@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Los Dioses Están Locos</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#330df2",
+              "primary-dark": "#1a0b7e",
+              secondary: "#f59e0b",
+              background: "#f8fafc",
+              surface: "#ffffff",
+              text: "#0f172a",
+              "text-muted": "#64748b",
+              danger: "#f2460d",
+              action: "#258cf4"
+            },
+            fontFamily: {
+              sans: ["Plus Jakarta Sans", "sans-serif"],
+              display: ["Space Grotesk", "sans-serif"],
+            },
+            animation: {
+              'spin-slow': 'spin 12s linear infinite',
+              'float': 'float 3s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-8px)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #f8fafc;
+        overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
+        color: #0f172a;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      /* Typography System */
+      .typo-h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        font-size: 2rem;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: #0f172a;
+      }
+      
+      .typo-h2 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 800;
+        font-size: 1.5rem;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        color: #0f172a;
+      }
+      
+      .typo-h3 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 700;
+        font-size: 1.125rem;
+        line-height: 1.4;
+        color: #0f172a;
+      }
+      
+      .typo-body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 400;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #334155;
+      }
+      
+      .typo-caption {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+      }
+
+      /* Hide scrollbar */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
