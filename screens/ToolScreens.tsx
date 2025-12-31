@@ -1,57 +1,235 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Header, Button, BottomBar } from '../components/UI';
 import { Player, GameColor } from '../types';
 
 // --- Timer Screen ---
 export const TimerScreen: React.FC = () => {
+    // State
+    const [totalTime, setTotalTime] = useState(60); // Default 1 minute
+    const [timeLeft, setTimeLeft] = useState(60);
+    const [isRunning, setIsRunning] = useState(false);
+    
+    // Audio States
+    const [narrationOn, setNarrationOn] = useState(true);
+    const [soundtrackOn, setSoundtrackOn] = useState(false);
+
+    // Input Refs for manual editing
+    const minutesInputRef = useRef<HTMLInputElement>(null);
+    const secondsInputRef = useRef<HTMLInputElement>(null);
+
+    // Timer Logic
+    useEffect(() => {
+        let interval: any = null;
+        if (isRunning && timeLeft > 0) {
+            interval = setInterval(() => {
+                setTimeLeft((prev) => prev - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            setIsRunning(false);
+            // Optional: Play sound here
+        }
+        return () => clearInterval(interval);
+    }, [isRunning, timeLeft]);
+
+    // Formatters
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+
+    const formatNumber = (num: number) => num.toString().padStart(2, '0');
+
+    // Handlers
+    const toggleTimer = () => {
+        if (timeLeft === 0) {
+            setTimeLeft(totalTime);
+        }
+        setIsRunning(!isRunning);
+    };
+
+    const resetTimer = () => {
+        setIsRunning(false);
+        setTimeLeft(totalTime);
+    };
+
+    const handleQuickSelect = (seconds: number) => {
+        if (isRunning) return;
+        setTotalTime(seconds);
+        setTimeLeft(seconds);
+    };
+
+    const handleManualInput = (type: 'min' | 'sec', value: string) => {
+        let val = parseInt(value) || 0;
+        if (type === 'sec' && val > 59) val = 59;
+        if (val < 0) val = 0;
+
+        let newTotal = 0;
+        if (type === 'min') {
+            newTotal = (val * 60) + (totalTime % 60);
+        } else {
+            newTotal = (Math.floor(totalTime / 60) * 60) + val;
+        }
+
+        setTotalTime(newTotal);
+        setTimeLeft(newTotal);
+    };
+
+    // SVG Circle Calculations
+    const radius = 140; 
+    const circumference = 2 * Math.PI * radius;
+    // Visually target the next second when running to consume immediately
+    const displayTime = isRunning ? Math.max(0, timeLeft - 1) : timeLeft;
+    const strokeDashoffset = circumference - (displayTime / totalTime) * circumference;
+
     return (
-        <div className="relative flex h-screen w-full flex-col bg-[#f8f6f5] font-display overflow-hidden text-[#392c28]">
-             <div className="absolute inset-0 z-0">
-                <img className="h-full w-full object-cover opacity-5 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYa-OoofmWSBinPaouh8-IMH4Htbm-QgS4P4A44BJpjsRfYF3-5EdFTfc12TXPelhdaJgCRMtAdAPKCUFARpN8bWjLSFGIHC5JndSoL7NomaCKIND6c7rCUqOJmEv_uvRAWkCNOoTo838PAlratp2m9qm80rMRpy-plFgCl_joDwcl25_cLrW36ibjR5hPqjkUr9pGdw5rWCsnz4ZXfNWPfgmiuDahHFi6ZjG5q8wYTY5X2b_35vUVYX9VQ562fMTj7EDgG6UkyW8"/>
-            </div>
-            <Header title="Temporizador" transparent actionIcon="settings" />
-            <div className="relative z-10 flex flex-col h-full">
-                <div className="flex items-center justify-center gap-4 py-6 w-full px-6">
-                    <button className="px-5 py-2.5 rounded-xl bg-white border border-[#392c28]/10 text-[#392c28] font-bold">00:30</button>
-                    <button className="px-5 py-2.5 rounded-xl bg-danger border border-danger text-white shadow-[0_0_15px_rgba(242,70,13,0.3)] font-bold">01:00</button>
-                    <button className="px-5 py-2.5 rounded-xl bg-white border border-[#392c28]/10 text-[#392c28] font-bold">01:30</button>
+        <div className="flex h-screen w-full flex-col bg-[#f8fafc] font-display overflow-hidden text-slate-900">
+            <Header title="Temporizador" actionIcon="settings" />
+            
+            <div className="relative z-10 flex flex-col h-full items-center">
+                
+                {/* Quick Select Options */}
+                <div className="w-full px-6 pt-6 pb-2">
+                    <div className="flex justify-between gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+                         {[30, 60, 90].map((sec) => (
+                             <button
+                                key={sec}
+                                onClick={() => handleQuickSelect(sec)}
+                                disabled={isRunning}
+                                className={`flex-1 py-4 rounded-xl text-base font-bold transition-all 
+                                    ${totalTime === sec 
+                                        ? 'bg-primary text-white shadow-md' 
+                                        : 'bg-transparent text-slate-500 hover:bg-slate-50'}
+                                    ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}
+                                `}
+                             >
+                                 {Math.floor(sec / 60)}:{formatNumber(sec % 60)}
+                             </button>
+                         ))}
+                    </div>
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center w-full px-4 min-h-0">
+
+                {/* Main Timer Display */}
+                <div className="flex-1 flex flex-col items-center justify-center w-full px-4 min-h-0 relative">
                     <div className="relative flex items-center justify-center">
-                        <div className="w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-[#392c28]/10 relative flex items-center justify-center bg-white/60 backdrop-blur-sm shadow-xl">
-                            <svg className="absolute inset-0 w-full h-full -rotate-90 transform p-2" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" fill="none" r="46" stroke="#e5e5e5" strokeWidth="6"></circle>
-                                <circle cx="50" cy="50" fill="none" r="46" stroke="#f2460d" strokeDasharray="289" strokeDashoffset="40" strokeLinecap="round" strokeWidth="6"></circle>
+                        {/* SVG Progress Circle */}
+                        <div className="relative flex items-center justify-center">
+                             {/* Background Circle */}
+                            <svg className="w-[340px] h-[340px] -rotate-90 transform" viewBox="0 0 300 300">
+                                <circle 
+                                    cx="150" cy="150" r={radius} 
+                                    fill="none" 
+                                    stroke="#e2e8f0" 
+                                    strokeWidth="12"
+                                    strokeLinecap="round"
+                                ></circle>
+                                {/* Progress Circle - Faster animation (duration-300) */}
+                                <circle 
+                                    cx="150" cy="150" r={radius} 
+                                    fill="none" 
+                                    stroke={timeLeft < 10 && isRunning ? "#f44611" : "#f44611"} 
+                                    strokeDasharray={circumference} 
+                                    strokeDashoffset={isNaN(strokeDashoffset) ? 0 : strokeDashoffset}
+                                    strokeLinecap="round" 
+                                    strokeWidth="12"
+                                    className="transition-all duration-300 ease-out"
+                                ></circle>
                             </svg>
-                            <div className="flex flex-col items-center z-10 text-[#392c28]">
-                                <div className="flex items-baseline justify-center">
-                                    <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">05</span>
-                                    <span className="text-7xl font-bold tracking-tighter mb-2 animate-pulse text-[#392c28]/80">:</span>
-                                    <span className="text-7xl font-bold tracking-tighter tabular-nums leading-none">00</span>
+                            
+                            {/* Absolute Overlay */}
+                            <div className="absolute inset-0">
+                                {/* Timer Digits - Perfectly Centered */}
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pb-3">
+                                    <input 
+                                        ref={minutesInputRef}
+                                        type="number"
+                                        disabled={isRunning}
+                                        value={formatNumber(minutes)}
+                                        onChange={(e) => handleManualInput('min', e.target.value)}
+                                        className={`w-[110px] text-center text-7xl font-bold bg-transparent focus:outline-none p-0 leading-none tracking-tighter text-slate-900 placeholder-slate-900 selection:bg-primary/20`}
+                                    />
+                                    <span className="text-7xl font-bold text-slate-300 mx-0 pb-2">:</span>
+                                    <input 
+                                        ref={secondsInputRef}
+                                        type="number"
+                                        disabled={isRunning}
+                                        value={formatNumber(seconds)}
+                                        onChange={(e) => handleManualInput('sec', e.target.value)}
+                                        className={`w-[110px] text-center text-7xl font-bold bg-transparent focus:outline-none p-0 leading-none tracking-tighter text-slate-900 placeholder-slate-900 selection:bg-primary/20`}
+                                    />
+                                </div>
+                                
+                                {/* Reset Button - Positioned absolutely at bottom of circle area */}
+                                <div className="absolute bottom-12 left-0 right-0 flex justify-center">
+                                    <button 
+                                        onClick={resetTimer}
+                                        className="h-16 w-16 rounded-full flex items-center justify-center text-slate-300 hover:text-primary hover:bg-slate-50 transition-all active:scale-95"
+                                        title="Reiniciar"
+                                    >
+                                        <span className="material-symbols-outlined text-4xl">replay</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="flex justify-center px-5 pb-10 pt-12 relative z-20">
-                     <Button variant="danger" className="w-full max-w-[320px] h-16 text-lg" icon="play_arrow">START TIMER</Button>
+                
+                {/* Main Action Button - Now Above Audio */}
+                <div className="w-full px-4 mb-6">
+                    <Button 
+                        fullWidth 
+                        onClick={toggleTimer} 
+                        icon={isRunning ? "pause" : "play_arrow"}
+                        className="shadow-[0_8px_25px_rgba(51,13,242,0.3)] h-16 text-lg tracking-wide bg-primary hover:bg-primary-dark text-white"
+                    >
+                        {isRunning ? 'PAUSAR' : 'EMPEZAR'}
+                    </Button>
                 </div>
+
+                {/* Audio Controls - Now Below Main Button, Orange Accent */}
+                <div className="flex justify-center gap-4 w-full px-6 mb-8">
+                    <button 
+                        onClick={() => setNarrationOn(!narrationOn)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border transition-all active:scale-95 ${narrationOn ? 'bg-white border-[#f44611] text-[#f44611] shadow-sm shadow-[#f44611]/10' : 'bg-white border-slate-200 text-slate-400'}`}
+                    >
+                        <div className="relative">
+                            <span className="material-symbols-outlined text-[24px]">graphic_eq</span>
+                            {!narrationOn && (
+                                <div className="absolute top-1/2 left-1/2 w-[140%] h-[2px] bg-slate-400 -translate-x-1/2 -translate-y-1/2 rotate-[-45deg]"></div>
+                            )}
+                        </div>
+                        <span className="text-sm font-bold">Narración</span>
+                    </button>
+                    
+                    <button 
+                        onClick={() => setSoundtrackOn(!soundtrackOn)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border transition-all active:scale-95 ${soundtrackOn ? 'bg-white border-[#f44611] text-[#f44611] shadow-sm shadow-[#f44611]/10' : 'bg-white border-slate-200 text-slate-400'}`}
+                    >
+                        <div className="relative">
+                            <span className="material-symbols-outlined text-[24px]">music_note</span>
+                            {!soundtrackOn && (
+                                <div className="absolute top-1/2 left-1/2 w-[140%] h-[2px] bg-slate-400 -translate-x-1/2 -translate-y-1/2 rotate-[-45deg]"></div>
+                            )}
+                        </div>
+                        <span className="text-sm font-bold">Música de Fondo</span>
+                    </button>
+                </div>
+
             </div>
         </div>
     );
 };
 
-// --- Calculator Screen ---
+// ... Rest of the file unchanged ...
 export const CalculatorScreen: React.FC = () => {
+    // ... Copy content from previous CalculatorScreen ...
     const navigate = useNavigate();
+    const location = useLocation();
     const [players, setPlayers] = useState<Player[]>([]);
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
     const [stats, setStats] = useState<Record<string, {relics: number, plagues: number, powers: number}>>({});
     
     // New States for Flow Control
-    const [showExitConfirm, setShowExitConfirm] = useState(false);
-    const [showFinalSummary, setShowFinalSummary] = useState(false);
+    // Check if we are returning from Victory Log to show summary immediately
+    const [showFinalSummary, setShowFinalSummary] = useState(location.state?.initialShowSummary || false);
 
     // Load players on mount
     useEffect(() => {
@@ -121,14 +299,18 @@ export const CalculatorScreen: React.FC = () => {
         if (showFinalSummary) {
             // Go back to input view, preserving all stats
             setShowFinalSummary(false);
+            // FIX: Always go to the last player when going back from summary
+            if (players.length > 0) {
+                setCurrentPlayerIndex(players.length - 1);
+            }
             return;
         }
 
         if (currentPlayerIndex > 0) {
             setCurrentPlayerIndex(prev => prev - 1);
         } else {
-            // If first player, try to exit
-            setShowExitConfirm(true);
+            // No confirmation, just go back to game hub
+            navigate('/game');
         }
     };
 
@@ -338,30 +520,30 @@ export const CalculatorScreen: React.FC = () => {
                         </p>
                     </div>
                     <BottomBar className="bg-white border-t border-slate-100">
-                        <Button fullWidth onClick={handleFinalizeGame} icon="emoji_events" className="animate-pulse h-auto py-3">
-                             <div className="flex flex-col items-center leading-none">
-                                <span>Calcular Ganador</span>
-                                <span className="text-[10px] font-medium opacity-80 mt-1 tracking-wide">Y Revelar Pactos</span>
-                            </div>
-                        </Button>
+                        <div className="w-full flex flex-col gap-3">
+                            <Button 
+                                fullWidth 
+                                onClick={handleFinalizeGame} 
+                                icon="emoji_events" 
+                                className="h-auto py-3 !bg-[#f44611] hover:!bg-[#d63b0b] text-white !shadow-[0_4px_15px_rgba(244,70,17,0.4)]"
+                            >
+                                <div className="flex flex-col items-center leading-none">
+                                    <span className="text-lg font-bold">Calcular Ganador</span>
+                                    <span className="text-[10px] font-medium opacity-80 mt-1 tracking-wide">Y Revelar Pactos</span>
+                                </div>
+                            </Button>
+                            <Button 
+                                fullWidth 
+                                variant="ghost" 
+                                onClick={() => navigate('/victory-log', { state: { fromCalculator: true } })} 
+                                icon="menu_book" 
+                                className="text-sm font-bold text-slate-500"
+                            >
+                                Actualizar la Bitácora
+                            </Button>
+                        </div>
                     </BottomBar>
                 </>
-            )}
-
-            {/* Exit Confirmation Modal */}
-            {showExitConfirm && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowExitConfirm(false)}></div>
-                    <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 p-6 flex flex-col items-center text-center">
-                        <span className="material-symbols-outlined text-4xl text-danger mb-2">warning</span>
-                        <h3 className="typo-h3 mb-2">¿Cancelar cálculo?</h3>
-                        <p className="text-sm text-slate-500 mb-6">Se perderá los datos ingresados hasta ahora.</p>
-                        <div className="flex gap-3 w-full">
-                            <button onClick={() => setShowExitConfirm(false)} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Continuar</button>
-                            <button onClick={() => navigate('/game')} className="flex-1 py-3 rounded-xl bg-danger text-white font-bold">Salir</button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     )
@@ -369,6 +551,7 @@ export const CalculatorScreen: React.FC = () => {
 
 // --- Destinies Screen ---
 export const DestiniesScreen: React.FC = () => {
+    // ... Copy content from previous DestiniesScreen ...
     const [players, setPlayers] = useState<Player[]>([]);
     const [mode, setMode] = useState<'Public' | 'Secret'>('Public');
     const [excludedPlayers, setExcludedPlayers] = useState<string[]>([]);
@@ -560,7 +743,7 @@ export const DestiniesScreen: React.FC = () => {
                          const isWinner = winnerId === p.id;
                          const hasSeen = seenPlayers.includes(p.id);
                          const showSecretEye = isRevealed && mode === 'Secret' && !isExcluded && !hasSeen;
-                         const playerIcon = mode === 'Public' ? 'face' : 'visibility';
+                         const playerIcon = mode === 'Secret' ? 'visibility' : 'face';
                          
                          return (
                             <div 
@@ -572,36 +755,39 @@ export const DestiniesScreen: React.FC = () => {
                                 `}
                                 style={{ left: pos.left, top: pos.top }}
                             >
-                                <div className={`relative size-14 rounded-full ${style.bg} border-2 ${style.border} shadow-md flex items-center justify-center z-10 transition-all overflow-hidden`}>
-                                    <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>{playerIcon}</span>
-                                    
-                                    {/* SEEN Diagonal Line Overlay */}
-                                    {hasSeen && mode === 'Secret' && (
-                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                            <div className="w-full h-1 bg-white/80 rotate-45 transform"></div>
-                                         </div>
-                                    )}
+                                <div className="relative z-10">
+                                    <div className={`relative size-14 rounded-full ${style.bg} border-2 ${style.border} shadow-md flex items-center justify-center transition-all overflow-hidden`}>
+                                        <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>{playerIcon}</span>
+                                        
+                                        {/* SEEN Diagonal Line Overlay */}
+                                        {hasSeen && mode === 'Secret' && (
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                                <div className="w-full h-1 bg-white/80 rotate-45 transform"></div>
+                                                </div>
+                                        )}
 
+                                        {/* SECRET MODE INTERACTION LAYER */}
+                                        {showSecretEye && (
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSecretCheck(p);
+                                                }}
+                                                className="absolute inset-0 z-20 w-full h-full rounded-full cursor-pointer ring-2 ring-white animate-pulse"
+                                            >
+                                                {/* No icon needed here, the underlying icon is already an eye */}
+                                            </button>
+                                        )}
+                                    </div>
+                                    
                                     {/* PUBLIC RESULT: Result Bubble */}
                                     {isRevealed && mode === 'Public' && !isExcluded && (
-                                        <div className={`absolute -top-4 -right-2 px-2 py-0.5 rounded-lg border-2 shadow-sm text-[10px] font-black uppercase tracking-wider animate-bounce ${isWinner ? 'bg-green-500 border-green-600 text-white z-20 scale-125' : 'bg-white border-slate-200 text-slate-400'}`}>
+                                        <div className={`absolute -top-4 -right-4 px-2 py-0.5 rounded-lg border-2 shadow-sm text-[10px] font-black uppercase tracking-wider ${isWinner ? 'bg-green-500 border-green-600 text-white z-30 scale-125 shadow-[0_0_15px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-white border-slate-200 text-slate-600 z-20'}`}>
                                             {isWinner ? 'SÍ' : 'NO'}
                                         </div>
                                     )}
-
-                                    {/* SECRET RESULT: Eye Button Overlay */}
-                                    {showSecretEye && (
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleSecretCheck(p);
-                                            }}
-                                            className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors z-20"
-                                        >
-                                            <span className="material-symbols-outlined text-2xl">visibility</span>
-                                        </button>
-                                    )}
                                 </div>
+                                
                                 <span className={`text-[10px] font-bold bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-slate-100 shadow-sm truncate max-w-[80px] ${isWinner && isRevealed && mode === 'Public' ? 'text-primary' : 'text-slate-600'}`}>{p.name}</span>
                             </div>
                          );
@@ -630,8 +816,8 @@ export const DestiniesScreen: React.FC = () => {
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-8 items-center text-center animate-float">
                         <h3 className="typo-caption text-slate-400 mb-2">Destino de {modalPlayer.name}</h3>
                         
-                        <div className={`size-32 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 ${modalPlayer.id === winnerId ? 'bg-green-100 border-green-200 text-green-600' : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
-                            <span className="font-black text-5xl tracking-tighter">
+                        <div className={`size-32 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 ${modalPlayer.id === winnerId ? 'bg-green-100 border-green-200 text-green-600' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
+                            <span className="font-black text-5xl tracking-tighter relative z-10">
                                 {modalPlayer.id === winnerId ? 'SÍ' : 'NO'}
                             </span>
                         </div>

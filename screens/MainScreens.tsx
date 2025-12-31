@@ -100,9 +100,7 @@ export const HomeScreen: React.FC = () => {
     );
 };
 
-// --- Registration Screen --- (No changes needed, keeping existing restored version logic)
-// To keep file size minimal in response, relying on the fact that RegistrationScreen is handled in the previous turn's file. 
-// However, since we must return the full file content for replacement, I will include the RegistrationScreen as it was in the previous valid state.
+// --- Registration Screen ---
 export const RegistrationScreen: React.FC = () => {
     const navigate = useNavigate();
     const contentRef = useRef<HTMLDivElement>(null);
@@ -131,6 +129,9 @@ export const RegistrationScreen: React.FC = () => {
     const [editColor, setEditColor] = useState<GameColor>('red');
     const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+    // Skip Confirmation State
+    const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+
     // Constants
     const pacts = [
         { id: 'Atenea', label: 'Atenea', icon: 'school', colorClass: 'text-yellow-600', bgClass: 'bg-yellow-100', borderClass: 'border-yellow-200' },
@@ -155,7 +156,6 @@ export const RegistrationScreen: React.FC = () => {
     const isRegistrationComplete = registeredPlayers.length >= totalPlayers;
     const progressText = `${Math.min(currentPlayerNumber, totalPlayers)} / ${totalPlayers}`;
 
-    // Auto-scroll Form to top when player registered and focus input
     useEffect(() => {
         if (contentRef.current) {
             contentRef.current.scrollTop = 0;
@@ -167,7 +167,6 @@ export const RegistrationScreen: React.FC = () => {
         }
     }, [registeredPlayers.length, isConfigConfirmed, showSummary]);
 
-    // Auto-scroll Top Bar to keep active player visible/centered
     useEffect(() => {
         if (topBarRef.current) {
             const activeElement = document.getElementById('current-player-slot');
@@ -229,6 +228,16 @@ export const RegistrationScreen: React.FC = () => {
         if (updatedList.length >= totalPlayers) {
              setShowSummary(true);
         }
+    };
+
+    const handleSkipRegistration = () => {
+        // Clear data to prevent zombie state
+        localStorage.removeItem('game_players');
+        localStorage.removeItem('game_results');
+        localStorage.removeItem('game_stats'); 
+        localStorage.removeItem('game_log');   
+        localStorage.removeItem('game_minigame_history'); 
+        navigate('/game');
     };
 
     const handleAddPlayerFromModal = () => {
@@ -309,6 +318,13 @@ export const RegistrationScreen: React.FC = () => {
                         <Button fullWidth onClick={() => setIsConfigConfirmed(true)} icon="check">
                             Confirmar y Empezar
                         </Button>
+                        
+                        <button 
+                            onClick={() => setShowSkipConfirm(true)}
+                            className="w-full mt-4 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors py-2"
+                        >
+                            Omitir
+                        </button>
                     </div>
                 </div>
             ) : (
@@ -478,6 +494,24 @@ export const RegistrationScreen: React.FC = () => {
                 </>
             )}
 
+            {/* Skip Confirmation Modal */}
+            {showSkipConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSkipConfirm(false)}></div>
+                    <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-6 items-center text-center animate-float">
+                        <span className="material-symbols-outlined text-4xl text-amber-500 mb-2">warning</span>
+                        <h3 className="typo-h3 mb-2">¿Saltar Registro?</h3>
+                        <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                            Si saltas este paso, no podrás llevar la <strong>Bitácora</strong> ni calcular automáticamente al ganador al final de la partida.
+                        </p>
+                        <div className="flex gap-3 w-full">
+                            <button onClick={() => setShowSkipConfirm(false)} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Cancelar</button>
+                            <button onClick={handleSkipRegistration} className="flex-1 py-3 rounded-xl bg-primary text-white font-bold">Continuar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showSummary && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !showExitConfirm && setShowSummary(false)}></div>
@@ -494,7 +528,7 @@ export const RegistrationScreen: React.FC = () => {
                             </div>
                         ) : (
                             <>
-                                <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-center items-center">
+                                <div className="p-5 border-b border-slate-100 bg-white flex justify-center items-center">
                                     <h2 className="typo-h3">Jugadores</h2>
                                 </div>
                                 <div className="p-4 overflow-y-auto">
@@ -562,7 +596,6 @@ export const RegistrationScreen: React.FC = () => {
                                         fullWidth 
                                         onClick={startGame} 
                                         icon="play_arrow" 
-                                        className="animate-pulse"
                                         disabled={registeredPlayers.length < 4}
                                     >
                                         {registeredPlayers.length < 4 ? missingPlayersText : 'Confirmar y Jugar'}
@@ -592,102 +625,175 @@ export const LeaderboardScreen: React.FC = () => {
     const navigate = useNavigate();
     const [results, setResults] = useState<Player[]>([]);
     const [gameLog, setGameLog] = useState<{minigames: Record<string, number>, mentions?: Record<string, Record<string, number>>, decisions?: Record<string, number>} | null>(null);
+    const [honorCounts, setHonorCounts] = useState<Record<string, number>>({});
+
+    // Helper to calculate how many *TITLES* (Honors) a player won.
+    // Winning a Title means having the strict MAX votes/wins in a category.
+    // Ties for max mean both get the point for the tie-breaker.
+    const calculateHonorCounts = (players: Player[], log: any) => {
+        const counts: Record<string, number> = {};
+        players.forEach(p => counts[p.id] = 0);
+
+        if (!log) return counts;
+
+        // 1. Minigame Master
+        if (log.minigames) {
+            let max = 0;
+            // Find max wins
+            Object.values(log.minigames).forEach((v: any) => { if (v > max) max = v; });
+            
+            if (max > 0) {
+                // Find all players with max wins
+                const winners = Object.keys(log.minigames).filter(id => log.minigames[id] === max);
+                // Give them a point for winning the "Minigame Master" title
+                winners.forEach(id => { if(counts[id] !== undefined) counts[id]++; });
+            }
+        }
+
+        // 2. Voting Categories
+        if (log.mentions) {
+            Object.keys(log.mentions).forEach(catId => {
+                const votes = log.mentions[catId];
+                let max = 0;
+                // Find max votes in this category
+                Object.values(votes).forEach((v: any) => { if (v > max) max = v; });
+                
+                if (max > 0) {
+                    // Find all players with max votes
+                    const winners = Object.keys(votes).filter(id => votes[id] === max);
+                    // Give them a point for winning this Category title
+                    winners.forEach(id => { if(counts[id] !== undefined) counts[id]++; });
+                }
+            });
+        }
+
+        return counts;
+    }
 
     useEffect(() => {
         const storedResults = localStorage.getItem('game_results');
         const storedLog = localStorage.getItem('game_log');
-        
+        let parsedLog = null;
+        let parsedResults: Player[] = [];
+
+        if (storedLog) {
+            parsedLog = JSON.parse(storedLog);
+            setGameLog(parsedLog);
+        }
+
         if (storedResults) {
-            const parsed = JSON.parse(storedResults);
-            // Sort by score descending
-            const sorted = parsed.sort((a: Player, b: Player) => (b.score || 0) - (a.score || 0));
+            parsedResults = JSON.parse(storedResults);
+            
+            // Calculate Honor Counts first (Tie-breaker)
+            const calculatedHonors = calculateHonorCounts(parsedResults, parsedLog);
+            setHonorCounts(calculatedHonors);
+            
+            // Sort by:
+            // 1. Score (Desc)
+            // 2. Total Honors Won (Desc)
+            const sorted = parsedResults.sort((a: Player, b: Player) => {
+                const scoreDiff = (b.score || 0) - (a.score || 0);
+                if (scoreDiff !== 0) return scoreDiff;
+
+                const honorsA = calculatedHonors[a.id] || 0;
+                const honorsB = calculatedHonors[b.id] || 0;
+                return honorsB - honorsA;
+            });
+            
             setResults(sorted);
         } else {
             setResults([]); 
-        }
-
-        if (storedLog) {
-            setGameLog(JSON.parse(storedLog));
         }
     }, []);
 
     const winner = results.length > 0 ? results[0] : null;
     const others = results.length > 1 ? results.slice(1) : [];
 
-    // Calculate Honors
-    const getHonorPlayer = (type: 'minigames' | 'mentions') => {
-        if (!gameLog || !results.length) return null;
+    // --- Honors Logic for Display ---
+    const getMinigameHonor = () => {
+        if (!gameLog?.minigames || !results.length) return null;
+        let max = 0;
+        let bestPids: string[] = [];
         
-        let targetRecords: Record<string, any> = {};
-        
-        if (type === 'minigames') {
-             targetRecords = gameLog.minigames || {};
-        } else if (type === 'mentions') {
-             // Combine all mentions into a single count or find the most notable one
-             // Prioritize mentions if available, fallback to old decisions
-             if (gameLog.mentions) {
-                 // Flatten all categories to find the single most voted person across all categories?
-                 // Or just pick the "strategy" category for the main display?
-                 // Let's iterate all categories and find the highest single count
-                 const allVotes: Record<string, {count: number, category: string}> = {};
-                 
-                 Object.entries(gameLog.mentions).forEach(([category, votes]) => {
-                     Object.entries(votes).forEach(([pid, count]) => {
-                         if (!allVotes[pid] || (count as number) > allVotes[pid].count) {
-                             allVotes[pid] = { count: (count as number), category };
-                         }
-                     });
-                 });
-                 
-                 let max = -1;
-                 let pid = null;
-                 let cat = '';
-                 
-                 Object.entries(allVotes).forEach(([id, data]) => {
-                     if (data.count > max) {
-                         max = data.count;
-                         pid = id;
-                         cat = data.category;
-                     }
-                 });
-                 
-                 if (max > 0 && pid) {
-                     const player = results.find(p => p.id === pid);
-                     const labels: Record<string, string> = {
-                         strategy: 'Estratega Maestro',
-                         chaos: 'Dios del Caos',
-                         fun: 'Alma de la Fiesta',
-                         liar: 'Lengua de Plata'
-                     };
-                     return player ? { player, count: max, title: labels[cat] || 'Destacado' } : null;
-                 }
-                 return null;
-             } else if (gameLog.decisions) {
-                 targetRecords = gameLog.decisions;
-             }
-        }
-
-        // Standard Max Calculation (for minigames or fallback decisions)
-        let maxVal = -1;
-        let bestPlayerId = null;
-
-        Object.entries(targetRecords).forEach(([pid, val]) => {
-            if ((val as number) > maxVal) {
-                maxVal = (val as number);
-                bestPlayerId = pid;
+        Object.entries(gameLog.minigames).forEach(([id, count]) => {
+            if (count > max) {
+                max = count;
+                bestPids = [id];
+            } else if (count === max) {
+                bestPids.push(id);
             }
         });
 
-        if (maxVal <= 0) return null;
-        
-        const player = results.find(p => p.id === bestPlayerId);
-        return player ? { player, count: maxVal, title: type === 'minigames' ? 'Maestro de Minijuegos' : 'Sabio del Destino' } : null;
+        if (max <= 0 || bestPids.length === 0) return null;
+
+        // Visual Tie-breaker: prefer higher score for the display card
+        const bestPlayer = results
+            .filter(p => bestPids.includes(p.id))
+            .sort((a,b) => (b.score || 0) - (a.score || 0))[0];
+
+        if (!bestPlayer) return null;
+
+        return {
+            player: bestPlayer,
+            count: max,
+            title: 'Maestro de Minijuegos',
+            icon: 'trophy',
+            colorClass: 'text-amber-600',
+            bgClass: 'bg-amber-100',
+            borderClass: 'border-amber-200'
+        };
     };
 
-    const minigameHonor = getHonorPlayer('minigames');
-    const mentionHonor = getHonorPlayer('mentions');
-    const hasHonors = minigameHonor || mentionHonor;
+    const getCategoryHonors = () => {
+        if (!gameLog?.mentions || !results.length) return [];
+        
+        const categories = [
+             { id: 'strategy', title: 'El Más Estratégico', icon: 'psychology', colorClass: 'text-purple-600', bgClass: 'bg-purple-100', borderClass: 'border-purple-200', gradientClass: 'from-purple-50' },
+             { id: 'chaos', title: 'El Más Caótico', icon: 'local_fire_department', colorClass: 'text-red-600', bgClass: 'bg-red-100', borderClass: 'border-red-200', gradientClass: 'from-red-50' },
+             { id: 'fun', title: 'Quien Más Hizo Reír', icon: 'sentiment_very_satisfied', colorClass: 'text-amber-600', bgClass: 'bg-amber-100', borderClass: 'border-amber-200', gradientClass: 'from-amber-50' },
+             { id: 'liar', title: 'El Mejor Mentiroso', icon: 'theater_comedy', colorClass: 'text-slate-600', bgClass: 'bg-slate-100', borderClass: 'border-slate-200', gradientClass: 'from-slate-50' },
+        ];
 
+        const honors: any[] = [];
+
+        categories.forEach(cat => {
+            const catVotes = gameLog.mentions![cat.id];
+            if (!catVotes) return;
+
+            let max = 0;
+            let bestPids: string[] = [];
+
+            Object.entries(catVotes).forEach(([pid, count]) => {
+                if (count > max) {
+                    max = count;
+                    bestPids = [pid];
+                } else if (count === max) {
+                    bestPids.push(pid);
+                }
+            });
+
+            if (max > 0 && bestPids.length > 0) {
+                 // Visual Tie-breaker: prefer higher score
+                 const bestPlayer = results
+                    .filter(p => bestPids.includes(p.id))
+                    .sort((a,b) => (b.score || 0) - (a.score || 0))[0];
+                 
+                 if (bestPlayer) {
+                     honors.push({
+                         player: bestPlayer,
+                         count: max,
+                         ...cat
+                     });
+                 }
+            }
+        });
+
+        return honors;
+    };
+
+    const minigameHonor = getMinigameHonor();
+    const categoryHonors = getCategoryHonors();
+    const hasHonors = minigameHonor || categoryHonors.length > 0;
 
     const getColorStyle = (color: GameColor) => {
         switch(color) {
@@ -700,6 +806,30 @@ export const LeaderboardScreen: React.FC = () => {
             default: return {bg: 'bg-slate-500', text: 'text-slate-600', border: 'border-slate-200'};
         }
     };
+
+    const getRank = (index: number) => {
+        const actualRank = index + 1;
+        if (index === 0) return 1;
+        
+        const curr = results[index];
+        const prev = results[index - 1];
+        
+        const currHonors = honorCounts[curr.id] || 0;
+        const prevHonors = honorCounts[prev.id] || 0;
+
+        // Tie condition: Same Score AND Same Title Count
+        if ((curr.score || 0) === (prev.score || 0) && currHonors === prevHonors) {
+             // If tied, find the first index in the array that matches these stats
+             // to share the rank (e.g., T-1, T-1, 3)
+             const firstIndex = results.findIndex(p => 
+                 (p.score || 0) === (curr.score || 0) && 
+                 (honorCounts[p.id] || 0) === currHonors
+             );
+             return firstIndex + 1;
+        }
+        
+        return actualRank;
+    }
 
     if (results.length === 0) {
         return (
@@ -732,7 +862,9 @@ export const LeaderboardScreen: React.FC = () => {
                             <div className={`w-32 h-32 rounded-full border-4 shadow-md flex items-center justify-center mb-4 ${getColorStyle(winner.color).bg}`}>
                                 <span className={`material-symbols-outlined text-7xl ${winner.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
                             </div>
-                            <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold mb-2">1er Lugar</div>
+                            <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-bold mb-2">
+                                {getRank(0) === 1 ? '1er Lugar' : `${getRank(0)}º Lugar`}
+                            </div>
                             <p className="typo-h2">{winner.name}</p>
                             <p className="text-text-muted text-sm font-medium">Pacto: <span className="font-bold text-slate-800">{winner.pact}</span></p>
                             <div className="mt-4 flex items-center gap-2">
@@ -766,11 +898,14 @@ export const LeaderboardScreen: React.FC = () => {
                              <div className="text-xs font-bold text-slate-400 uppercase text-right">Pts</div>
                         </div>
                         <div className="divide-y divide-slate-100">
-                            {others.map((p, i) => (
+                            {others.map((p, i) => {
+                                const overallIndex = i + 1; // 0 is winner
+                                const rank = getRank(overallIndex);
+                                return (
                                 <div key={p.id} className="grid grid-cols-[3rem_1fr_4rem] items-center py-3 px-3">
                                     {/* Rank */}
                                     <div className="flex justify-center">
-                                        <div className="flex size-7 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600 text-sm border border-slate-200">{i + 2}</div>
+                                        <div className="flex size-7 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600 text-sm border border-slate-200">{rank}</div>
                                     </div>
                                     
                                     {/* Player Info */}
@@ -789,7 +924,7 @@ export const LeaderboardScreen: React.FC = () => {
                                         <p className="text-slate-900 font-bold text-lg">{p.score}</p>
                                     </div>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                  </div>
@@ -801,32 +936,32 @@ export const LeaderboardScreen: React.FC = () => {
                         <div className="grid gap-3">
                             {minigameHonor && (
                                 <div className="bg-gradient-to-r from-amber-50 to-white p-4 rounded-xl border border-amber-100 flex items-center gap-4 shadow-sm">
-                                    <div className="size-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-500 shrink-0">
+                                    <div className="size-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
                                         <span className="material-symbols-outlined text-2xl">trophy</span>
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-baseline">
                                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">{minigameHonor.title}</p>
-                                            <span className="text-xs font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded">{minigameHonor.count} Victorias</span>
+                                            <span className="text-xs font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded">{minigameHonor.count} {minigameHonor.count === 1 ? 'Victoria' : 'Victorias'}</span>
                                         </div>
                                         <p className="font-bold text-slate-900 text-lg">{minigameHonor.player.name}</p>
                                     </div>
                                 </div>
                             )}
-                            {mentionHonor && (
-                                <div className="bg-gradient-to-r from-purple-50 to-white p-4 rounded-xl border border-purple-100 flex items-center gap-4 shadow-sm">
-                                    <div className="size-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-500 shrink-0">
-                                        <span className="material-symbols-outlined text-2xl">psychology</span>
+                            {categoryHonors.map((honor) => (
+                                <div key={honor.id} className={`bg-gradient-to-r ${honor.gradientClass} to-white p-4 rounded-xl border ${honor.borderClass} flex items-center gap-4 shadow-sm`}>
+                                    <div className={`size-12 rounded-full ${honor.bgClass} flex items-center justify-center ${honor.colorClass} shrink-0`}>
+                                        <span className="material-symbols-outlined text-2xl">{honor.icon}</span>
                                     </div>
                                     <div className="flex-1">
                                          <div className="flex justify-between items-baseline">
-                                            <p className="text-xs font-bold text-purple-600 uppercase tracking-wider">{mentionHonor.title}</p>
-                                            <span className="text-xs font-bold bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded">{mentionHonor.count} Votos</span>
+                                            <p className={`text-xs font-bold uppercase tracking-wider ${honor.colorClass}`}>{honor.title}</p>
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${honor.bgClass} ${honor.colorClass}`}>{honor.count} {honor.count === 1 ? 'Voto' : 'Votos'}</span>
                                         </div>
-                                        <p className="font-bold text-slate-900 text-lg">{mentionHonor.player.name}</p>
+                                        <p className="font-bold text-slate-900 text-lg">{honor.player.name}</p>
                                     </div>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </div>
                  )}
