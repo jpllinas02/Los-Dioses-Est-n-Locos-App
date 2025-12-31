@@ -21,9 +21,9 @@ export const HomeScreen: React.FC = () => {
         // Clear all game data
         localStorage.removeItem('game_players');
         localStorage.removeItem('game_results');
-        localStorage.removeItem('game_stats'); // Clear calculator stats
-        localStorage.removeItem('game_log');   // Clear victory log
-        localStorage.removeItem('game_minigame_history'); // Clear history
+        localStorage.removeItem('game_stats'); 
+        localStorage.removeItem('game_log');   
+        localStorage.removeItem('game_minigame_history'); 
         navigate('/registration');
     };
 
@@ -84,8 +84,8 @@ export const HomeScreen: React.FC = () => {
             {/* Resume/New Game Modal */}
             {showResumeModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowResumeModal(false)}></div>
-                    <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 p-6 flex flex-col items-center text-center">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowResumeModal(false)}></div>
+                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 p-6 flex flex-col items-center text-center animate-float">
                         <span className="material-symbols-outlined text-4xl text-primary mb-2">save</span>
                         <h3 className="typo-h3 mb-2">Partida Encontrada</h3>
                         <p className="text-sm text-slate-500 mb-6">Existe una partida anterior guardada. ¿Deseas continuarla o empezar de cero?</p>
@@ -231,12 +231,26 @@ export const RegistrationScreen: React.FC = () => {
     };
 
     const handleSkipRegistration = () => {
-        // Clear data to prevent zombie state
+        // Clear old data first
         localStorage.removeItem('game_players');
         localStorage.removeItem('game_results');
         localStorage.removeItem('game_stats'); 
         localStorage.removeItem('game_log');   
         localStorage.removeItem('game_minigame_history'); 
+
+        // Generate 6 Default Players with unique random names
+        const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
+        const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+
+        const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
+        const defaults: Player[] = defaultColors.map((color, index) => ({
+            id: `def-${index}`,
+            name: shuffledPool[index], // Assign unique random name
+            pact: 'Atenea', // Default pact
+            color: color
+        }));
+
+        localStorage.setItem('game_players', JSON.stringify(defaults));
         navigate('/game');
     };
 
@@ -289,6 +303,9 @@ export const RegistrationScreen: React.FC = () => {
     const missingPlayersText = missingPlayersCount === 1 
         ? "Falta 1 Jugador" 
         : `Faltan ${missingPlayersCount} Jugadores`;
+    
+    // Helper to check if buttons should be disabled
+    const isEditing = editingPlayerId !== null;
 
     return (
         <div className="flex h-screen w-full flex-col bg-[#f6f5f8] overflow-hidden">
@@ -316,7 +333,7 @@ export const RegistrationScreen: React.FC = () => {
                         </div>
                         
                         <Button fullWidth onClick={() => setIsConfigConfirmed(true)} icon="check">
-                            Confirmar y Empezar
+                            Continuar y Registrar
                         </Button>
                         
                         <button 
@@ -366,6 +383,7 @@ export const RegistrationScreen: React.FC = () => {
                     </div>
                     
                     <div ref={contentRef} className="flex-1 px-4 gap-6 pt-6 pb-40 overflow-y-auto no-scrollbar">
+                         {/* ... Form inputs ... */}
                          <div>
                             <div className="text-left mb-2">
                                 <h3 className="typo-h3 leading-tight">Nombre del Jugador</h3>
@@ -497,12 +515,12 @@ export const RegistrationScreen: React.FC = () => {
             {/* Skip Confirmation Modal */}
             {showSkipConfirm && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSkipConfirm(false)}></div>
-                    <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-6 items-center text-center animate-float">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowSkipConfirm(false)}></div>
+                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-6 items-center text-center animate-float">
                         <span className="material-symbols-outlined text-4xl text-amber-500 mb-2">warning</span>
                         <h3 className="typo-h3 mb-2">¿Saltar Registro?</h3>
                         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                            Si saltas este paso, no podrás llevar la <strong>Bitácora</strong> ni calcular automáticamente al ganador al final de la partida.
+                             Se asignarán <strong>6 jugadores genéricos</strong> con colores predeterminados. Podrás usar la Bitácora y la Calculadora, pero no tendrás nombres personalizados.
                         </p>
                         <div className="flex gap-3 w-full">
                             <button onClick={() => setShowSkipConfirm(false)} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Cancelar</button>
@@ -512,10 +530,11 @@ export const RegistrationScreen: React.FC = () => {
                 </div>
             )}
 
+            {/* ... Summary Modal code remains same ... */}
             {showSummary && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !showExitConfirm && setShowSummary(false)}></div>
-                    <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh]">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => !showExitConfirm && setShowSummary(false)}></div>
+                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
                         {showExitConfirm ? (
                             <div className="p-6 flex flex-col items-center text-center">
                                 <span className="material-symbols-outlined text-4xl text-danger mb-2">warning</span>
@@ -529,10 +548,10 @@ export const RegistrationScreen: React.FC = () => {
                         ) : (
                             <>
                                 <div className="p-5 border-b border-slate-100 bg-white flex justify-center items-center">
-                                    <h2 className="typo-h3">Jugadores</h2>
+                                    <h2 className="typo-h3">Lista de Jugadores</h2>
                                 </div>
                                 <div className="p-4 overflow-y-auto">
-                                    <p className="text-sm text-slate-500 mb-4 text-center">¿Todo listo para empezar el juego?</p>
+                                    <p className="text-sm text-slate-500 mb-4 text-center">Revisa que todo esté en orden o haz cambios. No se pueden ver o cambiar los Pactos elegidos.</p>
                                     <div className="space-y-3">
                                         {registeredPlayers.map((player) => (
                                             <div key={player.id} className="border border-slate-200 rounded-xl p-3 flex flex-col bg-white">
@@ -582,7 +601,11 @@ export const RegistrationScreen: React.FC = () => {
                                                                 <p className="text-xs text-slate-500">Pacto Secreto</p>
                                                             </div>
                                                         </div>
-                                                        <button onClick={() => startEditing(player)} className="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-full">
+                                                        <button 
+                                                            onClick={() => startEditing(player)} 
+                                                            disabled={isEditing}
+                                                            className={`p-2 rounded-full ${isEditing ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-primary hover:bg-slate-50'}`}
+                                                        >
                                                             <span className="material-symbols-outlined">edit</span>
                                                         </button>
                                                     </div>
@@ -596,18 +619,30 @@ export const RegistrationScreen: React.FC = () => {
                                         fullWidth 
                                         onClick={startGame} 
                                         icon="play_arrow" 
-                                        disabled={registeredPlayers.length < 4}
+                                        disabled={registeredPlayers.length < 4 || isEditing}
+                                        className={isEditing ? 'opacity-50' : ''}
                                     >
                                         {registeredPlayers.length < 4 ? missingPlayersText : 'Confirmar y Jugar'}
                                     </Button>
                                     
                                     {registeredPlayers.length < 6 && (
-                                        <Button fullWidth variant="secondary" onClick={handleAddPlayerFromModal} icon="person_add">
+                                        <Button 
+                                            fullWidth 
+                                            variant="secondary" 
+                                            onClick={handleAddPlayerFromModal} 
+                                            icon="person_add"
+                                            disabled={isEditing}
+                                            className={isEditing ? 'opacity-50' : ''}
+                                        >
                                             Añadir Jugador
                                         </Button>
                                     )}
 
-                                    <button onClick={() => setShowExitConfirm(true)} className="text-slate-400 text-sm font-bold py-2 hover:text-danger transition-colors">
+                                    <button 
+                                        onClick={() => setShowExitConfirm(true)} 
+                                        disabled={isEditing}
+                                        className={`text-slate-400 text-sm font-bold py-2 hover:text-danger transition-colors ${isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
                                         Cancelar
                                     </button>
                                 </div>
@@ -628,8 +663,6 @@ export const LeaderboardScreen: React.FC = () => {
     const [honorCounts, setHonorCounts] = useState<Record<string, number>>({});
 
     // Helper to calculate how many *TITLES* (Honors) a player won.
-    // Winning a Title means having the strict MAX votes/wins in a category.
-    // Ties for max mean both get the point for the tie-breaker.
     const calculateHonorCounts = (players: Player[], log: any) => {
         const counts: Record<string, number> = {};
         players.forEach(p => counts[p.id] = 0);
@@ -639,13 +672,11 @@ export const LeaderboardScreen: React.FC = () => {
         // 1. Minigame Master
         if (log.minigames) {
             let max = 0;
-            // Find max wins
-            Object.values(log.minigames).forEach((v: any) => { if (v > max) max = v; });
+            const minigames = log.minigames as Record<string, number>;
+            Object.values(minigames).forEach((v) => { if (v > max) max = v; });
             
             if (max > 0) {
-                // Find all players with max wins
-                const winners = Object.keys(log.minigames).filter(id => log.minigames[id] === max);
-                // Give them a point for winning the "Minigame Master" title
+                const winners = Object.keys(minigames).filter(id => minigames[id] === max);
                 winners.forEach(id => { if(counts[id] !== undefined) counts[id]++; });
             }
         }
@@ -653,15 +684,12 @@ export const LeaderboardScreen: React.FC = () => {
         // 2. Voting Categories
         if (log.mentions) {
             Object.keys(log.mentions).forEach(catId => {
-                const votes = log.mentions[catId];
+                const votes = log.mentions[catId] as Record<string, number>;
                 let max = 0;
-                // Find max votes in this category
-                Object.values(votes).forEach((v: any) => { if (v > max) max = v; });
+                Object.values(votes).forEach((v) => { if (v > max) max = v; });
                 
                 if (max > 0) {
-                    // Find all players with max votes
                     const winners = Object.keys(votes).filter(id => votes[id] === max);
-                    // Give them a point for winning this Category title
                     winners.forEach(id => { if(counts[id] !== undefined) counts[id]++; });
                 }
             });
@@ -683,14 +711,9 @@ export const LeaderboardScreen: React.FC = () => {
 
         if (storedResults) {
             parsedResults = JSON.parse(storedResults);
-            
-            // Calculate Honor Counts first (Tie-breaker)
             const calculatedHonors = calculateHonorCounts(parsedResults, parsedLog);
             setHonorCounts(calculatedHonors);
             
-            // Sort by:
-            // 1. Score (Desc)
-            // 2. Total Honors Won (Desc)
             const sorted = parsedResults.sort((a: Player, b: Player) => {
                 const scoreDiff = (b.score || 0) - (a.score || 0);
                 if (scoreDiff !== 0) return scoreDiff;
@@ -715,7 +738,8 @@ export const LeaderboardScreen: React.FC = () => {
         let max = 0;
         let bestPids: string[] = [];
         
-        Object.entries(gameLog.minigames).forEach(([id, count]) => {
+        Object.entries(gameLog.minigames).forEach(([id, c]) => {
+            const count = c as number;
             if (count > max) {
                 max = count;
                 bestPids = [id];
@@ -726,7 +750,6 @@ export const LeaderboardScreen: React.FC = () => {
 
         if (max <= 0 || bestPids.length === 0) return null;
 
-        // Visual Tie-breaker: prefer higher score for the display card
         const bestPlayer = results
             .filter(p => bestPids.includes(p.id))
             .sort((a,b) => (b.score || 0) - (a.score || 0))[0];
@@ -763,7 +786,8 @@ export const LeaderboardScreen: React.FC = () => {
             let max = 0;
             let bestPids: string[] = [];
 
-            Object.entries(catVotes).forEach(([pid, count]) => {
+            Object.entries(catVotes).forEach(([pid, c]) => {
+                const count = c as number;
                 if (count > max) {
                     max = count;
                     bestPids = [pid];
@@ -773,7 +797,6 @@ export const LeaderboardScreen: React.FC = () => {
             });
 
             if (max > 0 && bestPids.length > 0) {
-                 // Visual Tie-breaker: prefer higher score
                  const bestPlayer = results
                     .filter(p => bestPids.includes(p.id))
                     .sort((a,b) => (b.score || 0) - (a.score || 0))[0];
@@ -817,10 +840,7 @@ export const LeaderboardScreen: React.FC = () => {
         const currHonors = honorCounts[curr.id] || 0;
         const prevHonors = honorCounts[prev.id] || 0;
 
-        // Tie condition: Same Score AND Same Title Count
         if ((curr.score || 0) === (prev.score || 0) && currHonors === prevHonors) {
-             // If tied, find the first index in the array that matches these stats
-             // to share the rank (e.g., T-1, T-1, 3)
              const firstIndex = results.findIndex(p => 
                  (p.score || 0) === (curr.score || 0) && 
                  (honorCounts[p.id] || 0) === currHonors
@@ -852,7 +872,6 @@ export const LeaderboardScreen: React.FC = () => {
                     </h1>
                  </div>
 
-                 {/* Winner Card */}
                  {winner && (
                      <div className="p-4 relative z-10">
                          <div className="flex flex-col items-center justify-center rounded-2xl shadow-lg bg-white border-2 border-primary overflow-hidden relative p-6">
@@ -889,7 +908,6 @@ export const LeaderboardScreen: React.FC = () => {
                      </div>
                  )}
 
-                 {/* Other Players Table */}
                  <div className="px-4 mt-4">
                     <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                         <div className="grid grid-cols-[3rem_1fr_4rem] bg-slate-50 border-b border-slate-200 py-2 px-3">
@@ -903,12 +921,9 @@ export const LeaderboardScreen: React.FC = () => {
                                 const rank = getRank(overallIndex);
                                 return (
                                 <div key={p.id} className="grid grid-cols-[3rem_1fr_4rem] items-center py-3 px-3">
-                                    {/* Rank */}
                                     <div className="flex justify-center">
                                         <div className="flex size-7 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600 text-sm border border-slate-200">{rank}</div>
                                     </div>
-                                    
-                                    {/* Player Info */}
                                     <div className="flex items-center gap-3 pl-2 overflow-hidden">
                                         <div className={`size-9 rounded-full flex items-center justify-center shadow-sm shrink-0 border ${getColorStyle(p.color).border} ${getColorStyle(p.color).bg}`}>
                                             <span className={`material-symbols-outlined text-lg ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
@@ -918,8 +933,6 @@ export const LeaderboardScreen: React.FC = () => {
                                             <p className="text-slate-400 text-xs truncate">Pacto: {p.pact}</p>
                                         </div>
                                     </div>
-
-                                    {/* Score */}
                                     <div className="text-right">
                                         <p className="text-slate-900 font-bold text-lg">{p.score}</p>
                                     </div>
@@ -929,7 +942,6 @@ export const LeaderboardScreen: React.FC = () => {
                     </div>
                  </div>
 
-                 {/* Honorable Mentions */}
                  {hasHonors && (
                     <div className="px-4 mt-8 mb-4">
                         <h3 className="text-center typo-h3 mb-4 text-slate-500">Menciones Honoríficas</h3>
@@ -987,7 +999,7 @@ export const ExtrasScreen: React.FC = () => {
                     </div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">En Construcción</h2>
                     <p className="text-slate-500 mb-8">
-                        Esta sección contendrá minijuegos adicionales y logros. ¡Vuelve pronto!
+                        Esta sección contendrá Galería de imágenes, Prototipos y versiones iniciales, y Agradecimientos especiales.
                     </p>
                     <Button fullWidth variant="outline" onClick={() => navigate(-1)}>
                         Volver

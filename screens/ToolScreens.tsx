@@ -218,9 +218,8 @@ export const TimerScreen: React.FC = () => {
     );
 };
 
-// ... Rest of the file unchanged ...
+// --- Calculator Screen ---
 export const CalculatorScreen: React.FC = () => {
-    // ... Copy content from previous CalculatorScreen ...
     const navigate = useNavigate();
     const location = useLocation();
     const [players, setPlayers] = useState<Player[]>([]);
@@ -236,21 +235,38 @@ export const CalculatorScreen: React.FC = () => {
         const storedPlayers = localStorage.getItem('game_players');
         const storedStats = localStorage.getItem('game_stats');
 
-        if (storedPlayers) {
+        if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
             const parsedPlayers = JSON.parse(storedPlayers);
             setPlayers(parsedPlayers);
             
             if (storedStats) {
-                // Restore stats if available
                 setStats(JSON.parse(storedStats));
             } else {
-                // Initialize stats for each player if not present
                 const initialStats: Record<string, any> = {};
                 parsedPlayers.forEach((p: Player) => {
                     initialStats[p.id] = { relics: 0, plagues: 0, powers: 0 };
                 });
                 setStats(initialStats);
             }
+        } else {
+             // Fallback: Generate Default Players if no data
+            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
+            const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+            
+            const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
+            const defaults: Player[] = defaultColors.map((color, index) => ({
+                id: `def-${index}`,
+                name: shuffledPool[index], // Use random name
+                pact: 'Atenea',
+                color: color
+            }));
+            setPlayers(defaults);
+             // Initialize default stats
+            const initialStats: Record<string, any> = {};
+            defaults.forEach((p: Player) => {
+                initialStats[p.id] = { relics: 0, plagues: 0, powers: 0 };
+            });
+            setStats(initialStats);
         }
     }, []);
 
@@ -549,291 +565,360 @@ export const CalculatorScreen: React.FC = () => {
     )
 }
 
-// --- Destinies Screen ---
+// --- Destinies Screen (REDESIGNED) ---
 export const DestiniesScreen: React.FC = () => {
-    // ... Copy content from previous DestiniesScreen ...
+    // Core Data
     const [players, setPlayers] = useState<Player[]>([]);
-    const [mode, setMode] = useState<'Public' | 'Secret'>('Public');
-    const [excludedPlayers, setExcludedPlayers] = useState<string[]>([]);
+    const [excludedIds, setExcludedIds] = useState<string[]>([]);
     
-    // States for Flow
-    const [isCountingDown, setIsCountingDown] = useState(false);
-    const [countdownValue, setCountdownValue] = useState(5);
-    const [isRevealed, setIsRevealed] = useState(false);
+    // Modes: 'PUBLIC' (Instant result) | 'SECRET' (Hidden result per player)
+    const [mode, setMode] = useState<'PUBLIC' | 'SECRET'>('PUBLIC');
+    
+    // State: 'IDLE' | 'RESULT' | 'SECRET_PHASE'
+    const [gameState, setGameState] = useState<'IDLE' | 'RESULT' | 'SECRET_PHASE'>('IDLE');
+    
+    // Logic State
     const [winnerId, setWinnerId] = useState<string | null>(null);
-    const [showReset, setShowReset] = useState(false);
+    const [resetLocked, setResetLocked] = useState(false);
+    
+    // Switch Confirmation State
+    const [pendingSwitchMode, setPendingSwitchMode] = useState<'PUBLIC' | 'SECRET' | null>(null);
 
-    // Secret Mode States
-    const [seenPlayers, setSeenPlayers] = useState<string[]>([]);
-    const [modalPlayer, setModalPlayer] = useState<Player | null>(null);
+    // Secret Mode Specifics
+    const [secretModalPlayer, setSecretModalPlayer] = useState<Player | null>(null);
+    const [seenPlayerIds, setSeenPlayerIds] = useState<string[]>([]);
 
     useEffect(() => {
         const storedPlayers = localStorage.getItem('game_players');
-        if (storedPlayers) {
+        if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
             setPlayers(JSON.parse(storedPlayers));
+        } else {
+            // Default players if none registered - use random names
+            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
+            const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+
+            const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
+            const defaults: Player[] = defaultColors.map((color, index) => ({
+                id: `def-${index}`,
+                name: shuffledPool[index], // Use random name
+                pact: 'Atenea', // Dummy value
+                color: color
+            }));
+            setPlayers(defaults);
         }
     }, []);
 
-    // Countdown Timer Logic
-    useEffect(() => {
-        let interval: any;
-        if (isCountingDown && countdownValue > 0) {
-            interval = setInterval(() => {
-                setCountdownValue(prev => prev - 1);
-            }, 1000);
-        } else if (isCountingDown && countdownValue === 0) {
-            // Timer Finished - Enable Reset
-            setIsCountingDown(false);
-            setShowReset(true);
-        }
-        return () => clearInterval(interval);
-    }, [isCountingDown, countdownValue]);
+    // --- Actions ---
 
     const toggleExclusion = (pid: string) => {
-        // Prevent interaction during countdown or once revealed
-        if (isCountingDown || isRevealed) return;
-        
-        setExcludedPlayers(prev => 
-            prev.includes(pid) 
-                ? prev.filter(id => id !== pid) 
-                : [...prev, pid]
+        if (gameState !== 'IDLE') return; // Lock during game
+        setExcludedIds(prev => 
+            prev.includes(pid) ? prev.filter(id => id !== pid) : [...prev, pid]
         );
     };
 
-    // Helper to Reset State
-    const resetState = () => {
-        setIsRevealed(false);
-        setWinnerId(null);
-        setShowReset(false);
-        setCountdownValue(5);
-        setSeenPlayers([]);
-        setExcludedPlayers([]); // Reset exclusions on restart as requested
-    };
+    const handleSwitchMode = (targetMode: 'PUBLIC' | 'SECRET') => {
+        // Requirement 1: Pressing same button does nothing
+        if (mode === targetMode) return;
 
-    const handleAction = () => {
-        if (showReset) {
-            resetState();
-            return;
-        }
-
-        // Calculate Winner
-        const candidates = players.filter(p => !excludedPlayers.includes(p.id));
-        if (candidates.length === 0) return;
-
-        const winner = candidates[Math.floor(Math.random() * candidates.length)];
-        setWinnerId(winner.id);
+        // Requirement 2: Double Click Safety
+        // Check "Busy" state
+        const candidates = players.filter(p => !excludedIds.includes(p.id));
+        const allCandidatesSeen = candidates.every(p => seenPlayerIds.includes(p.id));
         
-        // Show Results Immediately
-        setIsRevealed(true);
+        const isBusyPublic = mode === 'PUBLIC' && gameState === 'RESULT' && resetLocked;
+        const isBusySecret = mode === 'SECRET' && gameState === 'SECRET_PHASE' && !allCandidatesSeen;
 
-        // Start 5s timer to enable Reset button
-        setIsCountingDown(true);
+        // If busy, require confirmation
+        if (isBusyPublic || isBusySecret) {
+            if (pendingSwitchMode !== targetMode) {
+                setPendingSwitchMode(targetMode);
+                return;
+            }
+        }
+
+        // Execute Switch
+        resetGame();
+        setMode(targetMode);
     };
 
-    const handleModeSwitch = (newMode: 'Public' | 'Secret') => {
-        if (isCountingDown) return; // Block only during countdown
-        setMode(newMode);
-        // Switching mode acts as a reset if we are in revealed state
-        if (isRevealed) {
-            resetState();
+    // Auto-reset pending confirmation when game is no longer busy
+    useEffect(() => {
+        const candidates = players.filter(p => !excludedIds.includes(p.id));
+        const allCandidatesSeen = candidates.every(p => seenPlayerIds.includes(p.id));
+        const isBusyPublic = mode === 'PUBLIC' && gameState === 'RESULT' && resetLocked;
+        const isBusySecret = mode === 'SECRET' && gameState === 'SECRET_PHASE' && !allCandidatesSeen;
+
+        if (!isBusyPublic && !isBusySecret && pendingSwitchMode) {
+            setPendingSwitchMode(null);
+        }
+    }, [resetLocked, seenPlayerIds, players, excludedIds, mode, gameState, pendingSwitchMode]);
+
+    const pickWinner = () => {
+        const candidates = players.filter(p => !excludedIds.includes(p.id));
+        if (candidates.length === 0) return null;
+        const winner = candidates[Math.floor(Math.random() * candidates.length)];
+        return winner.id;
+    }
+
+    const startSelection = () => {
+        const winId = pickWinner();
+        if (!winId) return;
+
+        setWinnerId(winId);
+
+        if (mode === 'PUBLIC') {
+            setGameState('RESULT');
+            setResetLocked(true);
+            setTimeout(() => setResetLocked(false), 3000);
+        } else {
+            // Secret Mode starts immediately
+            setGameState('SECRET_PHASE');
+            setSeenPlayerIds([]);
         }
     };
 
-    const handleSecretCheck = (player: Player) => {
-        setModalPlayer(player);
+    const resetGame = () => {
+        setGameState('IDLE');
+        setWinnerId(null);
+        setSecretModalPlayer(null);
+        setSeenPlayerIds([]);
+        setExcludedIds([]);
+        setPendingSwitchMode(null); // Clear any pending switch
     };
 
-    const confirmSecretView = () => {
-        if (modalPlayer) {
-            setSeenPlayers(prev => [...prev, modalPlayer.id]);
-            setModalPlayer(null);
+    const handleSecretCardClick = (player: Player) => {
+        // Prevent re-opening seen cards
+        if (seenPlayerIds.includes(player.id)) return;
+        setSecretModalPlayer(player);
+    };
+
+    const closeSecretModal = () => {
+        if (secretModalPlayer) {
+            setSeenPlayerIds(prev => [...prev, secretModalPlayer.id]);
+            setSecretModalPlayer(null);
         }
-    };
+    }
 
+    // --- Helpers ---
     const getColorStyle = (color: GameColor) => {
         switch(color) {
-            case 'red': return { bg: 'bg-red-500', border: 'border-red-200' };
-            case 'blue': return { bg: 'bg-blue-500', border: 'border-blue-200' };
-            case 'yellow': return { bg: 'bg-yellow-400', border: 'border-yellow-200' };
-            case 'green': return { bg: 'bg-green-500', border: 'border-green-200' };
-            case 'black': return { bg: 'bg-slate-900', border: 'border-slate-800' };
-            case 'white': return { bg: 'bg-white', border: 'border-slate-300' };
-            default: return { bg: 'bg-slate-500', border: 'border-slate-200' };
+            case 'red': return { bg: 'bg-red-500', border: 'border-red-200', text: 'text-red-600', light: 'bg-red-50' };
+            case 'blue': return { bg: 'bg-blue-500', border: 'border-blue-200', text: 'text-blue-600', light: 'bg-blue-50' };
+            case 'yellow': return { bg: 'bg-yellow-400', border: 'border-yellow-200', text: 'text-yellow-600', light: 'bg-yellow-50' };
+            case 'green': return { bg: 'bg-green-500', border: 'border-green-200', text: 'text-green-600', light: 'bg-green-50' };
+            case 'black': return { bg: 'bg-slate-900', border: 'border-slate-800', text: 'text-slate-900', light: 'bg-slate-100' };
+            case 'white': return { bg: 'bg-white', border: 'border-slate-300', text: 'text-slate-600', light: 'bg-white' };
+            default: return { bg: 'bg-slate-500', border: 'border-slate-200', text: 'text-slate-600', light: 'bg-slate-50' };
         }
     };
 
-    // Calculate positions for players in a circle
-    const getPlayerPosition = (index: number, total: number) => {
-        const radius = 130; // Distance from center
-        const angle = (index * (360 / total)) - 90; // Start from top
-        const radian = (angle * Math.PI) / 180;
-        return {
-            left: `calc(50% + ${Math.cos(radian) * radius}px)`,
-            top: `calc(50% + ${Math.sin(radian) * radius}px)`,
-        };
-    };
-
-    const buttonLabel = useMemo(() => {
-        if (showReset) return "Reiniciar Destinos";
-        if (isCountingDown) return `${countdownValue}`;
-        return `Mostrar Destinos - ${mode === 'Public' ? 'Público' : 'Secreto'}`;
-    }, [showReset, isCountingDown, countdownValue, mode]);
+    const winnerPlayer = players.find(p => p.id === winnerId);
+    // Candidates are non-excluded players
+    const candidatesCount = players.filter(p => !excludedIds.includes(p.id)).length;
+    // For Secret Mode: Enable "Revelar Verdad" only when all CANDIDATES have seen their card
+    const allCandidatesSeen = players
+        .filter(p => !excludedIds.includes(p.id))
+        .every(p => seenPlayerIds.includes(p.id));
 
     return (
-        <div className="bg-[#f8f9fc] min-h-screen font-display flex flex-col overflow-hidden">
+        <div className="flex h-screen w-full flex-col bg-[#f8fafc]">
             <Header title="Selector de Destinos" actionIcon="settings" />
-            
-            {/* Top Controls */}
-            <div className="pt-6 px-6 z-20">
-                <p className="text-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">¿Quieres que el Destino sea público o secreto?</p>
-                <div className="flex h-10 w-full max-w-xs mx-auto items-center justify-center rounded-xl bg-white p-1 shadow-sm border border-slate-200">
-                    <button 
-                        onClick={() => handleModeSwitch('Public')} 
-                        disabled={isCountingDown}
-                        className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 transition-all duration-300 ${isCountingDown ? 'opacity-50 cursor-not-allowed' : ''} ${mode==='Public' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:bg-slate-50'}`}
-                    >
-                        <span className="truncate text-sm font-bold tracking-wide">Público</span>
-                    </button>
-                    <button 
-                        onClick={() => handleModeSwitch('Secret')} 
-                        disabled={isCountingDown}
-                        className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 transition-all duration-300 ${isCountingDown ? 'opacity-50 cursor-not-allowed' : ''} ${mode==='Secret' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:bg-slate-50'}`}
-                    >
-                        <span className="truncate text-sm font-bold tracking-wide">Secreto</span>
-                    </button>
+
+            {/* --- TOP: Player Filter --- */}
+            <div className="bg-white border-b border-slate-100 pb-3 pt-4 px-4 shadow-sm z-20">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide">¿QUIÉNES PARTICIPAN?</h3>
+                    <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">{candidatesCount} Jugadores</span>
+                </div>
+                {/* Horizontal Scrolling: "w-max mx-auto" centers small content within overflow, but allows scrolling for large */}
+                <div className="overflow-x-auto no-scrollbar pb-1">
+                    <div className="flex gap-3 px-4 w-max mx-auto">
+                        {players.map(p => {
+                            const isExcluded = excludedIds.includes(p.id);
+                            const style = getColorStyle(p.color);
+                            return (
+                                <button 
+                                    key={p.id}
+                                    onClick={() => toggleExclusion(p.id)}
+                                    disabled={gameState !== 'IDLE'}
+                                    className={`relative flex flex-col items-center gap-1.5 min-w-[60px] transition-all ${isExcluded ? 'opacity-60 grayscale' : 'opacity-100'} ${gameState !== 'IDLE' ? 'pointer-events-none' : 'active:scale-95'}`}
+                                >
+                                    <div className={`size-12 rounded-full ${style.bg} border-2 ${style.border} flex items-center justify-center shadow-sm relative`}>
+                                        <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
+                                        {isExcluded && (
+                                            <div className="absolute top-1/2 left-1/2 w-[140%] h-[2px] bg-slate-600 -translate-x-1/2 -translate-y-1/2 rotate-[-45deg] z-20 shadow-sm border border-white/50"></div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-600 truncate w-full text-center">{p.name}</span>
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
 
-            <main className="relative flex-1 flex flex-col items-center justify-center w-full max-w-lg mx-auto overflow-hidden">
-                
-                {/* Radial Layout */}
-                <div className="relative w-[340px] h-[340px] flex items-center justify-center mt-[-40px]">
-                     {/* Center Button */}
-                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <button 
-                            onClick={handleAction}
-                            disabled={isCountingDown}
-                            className={`relative group w-40 h-40 rounded-full flex items-center justify-center shadow-[0_15px_35px_-5px_rgba(79,44,224,0.35)] transition-all duration-200 ring-8 ring-white/50 backdrop-blur-sm 
-                                ${isCountingDown 
-                                    ? 'bg-primary opacity-50 cursor-not-allowed scale-95 shadow-none ring-primary/30' 
-                                    : 'bg-gradient-to-br from-[#6345e8] to-[#330df2] active:scale-95'
-                                }
-                            `}
-                        >
-                            <div className="relative z-10 flex flex-col items-center justify-center text-center gap-1 p-2">
-                                 {!isCountingDown && (
-                                     <div className="bg-white/10 p-3 rounded-full mb-1 backdrop-blur-md border border-white/20 shadow-lg">
-                                        <span className="material-symbols-outlined text-3xl text-white">
-                                            {showReset ? 'replay' : 'auto_awesome'}
-                                        </span>
-                                     </div>
-                                 )}
-                                 <span className={`font-black uppercase leading-tight tracking-wider text-white ${isCountingDown ? 'text-6xl' : 'text-xs'}`}>
-                                    {buttonLabel}
-                                 </span>
-                            </div>
-                        </button>
-                     </div>
-
-                     {/* Players */}
-                     {players.map((p, i) => {
-                         const pos = getPlayerPosition(i, players.length);
-                         const style = getColorStyle(p.color);
-                         const isExcluded = excludedPlayers.includes(p.id);
-                         const isWinner = winnerId === p.id;
-                         const hasSeen = seenPlayers.includes(p.id);
-                         const showSecretEye = isRevealed && mode === 'Secret' && !isExcluded && !hasSeen;
-                         const playerIcon = mode === 'Secret' ? 'visibility' : 'face';
-                         
-                         return (
-                            <div 
-                                key={p.id}
-                                onClick={() => toggleExclusion(p.id)}
-                                className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 transition-all duration-300 z-30
-                                    ${isExcluded ? 'opacity-40 grayscale scale-95' : 'opacity-100'} 
-                                    ${!isCountingDown && !isRevealed ? 'cursor-pointer active:scale-95 hover:scale-105' : ''}
-                                `}
-                                style={{ left: pos.left, top: pos.top }}
-                            >
-                                <div className="relative z-10">
-                                    <div className={`relative size-14 rounded-full ${style.bg} border-2 ${style.border} shadow-md flex items-center justify-center transition-all overflow-hidden`}>
-                                        <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>{playerIcon}</span>
-                                        
-                                        {/* SEEN Diagonal Line Overlay */}
-                                        {hasSeen && mode === 'Secret' && (
-                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-                                                <div className="w-full h-1 bg-white/80 rotate-45 transform"></div>
-                                                </div>
-                                        )}
-
-                                        {/* SECRET MODE INTERACTION LAYER */}
-                                        {showSecretEye && (
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSecretCheck(p);
-                                                }}
-                                                className="absolute inset-0 z-20 w-full h-full rounded-full cursor-pointer ring-2 ring-white animate-pulse"
-                                            >
-                                                {/* No icon needed here, the underlying icon is already an eye */}
-                                            </button>
-                                        )}
-                                    </div>
-                                    
-                                    {/* PUBLIC RESULT: Result Bubble */}
-                                    {isRevealed && mode === 'Public' && !isExcluded && (
-                                        <div className={`absolute -top-4 -right-4 px-2 py-0.5 rounded-lg border-2 shadow-sm text-[10px] font-black uppercase tracking-wider ${isWinner ? 'bg-green-500 border-green-600 text-white z-30 scale-125 shadow-[0_0_15px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-white border-slate-200 text-slate-600 z-20'}`}>
-                                            {isWinner ? 'SÍ' : 'NO'}
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                <span className={`text-[10px] font-bold bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-slate-100 shadow-sm truncate max-w-[80px] ${isWinner && isRevealed && mode === 'Public' ? 'text-primary' : 'text-slate-600'}`}>{p.name}</span>
-                            </div>
-                         );
-                     })}
-                </div>
-
-                 <div className="w-[90%] rounded-xl bg-white border border-slate-200 shadow-lg shadow-primary/5 p-4 relative overflow-hidden mt-4 mx-auto mb-6">
-                     <div className="flex flex-col gap-2 relative z-10 text-center">
-                        <div className="flex items-center justify-center gap-2 text-primary">
-                            <span className="material-symbols-outlined text-[20px]">info</span>
-                            <span className="text-xs font-bold uppercase tracking-wider">{mode === 'Public' ? 'Modo Público' : 'Modo Secreto'}</span>
-                        </div>
-                        <p className="typo-body text-xs text-slate-500">
-                            {mode === 'Public' 
-                                ? "Toca a los jugadores para excluirlos. El oráculo elegirá visiblemente a uno." 
-                                : "Pasa el dispositivo. Cada jugador descubrirá su destino en privado pulsando el ojo."}
-                        </p>
-                     </div>
+            {/* --- MIDDLE: Mode Switcher --- */}
+            <div className="px-6 py-4">
+                 <div className="flex bg-slate-100 p-1 rounded-xl relative isolate">
+                     <button 
+                        onClick={() => handleSwitchMode('PUBLIC')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all 
+                        ${mode === 'PUBLIC' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'} 
+                        ${pendingSwitchMode === 'PUBLIC' ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-300 relative z-10' : ''}`}
+                     >
+                         {pendingSwitchMode === 'PUBLIC' ? '¿Confirmar?' : 'Público'}
+                     </button>
+                     <button 
+                        onClick={() => handleSwitchMode('SECRET')}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all 
+                        ${mode === 'SECRET' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'} 
+                        ${pendingSwitchMode === 'SECRET' ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-300 relative z-10' : ''}`}
+                     >
+                         {pendingSwitchMode === 'SECRET' ? '¿Confirmar?' : 'Secreto'}
+                     </button>
                  </div>
-            </main>
+                 <p className="text-center text-xs text-slate-400 mt-2">
+                     {mode === 'PUBLIC' ? 'El resultado será visible para todos inmediatamente.' : 'Cada jugador consultará su destino en privado.'}
+                 </p>
+            </div>
 
-            {/* Secret Result Modal */}
-            {modalPlayer && (
+            {/* --- MAIN CONTENT AREA --- */}
+            <div className="flex-1 px-4 pb-6 overflow-hidden flex flex-col items-center justify-center">
+                
+                {/* IDLE STATE */}
+                {gameState === 'IDLE' && (
+                    <div className="w-full max-w-sm animate-float">
+                        <Button 
+                            fullWidth 
+                            onClick={startSelection} 
+                            disabled={candidatesCount === 0}
+                            className="h-24 text-xl shadow-xl shadow-primary/20"
+                            icon="auto_awesome"
+                        >
+                            Consultar Destino - {mode === 'PUBLIC' ? 'Público' : 'Secreto'}
+                        </Button>
+                    </div>
+                )}
+
+                {/* PUBLIC RESULT STATE */}
+                {mode === 'PUBLIC' && gameState === 'RESULT' && winnerPlayer && (
+                    <div className="w-full max-w-xs flex flex-col items-center">
+                        <div className="w-full bg-white rounded-3xl shadow-xl border border-slate-100 p-6 flex flex-col items-center text-center animate-bounce-in relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent z-0"></div>
+                            <div className="relative z-10 w-full">
+                                <div className="size-32 rounded-full border-8 border-white shadow-lg mb-6 flex items-center justify-center bg-slate-100 mx-auto">
+                                    <span className="material-symbols-outlined text-7xl text-slate-400">location_on</span>
+                                </div>
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">El Destino Señala a</h3>
+                                <h2 className="typo-h1 text-slate-900 mb-2">{winnerPlayer.name}</h2>
+                                {candidatesCount === 1 && (
+                                    <p className="text-xs text-slate-400 italic mb-4 bg-slate-50 px-3 py-2 rounded-lg">
+                                        (Bueno... eras el único participando 🤷‍♂️)
+                                    </p>
+                                )}
+                                <Button 
+                                    fullWidth 
+                                    onClick={resetGame} 
+                                    className={`h-16 bg-slate-900 text-white hover:bg-slate-800 shadow-lg ${resetLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={resetLocked}
+                                >
+                                    {resetLocked ? 'Espera...' : 'Reiniciar Destinos'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SECRET PHASE STATE */}
+                {mode === 'SECRET' && gameState === 'SECRET_PHASE' && (
+                    <div className="w-full h-full flex flex-col">
+                         <div className="flex-1 grid grid-cols-2 gap-3 overflow-y-auto content-start pb-24">
+                             {players.map(p => {
+                                 const isExcluded = excludedIds.includes(p.id);
+                                 if (isExcluded) return null; // Don't show excluded cards
+                                 
+                                 const style = getColorStyle(p.color);
+                                 const hasSeen = seenPlayerIds.includes(p.id);
+                                 
+                                 // Card State Logic
+                                 // If seen: Greyed out, Locked.
+                                 // If not seen: Colored, Clickable.
+                                 
+                                 if (hasSeen) {
+                                     return (
+                                        <div key={p.id} className="bg-slate-100 rounded-xl border border-slate-200 p-4 flex flex-col items-center justify-center gap-2 opacity-60 h-32">
+                                            <span className="material-symbols-outlined text-slate-400 text-3xl">lock</span>
+                                            <span className="font-bold text-slate-500 text-sm">Visto</span>
+                                        </div>
+                                     )
+                                 }
+
+                                 return (
+                                     <button 
+                                        key={p.id}
+                                        onClick={() => handleSecretCardClick(p)}
+                                        className={`relative rounded-xl shadow-sm border-2 p-4 flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform h-32 ${style.bg} ${style.border}`}
+                                     >
+                                         <div className={`size-12 rounded-full flex items-center justify-center mb-1 backdrop-blur-sm ${p.color === 'white' ? 'bg-black/10 text-slate-900' : 'bg-white/20 text-white'}`}>
+                                             <span className="material-symbols-outlined text-2xl">visibility</span>
+                                         </div>
+                                         <span className={`font-bold text-sm ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>Soy {p.name}</span>
+                                     </button>
+                                 )
+                             })}
+                         </div>
+
+                         {/* Reset/Finish Button Area */}
+                         <div className="absolute bottom-6 left-0 right-0 flex justify-center px-6">
+                            <Button 
+                                fullWidth 
+                                onClick={resetGame}
+                                disabled={!allCandidatesSeen}
+                                className={allCandidatesSeen ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-300 shadow-none'}
+                            >
+                                {allCandidatesSeen ? 'Reiniciar Destinos' : 'Faltan jugadores por ver'}
+                            </Button>
+                         </div>
+                    </div>
+                )}
+            </div>
+
+            {/* SECRET MODAL (The "Peek") */}
+            {secretModalPlayer && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fade-in"></div>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-8 items-center text-center animate-float">
-                        <h3 className="typo-caption text-slate-400 mb-2">Destino de {modalPlayer.name}</h3>
+                        <h3 className="typo-caption text-slate-400 mb-4">Destino de {secretModalPlayer.name}</h3>
                         
-                        <div className={`size-32 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 ${modalPlayer.id === winnerId ? 'bg-green-100 border-green-200 text-green-600' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
-                            <span className="font-black text-5xl tracking-tighter relative z-10">
-                                {modalPlayer.id === winnerId ? 'SÍ' : 'NO'}
-                            </span>
+                        <div className={`size-40 rounded-full flex items-center justify-center mb-6 shadow-xl border-8 ${secretModalPlayer.id === winnerId ? 'bg-slate-100 border-slate-200 text-slate-800' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                            {secretModalPlayer.id === winnerId ? (
+                                // Winner text: SÍ
+                                <span className="font-black text-6xl tracking-tighter">SÍ</span>
+                            ) : (
+                                // Loser text: NO
+                                <span className="font-black text-6xl tracking-tighter">NO</span>
+                            )}
                         </div>
 
-                        <p className="text-sm text-slate-500 mb-8 leading-relaxed">
-                            {modalPlayer.id === winnerId 
-                                ? "¡El destino te ha elegido! Asume la responsabilidad."
-                                : "Has sido salvado por esta vez. Continúa jugando."}
+                        <p className="text-sm text-slate-500 mb-4 leading-relaxed px-4">
+                            {secretModalPlayer.id === winnerId 
+                                ? "El destino te ha seleccionado."
+                                : "No has sido seleccionado."}
                         </p>
 
-                        <Button fullWidth onClick={confirmSecretView} className={modalPlayer.id === winnerId ? 'bg-green-500 shadow-green-500/30' : 'bg-slate-800'}>
-                            Aceptar
+                        {candidatesCount === 1 && (
+                            <p className="text-xs text-slate-400 italic mb-8 bg-slate-50 px-3 py-2 rounded-lg">
+                                (Bueno... eras el único participando 🤷‍♂️)
+                            </p>
+                        )}
+
+                        <Button fullWidth onClick={closeSecretModal} className="bg-slate-900 mt-2">
+                            Entendido
                         </Button>
                     </div>
                 </div>
             )}
         </div>
-    )
-}
+    );
+};

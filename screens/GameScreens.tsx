@@ -6,28 +6,13 @@ import { Player, GameColor } from '../types';
 // --- Game Session (Main Hub) ---
 export const GameSessionScreen: React.FC = () => {
     const navigate = useNavigate();
-    const [hasPlayers, setHasPlayers] = useState(false);
-    const [showEndGameModal, setShowEndGameModal] = useState(false);
-
-    useEffect(() => {
-        const storedPlayers = localStorage.getItem('game_players');
-        if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
-            setHasPlayers(true);
-        } else {
-            setHasPlayers(false);
-        }
-    }, []);
+    
+    // Logic simplification: We don't check for players to disable buttons anymore
+    // because "Skip Registration" now creates default players, and Tools have fallbacks.
 
     const handleEndGameClick = () => {
-        if (hasPlayers) {
-            navigate('/calculator');
-        } else {
-            setShowEndGameModal(true);
-        }
-    };
-
-    const handleExitGame = () => {
-        navigate('/');
+        // Direct navigation to calculator (which leads to leaderboard)
+        navigate('/calculator');
     };
 
     return (
@@ -75,25 +60,17 @@ export const GameSessionScreen: React.FC = () => {
                          {icon: 'map', color: 'amber', label: 'Destinos', path: '/destinies-public'},
                          {icon: 'menu_book', color: 'pink', label: 'Bitácora', path: '/victory-log'},
                      ].map((t, i) => {
-                         // Disable Victory Log if no players are registered
-                         const isDisabled = t.path === '/victory-log' && !hasPlayers;
                          return (
                              <button 
                                 key={i} 
-                                onClick={() => !isDisabled && navigate(t.path)} 
-                                disabled={isDisabled}
-                                className={`flex flex-col items-center justify-center bg-white rounded-2xl p-3 h-32 shadow-sm border border-slate-200 transition-all 
-                                    ${isDisabled 
-                                        ? 'opacity-50 grayscale cursor-not-allowed border-dashed' 
-                                        : 'hover:border-primary/50 active:scale-95'
-                                    }`}
+                                onClick={() => navigate(t.path)} 
+                                className={`flex flex-col items-center justify-center bg-white rounded-2xl p-3 h-32 shadow-sm border border-slate-200 transition-all hover:border-primary/50 active:scale-95`}
                              >
                                 <div className={`size-12 rounded-full bg-${t.color}-50 text-${t.color}-600 flex items-center justify-center mb-3`}>
                                     <span className="material-symbols-outlined">{t.icon}</span>
                                 </div>
                                 <span className="text-xs font-bold text-slate-700 text-center flex flex-col items-center">
                                     {t.label}
-                                    {isDisabled && <span className="text-[9px] text-slate-400 uppercase mt-0.5 font-normal">(Requiere Registro)</span>}
                                 </span>
                              </button>
                          )
@@ -109,38 +86,14 @@ export const GameSessionScreen: React.FC = () => {
                 >
                     <div className="flex flex-col items-center leading-none">
                         <span className="text-lg font-bold">Terminar Partida</span>
-                        {hasPlayers && (
-                            <span className="text-[10px] font-medium opacity-80 mt-1 tracking-wide">y Descubrir al Ganador</span>
-                        )}
                     </div>
                 </Button>
             </div>
-
-            {/* End Game Modal for Skipped Registration */}
-            {showEndGameModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEndGameModal(false)}></div>
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-8 items-center text-center animate-float">
-                        <div className="w-16 h-16 bg-green-50 text-green-600 border border-green-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
-                             <span className="material-symbols-outlined text-4xl">celebration</span>
-                        </div>
-                        <h3 className="typo-h2 mb-3 text-slate-900">¡Gracias por Jugar!</h3>
-                        <p className="text-slate-500 mb-8 leading-relaxed font-medium">
-                            Como jugaste en modo libre, no se ha <strong>calculado automáticamente el podio</strong>.
-                            <br/><br/>
-                            <span className="text-sm opacity-80">¡Registra a los jugadores la próxima vez para desbloquear la Bitácora y la Calculadora!</span>
-                        </p>
-                        <Button fullWidth onClick={handleExitGame}>
-                            Salir al Inicio
-                        </Button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
 
-// --- Minigame Selector --- (No changes, same as before)
+// --- Minigame Selector ---
 export const MinigameSelectorScreen: React.FC = () => {
     return (
         <div className="flex min-h-screen flex-col bg-background">
@@ -177,7 +130,7 @@ export const MinigameSelectorScreen: React.FC = () => {
     );
 };
 
-// --- Oracle Screen --- (No changes, same as before)
+// --- Oracle Screen ---
 export const OracleScreen: React.FC = () => {
     return (
         <div className="flex min-h-screen flex-col bg-background">
@@ -247,29 +200,44 @@ export const VictoryLogScreen: React.FC = () => {
         const storedLog = localStorage.getItem('game_log');
         const storedHistory = localStorage.getItem('game_minigame_history');
 
-        if (storedPlayers) {
-            const parsedPlayers = JSON.parse(storedPlayers);
-            setPlayers(parsedPlayers);
-            
-            if (storedLog) {
-                const parsedLog = JSON.parse(storedLog);
-                // Backward compatibility if old 'decisions' exists, move to mentions.strategy
-                if (parsedLog.decisions && !parsedLog.mentions) {
-                    parsedLog.mentions = { 'strategy': parsedLog.decisions };
-                }
-                setLog(parsedLog.mentions ? parsedLog : { minigames: {}, mentions: {} });
-            } else {
-                const initialLog = { minigames: {}, mentions: {} };
-                parsedPlayers.forEach((p: Player) => {
-                    // @ts-ignore
-                    initialLog.minigames[p.id] = 0;
-                });
-                setLog(initialLog);
-            }
+        let currentPlayers: Player[] = [];
 
-            if (storedHistory) {
-                setMinigameHistory(JSON.parse(storedHistory));
+        if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
+            currentPlayers = JSON.parse(storedPlayers);
+        } else {
+             // Fallback: Generate Default Players for Victory Log usage with random names
+            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
+            const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+
+            const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
+            currentPlayers = defaultColors.map((color, index) => ({
+                id: `def-${index}`,
+                name: shuffledPool[index], // Use random name
+                pact: 'Atenea',
+                color: color
+            }));
+        }
+        
+        setPlayers(currentPlayers);
+            
+        if (storedLog) {
+            const parsedLog = JSON.parse(storedLog);
+            // Backward compatibility if old 'decisions' exists, move to mentions.strategy
+            if (parsedLog.decisions && !parsedLog.mentions) {
+                parsedLog.mentions = { 'strategy': parsedLog.decisions };
             }
+            setLog(parsedLog.mentions ? parsedLog : { minigames: {}, mentions: {} });
+        } else {
+            const initialLog = { minigames: {}, mentions: {} };
+            currentPlayers.forEach((p: Player) => {
+                // @ts-ignore
+                initialLog.minigames[p.id] = 0;
+            });
+            setLog(initialLog);
+        }
+
+        if (storedHistory) {
+            setMinigameHistory(JSON.parse(storedHistory));
         }
     }, []);
 
