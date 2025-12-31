@@ -229,6 +229,9 @@ export const CalculatorScreen: React.FC = () => {
     // New States for Flow Control
     // Check if we are returning from Victory Log to show summary immediately
     const [showFinalSummary, setShowFinalSummary] = useState(location.state?.initialShowSummary || false);
+    
+    // State to track if we are editing a single player from the summary view
+    const [isEditingFromSummary, setIsEditingFromSummary] = useState(false);
 
     // Touch Handling State
     const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -331,6 +334,14 @@ export const CalculatorScreen: React.FC = () => {
     };
 
     const handleNextButton = () => {
+        // If we are in specific edit mode (from summary), return to summary
+        if (isEditingFromSummary) {
+            setShowFinalSummary(true);
+            setIsEditingFromSummary(false);
+            return;
+        }
+
+        // Normal flow
         if (currentPlayerIndex < players.length - 1) {
             setCurrentPlayerIndex(prev => prev + 1);
         } else {
@@ -340,6 +351,13 @@ export const CalculatorScreen: React.FC = () => {
     };
 
     const handleBackArrow = () => {
+        if (isEditingFromSummary) {
+            // If editing specific player, back goes to summary
+            setShowFinalSummary(true);
+            setIsEditingFromSummary(false);
+            return;
+        }
+
         if (showFinalSummary) {
             // Go back to input view, preserving all stats
             setShowFinalSummary(false);
@@ -352,6 +370,12 @@ export const CalculatorScreen: React.FC = () => {
 
         // Just go back to game hub
         navigate('/game');
+    };
+
+    const handleEditPlayerFromSummary = (index: number) => {
+        setCurrentPlayerIndex(index);
+        setIsEditingFromSummary(true);
+        setShowFinalSummary(false);
     };
 
     const handleFinalizeGame = () => {
@@ -392,16 +416,22 @@ export const CalculatorScreen: React.FC = () => {
     const minSwipeDistance = 50;
 
     const onTouchStart = (e: React.TouchEvent) => {
+        // Disable swipe if editing a single player from summary
+        if (isEditingFromSummary) return;
+
         setTouchEnd(null);
         setTouchStart(e.targetTouches[0].clientX);
     }
 
     const onTouchMove = (e: React.TouchEvent) => {
+        if (isEditingFromSummary) return;
         setTouchEnd(e.targetTouches[0].clientX);
     }
 
     const onTouchEnd = () => {
+        if (isEditingFromSummary) return;
         if (!touchStart || !touchEnd) return;
+        
         const distance = touchStart - touchEnd;
         const isLeftSwipe = distance > minSwipeDistance;
         const isRightSwipe = distance < -minSwipeDistance;
@@ -427,6 +457,18 @@ export const CalculatorScreen: React.FC = () => {
         }
     };
 
+    // Determine Main Button Props
+    let mainButtonText = "Siguiente";
+    let mainButtonIcon = "arrow_forward";
+
+    if (isEditingFromSummary) {
+        mainButtonText = "Guardar y Volver";
+        mainButtonIcon = "check";
+    } else if (currentPlayerIndex === players.length - 1) {
+        mainButtonText = "Finalizar";
+        mainButtonIcon = "list_alt";
+    }
+
     if (players.length === 0) return <div className="flex h-screen items-center justify-center">Cargando...</div>;
 
     const currentStats = stats[currentPlayer.id] || { relics: 0, plagues: 0, powers: 0 };
@@ -450,25 +492,30 @@ export const CalculatorScreen: React.FC = () => {
                         onTouchMove={onTouchMove}
                         onTouchEnd={onTouchEnd}
                     >
-                        {/* Dynamic Progress Dots */}
-                        <div className="flex w-full flex-row items-center justify-center gap-2 py-6">
-                            {players.map((p, idx) => {
-                                const pStyle = getColorStyle(p.color);
-                                const isActive = idx === currentPlayerIndex;
-                                return (
-                                    <div 
-                                        key={idx} 
-                                        className={`h-2.5 rounded-full transition-all duration-300 ${isActive ? `w-8 shadow-sm ${pStyle.dot}` : 'w-2.5 bg-gray-200'}`}
-                                    ></div>
-                                );
-                            })}
-                        </div>
+                        {/* Dynamic Progress Dots (Hide when editing from summary) */}
+                        {!isEditingFromSummary && (
+                            <div className="flex w-full flex-row items-center justify-center gap-2 py-6">
+                                {players.map((p, idx) => {
+                                    const pStyle = getColorStyle(p.color);
+                                    const isActive = idx === currentPlayerIndex;
+                                    return (
+                                        <div 
+                                            key={idx} 
+                                            className={`h-2.5 rounded-full transition-all duration-300 ${isActive ? `w-8 shadow-sm ${pStyle.dot}` : 'w-2.5 bg-gray-200'}`}
+                                        ></div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        
+                        {/* Spacing if dots are hidden */}
+                        {isEditingFromSummary && <div className="h-8"></div>}
 
                         {/* Player Header with Navigation Arrows */}
                         <div className="relative flex items-center justify-center px-2 mb-8 w-full max-w-lg mx-auto">
                             
-                            {/* Left Arrow (Previous) */}
-                            {currentPlayerIndex > 0 && (
+                            {/* Left Arrow (Previous) - Hide if editing from summary */}
+                            {!isEditingFromSummary && currentPlayerIndex > 0 && (
                                 <button
                                     onClick={goToPrevPlayer}
                                     className="absolute left-2 top-1/2 -translate-y-1/2 p-2 text-slate-300/60 hover:text-primary transition-colors z-20 animate-pulse active:scale-95"
@@ -486,14 +533,14 @@ export const CalculatorScreen: React.FC = () => {
                                     <div className={`absolute bottom-0 right-0 h-10 w-10 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${playerStyle.bg}`}>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-center justify-center animate-float">
-                                    <h1 className="typo-h1 text-center">Jugador {currentPlayerIndex + 1}: {currentPlayer.name}</h1>
+                                <div className="flex flex-col items-center justify-center">
+                                    <h1 className="typo-h1 text-center">{currentPlayer.name}</h1>
                                     <p className="typo-body font-medium text-center mt-1 text-slate-500">Ingresa sus resultados finales</p>
                                 </div>
                             </div>
 
-                            {/* Right Arrow (Next) */}
-                            {currentPlayerIndex < players.length - 1 && (
+                            {/* Right Arrow (Next) - Hide if editing from summary */}
+                            {!isEditingFromSummary && currentPlayerIndex < players.length - 1 && (
                                 <button
                                     onClick={goToNextPlayer}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-300/60 hover:text-primary transition-colors z-20 animate-pulse active:scale-95"
@@ -576,8 +623,8 @@ export const CalculatorScreen: React.FC = () => {
                         </div>
                     </div>
                     <BottomBar className="bg-white border-t border-slate-100">
-                        <Button fullWidth onClick={handleNextButton} icon={currentPlayerIndex === players.length - 1 ? "list_alt" : "arrow_forward"}>
-                            {currentPlayerIndex === players.length - 1 ? "Finalizar" : "Siguiente"}
+                        <Button fullWidth onClick={handleNextButton} icon={mainButtonIcon}>
+                            {mainButtonText}
                         </Button>
                     </BottomBar>
                 </>
@@ -593,16 +640,20 @@ export const CalculatorScreen: React.FC = () => {
                                 <div><span className="material-symbols-outlined text-lg align-middle text-yellow-500">bolt</span></div>
                             </div>
                             <div className="divide-y divide-slate-100">
-                                {players.map(p => {
+                                {players.map((p, index) => {
                                     const s = stats[p.id];
                                     const pStyle = getColorStyle(p.color);
                                     return (
-                                        <div key={p.id} className="grid grid-cols-5 gap-2 p-4 items-center text-center">
+                                        <div 
+                                            key={p.id} 
+                                            onClick={() => handleEditPlayerFromSummary(index)}
+                                            className="grid grid-cols-5 gap-2 p-4 items-center text-center cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition-colors group"
+                                        >
                                             <div className="col-span-2 flex items-center gap-3 text-left overflow-hidden">
                                                 <div className={`size-8 rounded-full ${pStyle.bg} flex items-center justify-center shrink-0 border border-black/10`}>
                                                     <span className={`material-symbols-outlined text-lg ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
                                                 </div>
-                                                <span className="font-bold text-slate-900 truncate text-sm">{p.name}</span>
+                                                <span className="font-bold text-slate-900 truncate text-sm group-hover:text-primary transition-colors">{p.name}</span>
                                             </div>
                                             <div className="font-bold text-slate-600">{s.relics}</div>
                                             <div className="font-bold text-slate-600">{s.plagues}</div>
@@ -612,8 +663,9 @@ export const CalculatorScreen: React.FC = () => {
                                 })}
                             </div>
                         </div>
-                        <p className="text-center text-slate-400 text-xs mt-4 px-4">
-                            Revisa que todo esté correcto antes de calcular al ganador.
+                        <p className="text-center text-slate-400 text-xs mt-4 px-4 leading-relaxed">
+                            Toca el nombre de un jugador para modificar sus puntos.<br/>
+                            Revisa que todo esté correcto antes de calcular.
                         </p>
                     </div>
                     <BottomBar className="bg-white border-t border-slate-100">
@@ -669,6 +721,11 @@ export const DestiniesScreen: React.FC = () => {
     const [secretModalPlayer, setSecretModalPlayer] = useState<Player | null>(null);
     const [seenPlayerIds, setSeenPlayerIds] = useState<string[]>([]);
 
+    // Scroll Fade State
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
     // Fisher-Yates Shuffle
     const shuffle = (array: string[]) => {
         let currentIndex = array.length, randomIndex;
@@ -679,6 +736,14 @@ export const DestiniesScreen: React.FC = () => {
         }
         return array;
     }
+
+    const checkScroll = () => {
+        if (scrollContainerRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+            setCanScrollLeft(scrollLeft > 0);
+            setCanScrollRight(Math.ceil(scrollLeft + clientWidth) < scrollWidth);
+        }
+    };
 
     useEffect(() => {
         const storedPlayers = localStorage.getItem('game_players');
@@ -699,6 +764,14 @@ export const DestiniesScreen: React.FC = () => {
             setPlayers(defaults);
         }
     }, []);
+
+    // Check scroll availability whenever players change or component mounts
+    useEffect(() => {
+        checkScroll();
+        // Fallback for initial render calculation issues
+        const timer = setTimeout(checkScroll, 100);
+        return () => clearTimeout(timer);
+    }, [players]);
 
     // --- Actions ---
 
@@ -823,30 +896,43 @@ export const DestiniesScreen: React.FC = () => {
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide">¿QUIÉNES PARTICIPAN?</h3>
                     <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">{candidatesCount} Jugadores</span>
                 </div>
-                {/* Horizontal Scrolling: "w-max mx-auto" centers small content within overflow, but allows scrolling for large */}
-                <div className="overflow-x-auto no-scrollbar pb-1">
-                    <div className="flex gap-3 px-4 w-max mx-auto">
-                        {players.map(p => {
-                            const isExcluded = excludedIds.includes(p.id);
-                            const style = getColorStyle(p.color);
-                            return (
-                                <button 
-                                    key={p.id}
-                                    onClick={() => toggleExclusion(p.id)}
-                                    disabled={gameState !== 'IDLE'}
-                                    className={`relative flex flex-col items-center gap-1.5 min-w-[60px] transition-all ${isExcluded ? 'opacity-60 grayscale' : 'opacity-100'} ${gameState !== 'IDLE' ? 'pointer-events-none' : 'active:scale-95'}`}
-                                >
-                                    <div className={`size-12 rounded-full ${style.bg} border-2 ${style.border} flex items-center justify-center shadow-sm relative`}>
-                                        <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
-                                        {isExcluded && (
-                                            <div className="absolute top-1/2 left-1/2 w-[140%] h-[2px] bg-slate-600 -translate-x-1/2 -translate-y-1/2 rotate-[-45deg] z-20 shadow-sm border border-white/50"></div>
-                                        )}
-                                    </div>
-                                    <span className="text-[10px] font-bold text-slate-600 truncate w-full text-center">{p.name}</span>
-                                </button>
-                            )
-                        })}
+                {/* Horizontal Scrolling Wrapper */}
+                <div className="relative">
+                    {/* Left Fade */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}></div>
+                    
+                    {/* Scroll Container */}
+                    <div 
+                        ref={scrollContainerRef}
+                        onScroll={checkScroll}
+                        className="overflow-x-auto no-scrollbar pb-1"
+                    >
+                        <div className="flex gap-3 px-2 w-max mx-auto">
+                            {players.map(p => {
+                                const isExcluded = excludedIds.includes(p.id);
+                                const style = getColorStyle(p.color);
+                                return (
+                                    <button 
+                                        key={p.id}
+                                        onClick={() => toggleExclusion(p.id)}
+                                        disabled={gameState !== 'IDLE'}
+                                        className={`relative flex flex-col items-center gap-1.5 min-w-[60px] transition-all ${isExcluded ? 'opacity-60 grayscale' : 'opacity-100'} ${gameState !== 'IDLE' ? 'pointer-events-none' : 'active:scale-95'}`}
+                                    >
+                                        <div className={`size-12 rounded-full ${style.bg} border-2 ${style.border} flex items-center justify-center shadow-sm relative`}>
+                                            <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
+                                            {isExcluded && (
+                                                <div className="absolute top-1/2 left-1/2 w-[140%] h-[2px] bg-slate-600 -translate-x-1/2 -translate-y-1/2 rotate-[-45deg] z-20 shadow-sm border border-white/50"></div>
+                                            )}
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-600 truncate w-full text-center">{p.name}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
                     </div>
+
+                    {/* Right Fade */}
+                    <div className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollRight ? 'opacity-100' : 'opacity-0'}`}></div>
                 </div>
             </div>
 

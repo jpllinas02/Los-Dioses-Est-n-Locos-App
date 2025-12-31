@@ -180,6 +180,9 @@ export const VictoryLogScreen: React.FC = () => {
     const location = useLocation();
     const [players, setPlayers] = useState<Player[]>([]);
     
+    // Check if we came from calculator
+    const isFromCalculator = location.state?.fromCalculator;
+
     // Core stats for Leaderboard compatibility
     // 'mentions' structure: { [category: string]: { [playerId: string]: number } }
     const [log, setLog] = useState<{minigames: Record<string, number>, mentions: Record<string, Record<string, number>>}>({ minigames: {}, mentions: {} });
@@ -264,7 +267,7 @@ export const VictoryLogScreen: React.FC = () => {
     }, [log, minigameHistory, players]);
 
     const handleBack = () => {
-        if (location.state?.fromCalculator) {
+        if (isFromCalculator) {
             // If coming from Calculator Summary, return there
             navigate('/calculator', { state: { initialShowSummary: true } });
         } else {
@@ -680,6 +683,19 @@ export const VictoryLogScreen: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Bottom Bar for Return to Summary */}
+            {isFromCalculator && (
+                <BottomBar className="bg-white border-t border-slate-100">
+                    <Button 
+                        fullWidth 
+                        onClick={() => navigate('/calculator', { state: { initialShowSummary: true } })} 
+                        icon="check"
+                    >
+                        Volver al Resumen
+                    </Button>
+                </BottomBar>
             )}
 
         </div>

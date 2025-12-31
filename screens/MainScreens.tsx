@@ -254,7 +254,7 @@ export const RegistrationScreen: React.FC = () => {
         localStorage.removeItem('game_minigame_history'); 
 
         // Generate Players based on SELECTED TotalPlayers with unique random names using Fisher-Yates
-        const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "El Capo", "Bebé", "Caos", "Osi", "Bicho", "Pulga", "Mole", "Cinco"];
+        const pool = ["Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi Casi", "Pro", "Bebé", "Caos", "Osi", "Bicho", "Pulga", "Mole", "Cinco", "'VIP'", "Admin", "¿Yo?", "Pie Grande", "Cálico"];
         const shuffledPool = shuffle([...pool]);
 
         const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
@@ -897,55 +897,55 @@ export const LeaderboardScreen: React.FC = () => {
         switch(color) {
             case 'red': return {
                 gradient: 'from-red-50', 
-                border: 'border-red-200', 
-                bgIcon: 'bg-red-100', 
-                textIcon: 'text-red-600',
-                textTitle: 'text-red-800',
-                badge: 'bg-red-100 text-red-700'
+                border: 'border-red-200 border-l-4 border-l-red-500', 
+                bgIcon: 'bg-red-500 shadow-md shadow-red-500/30', 
+                textIcon: 'text-white',
+                textTitle: 'text-red-900',
+                badge: 'bg-white border border-red-200 text-red-700'
             };
             case 'blue': return {
                 gradient: 'from-blue-50', 
-                border: 'border-blue-200', 
-                bgIcon: 'bg-blue-100', 
-                textIcon: 'text-blue-600',
-                textTitle: 'text-blue-800',
-                badge: 'bg-blue-100 text-blue-700'
+                border: 'border-blue-200 border-l-4 border-l-blue-500', 
+                bgIcon: 'bg-blue-500 shadow-md shadow-blue-500/30', 
+                textIcon: 'text-white',
+                textTitle: 'text-blue-900',
+                badge: 'bg-white border border-blue-200 text-blue-700'
             };
             case 'green': return {
                 gradient: 'from-green-50', 
-                border: 'border-green-200', 
-                bgIcon: 'bg-green-100', 
-                textIcon: 'text-green-600',
-                textTitle: 'text-green-800',
-                badge: 'bg-green-100 text-green-700'
+                border: 'border-green-200 border-l-4 border-l-green-500', 
+                bgIcon: 'bg-green-500 shadow-md shadow-green-500/30', 
+                textIcon: 'text-white',
+                textTitle: 'text-green-900',
+                badge: 'bg-white border border-green-200 text-green-700'
             };
             case 'yellow': return {
                 gradient: 'from-yellow-50', 
-                border: 'border-yellow-200', 
-                bgIcon: 'bg-yellow-100', 
-                textIcon: 'text-yellow-600',
+                border: 'border-yellow-200 border-l-4 border-l-yellow-400', 
+                bgIcon: 'bg-yellow-400 shadow-md shadow-yellow-400/30', 
+                textIcon: 'text-white',
                 textTitle: 'text-yellow-800',
-                badge: 'bg-yellow-100 text-yellow-700'
+                badge: 'bg-white border border-yellow-200 text-yellow-700'
             };
             case 'black': return {
                 gradient: 'from-slate-100', 
-                border: 'border-slate-300', 
-                bgIcon: 'bg-slate-200', 
-                textIcon: 'text-slate-700',
-                textTitle: 'text-slate-800',
-                badge: 'bg-slate-200 text-slate-800'
+                border: 'border-slate-300 border-l-4 border-l-slate-900', 
+                bgIcon: 'bg-slate-900 shadow-md shadow-slate-900/30', 
+                textIcon: 'text-white',
+                textTitle: 'text-slate-900',
+                badge: 'bg-white border border-slate-300 text-slate-800'
             };
             case 'white': return {
                 gradient: 'from-slate-50', 
-                border: 'border-slate-200', 
-                bgIcon: 'bg-white border border-slate-100', 
+                border: 'border-slate-200 border-l-4 border-l-slate-400', 
+                bgIcon: 'bg-white border border-slate-200', 
                 textIcon: 'text-slate-500', 
                 textTitle: 'text-slate-600',
-                badge: 'bg-slate-100 text-slate-600'
+                badge: 'bg-slate-50 border border-slate-200 text-slate-600'
             };
             default: return {
                 gradient: 'from-slate-50',
-                border: 'border-slate-100',
+                border: 'border-slate-100 border-l-4 border-l-slate-400',
                 bgIcon: 'bg-slate-100',
                 textIcon: 'text-slate-500',
                 textTitle: 'text-slate-600',

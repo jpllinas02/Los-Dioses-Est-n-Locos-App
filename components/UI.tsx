@@ -103,14 +103,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', icon, fullWidth = false, className = "", ...props }) => {
-    const baseStyles = "h-14 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none";
+    const baseStyles = "h-14 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none touch-manipulation";
     
+    // Switch from hover: to active: for mobile responsiveness without sticking
     const variants = {
-        primary: "bg-primary text-white shadow-[0_4px_15px_rgba(51,13,242,0.3)] hover:bg-primary-dark",
-        secondary: "bg-secondary text-white shadow-md hover:bg-amber-600",
-        danger: "bg-danger text-white shadow-[0_4px_15px_rgba(242,70,13,0.3)] hover:bg-red-700",
-        outline: "border-2 border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-        ghost: "bg-transparent text-slate-600 hover:bg-slate-100"
+        primary: "bg-primary text-white shadow-[0_4px_15px_rgba(51,13,242,0.3)] active:bg-primary-dark",
+        secondary: "bg-secondary text-white shadow-md active:bg-amber-600",
+        danger: "bg-danger text-white shadow-[0_4px_15px_rgba(242,70,13,0.3)] active:bg-red-700",
+        outline: "border-2 border-slate-200 bg-white text-slate-700 active:bg-slate-50",
+        ghost: "bg-transparent text-slate-600 active:bg-slate-100"
     };
 
     return (
