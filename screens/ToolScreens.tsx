@@ -230,6 +230,21 @@ export const CalculatorScreen: React.FC = () => {
     // Check if we are returning from Victory Log to show summary immediately
     const [showFinalSummary, setShowFinalSummary] = useState(location.state?.initialShowSummary || false);
 
+    // Touch Handling State
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+    // Fisher-Yates Shuffle
+    const shuffle = (array: string[]) => {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
     // Load players on mount
     useEffect(() => {
         const storedPlayers = localStorage.getItem('game_players');
@@ -250,8 +265,8 @@ export const CalculatorScreen: React.FC = () => {
             }
         } else {
              // Fallback: Generate Default Players if no data
-            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
-            const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "El Capo", "Bebé", "Caos", "Osi", "Bicho", "Pulga", "Mole", "Cinco"];
+            const shuffledPool = shuffle([...pool]);
             
             const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
             const defaults: Player[] = defaultColors.map((color, index) => ({
@@ -302,7 +317,20 @@ export const CalculatorScreen: React.FC = () => {
         }));
     };
 
-    const handleNext = () => {
+    // Navigation Logic
+    const goToNextPlayer = () => {
+        if (currentPlayerIndex < players.length - 1) {
+            setCurrentPlayerIndex(prev => prev + 1);
+        }
+    };
+
+    const goToPrevPlayer = () => {
+        if (currentPlayerIndex > 0) {
+            setCurrentPlayerIndex(prev => prev - 1);
+        }
+    };
+
+    const handleNextButton = () => {
         if (currentPlayerIndex < players.length - 1) {
             setCurrentPlayerIndex(prev => prev + 1);
         } else {
@@ -322,12 +350,8 @@ export const CalculatorScreen: React.FC = () => {
             return;
         }
 
-        if (currentPlayerIndex > 0) {
-            setCurrentPlayerIndex(prev => prev - 1);
-        } else {
-            // No confirmation, just go back to game hub
-            navigate('/game');
-        }
+        // Just go back to game hub
+        navigate('/game');
     };
 
     const handleFinalizeGame = () => {
@@ -364,6 +388,32 @@ export const CalculatorScreen: React.FC = () => {
         navigate('/leaderboard');
     };
 
+    // --- Touch Handlers ---
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+    }
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        setTouchEnd(e.targetTouches[0].clientX);
+    }
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchStart - touchEnd;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe && currentPlayerIndex < players.length - 1) {
+             goToNextPlayer();
+        }
+        if (isRightSwipe && currentPlayerIndex > 0) {
+             goToPrevPlayer();
+        }
+    }
+
     // Helper for styles based on color
     const getColorStyle = (color: GameColor) => {
         switch(color) {
@@ -394,7 +444,12 @@ export const CalculatorScreen: React.FC = () => {
             {!showFinalSummary ? (
                 // --- INPUT VIEW ---
                 <>
-                    <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+                    <div 
+                        className="flex-1 overflow-y-auto no-scrollbar pb-32"
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
+                    >
                         {/* Dynamic Progress Dots */}
                         <div className="flex w-full flex-row items-center justify-center gap-2 py-6">
                             {players.map((p, idx) => {
@@ -409,18 +464,44 @@ export const CalculatorScreen: React.FC = () => {
                             })}
                         </div>
 
-                        {/* Player Header */}
-                        <div className="flex flex-col items-center gap-5 px-6 mb-8">
-                            <div className={`relative h-32 w-32 bg-white flex items-center justify-center rounded-full border-[6px] shadow-lg transition-all duration-500 ${playerStyle.border}`}>
-                                <span className={`material-symbols-outlined text-7xl text-slate-800`}>face</span>
-                                {/* Player Color Badge */}
-                                <div className={`absolute bottom-0 right-0 h-10 w-10 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${playerStyle.bg}`}>
+                        {/* Player Header with Navigation Arrows */}
+                        <div className="relative flex items-center justify-center px-2 mb-8 w-full max-w-lg mx-auto">
+                            
+                            {/* Left Arrow (Previous) */}
+                            {currentPlayerIndex > 0 && (
+                                <button
+                                    onClick={goToPrevPlayer}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 text-slate-300/60 hover:text-primary transition-colors z-20 animate-pulse active:scale-95"
+                                    aria-label="Jugador Anterior"
+                                >
+                                    <span className="material-symbols-outlined text-6xl">chevron_left</span>
+                                </button>
+                            )}
+
+                            {/* Main Avatar Area */}
+                            <div className="flex flex-col items-center gap-5 z-10">
+                                <div className={`relative h-32 w-32 bg-white flex items-center justify-center rounded-full border-[6px] shadow-lg transition-all duration-500 ${playerStyle.border}`}>
+                                    <span className={`material-symbols-outlined text-7xl text-slate-800`}>face</span>
+                                    {/* Player Color Badge */}
+                                    <div className={`absolute bottom-0 right-0 h-10 w-10 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${playerStyle.bg}`}>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center justify-center animate-float">
+                                    <h1 className="typo-h1 text-center">Jugador {currentPlayerIndex + 1}: {currentPlayer.name}</h1>
+                                    <p className="typo-body font-medium text-center mt-1 text-slate-500">Ingresa sus resultados finales</p>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center justify-center animate-float">
-                                <h1 className="typo-h1 text-center">Jugador {currentPlayerIndex + 1}: {currentPlayer.name}</h1>
-                                <p className="typo-body font-medium text-center mt-1 text-slate-500">Ingresa sus resultados finales</p>
-                            </div>
+
+                            {/* Right Arrow (Next) */}
+                            {currentPlayerIndex < players.length - 1 && (
+                                <button
+                                    onClick={goToNextPlayer}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-300/60 hover:text-primary transition-colors z-20 animate-pulse active:scale-95"
+                                    aria-label="Siguiente Jugador"
+                                >
+                                    <span className="material-symbols-outlined text-6xl">chevron_right</span>
+                                </button>
+                            )}
                         </div>
 
                         {/* Input Items */}
@@ -495,7 +576,7 @@ export const CalculatorScreen: React.FC = () => {
                         </div>
                     </div>
                     <BottomBar className="bg-white border-t border-slate-100">
-                        <Button fullWidth onClick={handleNext} icon={currentPlayerIndex === players.length - 1 ? "list_alt" : "arrow_forward"}>
+                        <Button fullWidth onClick={handleNextButton} icon={currentPlayerIndex === players.length - 1 ? "list_alt" : "arrow_forward"}>
                             {currentPlayerIndex === players.length - 1 ? "Finalizar" : "Siguiente"}
                         </Button>
                     </BottomBar>
@@ -588,14 +669,25 @@ export const DestiniesScreen: React.FC = () => {
     const [secretModalPlayer, setSecretModalPlayer] = useState<Player | null>(null);
     const [seenPlayerIds, setSeenPlayerIds] = useState<string[]>([]);
 
+    // Fisher-Yates Shuffle
+    const shuffle = (array: string[]) => {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
     useEffect(() => {
         const storedPlayers = localStorage.getItem('game_players');
         if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
             setPlayers(JSON.parse(storedPlayers));
         } else {
             // Default players if none registered - use random names
-            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
-            const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "El Capo", "Bebé", "Caos", "Osi", "Bicho", "Pulga", "Mole", "Cinco"];
+            const shuffledPool = shuffle([...pool]);
 
             const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
             const defaults: Player[] = defaultColors.map((color, index) => ({

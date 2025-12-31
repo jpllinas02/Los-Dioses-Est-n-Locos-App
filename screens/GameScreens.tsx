@@ -194,6 +194,20 @@ export const VictoryLogScreen: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
     const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+    
+    // New UI State for Vote Feedback
+    const [justVotedId, setJustVotedId] = useState<string | null>(null);
+
+    // Fisher-Yates Shuffle
+    const shuffle = (array: string[]) => {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
 
     useEffect(() => {
         const storedPlayers = localStorage.getItem('game_players');
@@ -206,8 +220,8 @@ export const VictoryLogScreen: React.FC = () => {
             currentPlayers = JSON.parse(storedPlayers);
         } else {
              // Fallback: Generate Default Players for Victory Log usage with random names
-            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
-            const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+            const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "El Capo", "Bebé", "Caos", "Osi", "Bicho", "Pulga", "Mole", "Cinco"];
+            const shuffledPool = shuffle([...pool]);
 
             const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
             currentPlayers = defaultColors.map((color, index) => ({
@@ -362,21 +376,28 @@ export const VictoryLogScreen: React.FC = () => {
     const confirmVote = (winnerId: string) => {
         if (!activeCategory) return;
         
-        setLog(prev => {
-            const catVotes = prev.mentions[activeCategory] || {};
-            return {
-                ...prev,
-                mentions: {
-                    ...prev.mentions,
-                    [activeCategory]: {
-                        ...catVotes,
-                        [winnerId]: (catVotes[winnerId] || 0) + 1
+        // 1. Set Visual Feedback
+        setJustVotedId(winnerId);
+
+        // 2. Wait 700ms before saving and closing
+        setTimeout(() => {
+            setLog(prev => {
+                const catVotes = prev.mentions[activeCategory] || {};
+                return {
+                    ...prev,
+                    mentions: {
+                        ...prev.mentions,
+                        [activeCategory]: {
+                            ...catVotes,
+                            [winnerId]: (catVotes[winnerId] || 0) + 1
+                        }
                     }
                 }
-            }
-        });
-        setShowVoteModal(false);
-        setActiveCategory(null);
+            });
+            setShowVoteModal(false);
+            setActiveCategory(null);
+            setJustVotedId(null); // Reset
+        }, 700);
     };
 
     const clearCategoryVotes = () => {
@@ -549,12 +570,12 @@ export const VictoryLogScreen: React.FC = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMinigameModal(false)}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
-                        <div className="p-6 border-b border-slate-100 bg-white text-center">
+                        <div className="p-5 border-b border-slate-100 bg-white text-center">
                             <h3 className="typo-h3 text-slate-900">{editingRecordId ? 'Editar Resultado' : '¿Quién Ganó el Minijuego?'}</h3>
-                            <p className="text-sm text-slate-500 mt-1 font-medium">Selecciona los ganadores del Minijuego de la Ronda</p>
+                            <p className="text-sm text-slate-500 mt-1 font-medium">Selecciona los ganadores de la Ronda</p>
                         </div>
                         
-                        <div className="p-6 overflow-y-auto grid grid-cols-2 gap-4 bg-[#f8fafc]">
+                        <div className="p-5 overflow-y-auto grid grid-cols-2 gap-3 bg-[#f8fafc]">
                             {players.map(p => {
                                 const isSelected = selectedWinners.includes(p.id);
                                 const style = getColorStyle(p.color);
@@ -562,24 +583,24 @@ export const VictoryLogScreen: React.FC = () => {
                                     <button 
                                         key={p.id}
                                         onClick={() => toggleWinnerSelection(p.id)}
-                                        className={`relative p-4 rounded-2xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-3 aspect-[4/3] shadow-sm ${isSelected ? `border-action bg-white ring-2 ring-action/20` : 'border-white bg-white hover:border-slate-200'}`}
+                                        className={`relative p-3 rounded-2xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 h-28 shadow-sm ${isSelected ? `border-action bg-white ring-2 ring-action/20` : 'border-white bg-white hover:border-slate-200'}`}
                                     >
-                                        <div className={`size-14 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform ${isSelected ? 'scale-110' : ''}`}>
-                                            <span className={`material-symbols-outlined text-3xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
+                                        <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform ${isSelected ? 'scale-110' : ''}`}>
+                                            <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
                                         </div>
                                         <span className={`text-sm font-bold truncate w-full text-center ${isSelected ? 'text-action' : 'text-slate-700'}`}>{p.name}</span>
                                         
                                         {/* Corner checkmark similar to screenshot/registration */}
-                                        <div className={`absolute top-3 right-3 size-6 rounded-full flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-action text-white scale-100' : 'bg-slate-100 text-slate-300 scale-0 opacity-0'}`}>
-                                            <span className="material-symbols-outlined text-sm font-bold">check</span>
+                                        <div className={`absolute top-2 right-2 size-5 rounded-full flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-action text-white scale-100' : 'bg-slate-100 text-slate-300 scale-0 opacity-0'}`}>
+                                            <span className="material-symbols-outlined text-xs font-bold">check</span>
                                         </div>
                                     </button>
                                 )
                             })}
                         </div>
                         
-                        <div className="p-6 border-t border-slate-100 bg-white flex flex-col gap-3">
-                            <div className="flex items-center gap-4">
+                        <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
+                            <div className="flex items-center gap-3">
                                 <button 
                                     onClick={() => setShowMinigameModal(false)}
                                     className="px-4 py-3 font-bold text-slate-500 hover:text-slate-800 transition-colors"
@@ -609,33 +630,45 @@ export const VictoryLogScreen: React.FC = () => {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVoteModal(false)}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
-                         <div className="p-6 border-b border-slate-100 bg-white text-center">
+                         <div className="p-5 border-b border-slate-100 bg-white text-center">
                             <h3 className="typo-h3 text-slate-900">{getActiveCategoryModalTitle()}</h3>
                             <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wide">
                                 ({activeCategory ? getTotalVotesForCategory(activeCategory) : 0} {activeCategory && getTotalVotesForCategory(activeCategory) === 1 ? 'voto recibido' : 'votos recibidos'})
                             </p>
                             <p className="text-sm text-slate-500 mt-2 font-medium">Toca al jugador que merece este título</p>
                         </div>
-                        <div className="p-6 overflow-y-auto grid grid-cols-2 gap-4 bg-[#f8fafc]">
+                        <div className="p-5 overflow-y-auto grid grid-cols-2 gap-3 bg-[#f8fafc]">
                              {players.map(p => {
                                 const style = getColorStyle(p.color);
+                                const isJustVoted = justVotedId === p.id;
+                                
                                 return (
                                     <button 
                                         key={p.id}
                                         onClick={() => confirmVote(p.id)}
-                                        className="relative p-4 rounded-2xl border-2 border-white bg-white hover:border-slate-200 transition-all duration-200 flex flex-col items-center justify-center gap-3 aspect-[4/3] shadow-sm active:scale-95"
+                                        disabled={justVotedId !== null} // Disable all during feedback animation
+                                        className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-28 shadow-sm active:scale-95 overflow-hidden ${isJustVoted ? 'bg-green-50 border-green-500 scale-105' : 'border-white bg-white hover:border-slate-200'}`}
                                     >
-                                        <div className={`size-14 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md`}>
-                                            <span className={`material-symbols-outlined text-3xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
+                                        <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform ${isJustVoted ? 'scale-110' : ''}`}>
+                                            <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
                                         </div>
-                                        <div className="w-full text-center">
-                                            <span className="block text-sm font-bold truncate w-full text-slate-700">{p.name}</span>
+                                        <div className="w-full text-center relative z-10">
+                                            <span className={`block text-sm font-bold truncate w-full ${isJustVoted ? 'text-green-700' : 'text-slate-700'}`}>{isJustVoted ? '¡Voto!' : p.name}</span>
                                         </div>
+                                        
+                                        {/* Overlay Feedback Icon */}
+                                        {isJustVoted && (
+                                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                                                <div className="size-10 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg animate-pop-in">
+                                                    <span className="material-symbols-outlined text-2xl font-bold">check</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </button>
                                 )
                              })}
                         </div>
-                        <div className="p-6 border-t border-slate-100 bg-white flex flex-col gap-3">
+                        <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
                             <Button variant="outline" fullWidth onClick={() => setShowVoteModal(false)}>Cancelar</Button>
                             
                             <button 

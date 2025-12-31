@@ -117,6 +117,10 @@ export const RegistrationScreen: React.FC = () => {
     const [selectedPact, setSelectedPact] = useState<PactType | null>(null);
     const [selectedColor, setSelectedColor] = useState<GameColor>('red');
     
+    // Random Generation State
+    const [randomPlayers, setRandomPlayers] = useState<Player[]>([]);
+    const [showRandomSummary, setShowRandomSummary] = useState(false);
+
     // Specific Error States
     const [nameError, setNameError] = useState<string | null>(null);
     const [pactError, setPactError] = useState<string | null>(null);
@@ -155,6 +159,17 @@ export const RegistrationScreen: React.FC = () => {
     const currentPlayerNumber = registeredPlayers.length + 1;
     const isRegistrationComplete = registeredPlayers.length >= totalPlayers;
     const progressText = `${Math.min(currentPlayerNumber, totalPlayers)} / ${totalPlayers}`;
+
+    // Fisher-Yates Shuffle
+    const shuffle = (array: string[]) => {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
 
     useEffect(() => {
         if (contentRef.current) {
@@ -238,21 +253,31 @@ export const RegistrationScreen: React.FC = () => {
         localStorage.removeItem('game_log');   
         localStorage.removeItem('game_minigame_history'); 
 
-        // Generate 6 Default Players with unique random names
-        const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "Jota", "Bebé", "Caos", "Osi", "Bicho"];
-        const shuffledPool = [...pool].sort(() => 0.5 - Math.random());
+        // Generate Players based on SELECTED TotalPlayers with unique random names using Fisher-Yates
+        const pool = ["Paco", "Lola", "Coco", "Tete", "Nono", "Rorro", "Nadie", "Casi", "El Capo", "Bebé", "Caos", "Osi", "Bicho", "Pulga", "Mole", "Cinco"];
+        const shuffledPool = shuffle([...pool]);
 
         const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
-        const defaults: Player[] = defaultColors.map((color, index) => ({
+        
+        // Take only the number of colors needed for the selected player count
+        const selectedColors = defaultColors.slice(0, totalPlayers);
+
+        const defaults: Player[] = selectedColors.map((color, index) => ({
             id: `def-${index}`,
             name: shuffledPool[index], // Assign unique random name
-            pact: 'Atenea', // Default pact
+            pact: 'Longwang', // Default pact as per confirmation modal
             color: color
         }));
 
-        localStorage.setItem('game_players', JSON.stringify(defaults));
-        navigate('/game');
+        setRandomPlayers(defaults);
+        setShowSkipConfirm(false);
+        setShowRandomSummary(true);
     };
+
+    const handleConfirmRandomGame = () => {
+        localStorage.setItem('game_players', JSON.stringify(randomPlayers));
+        navigate('/game');
+    }
 
     const handleAddPlayerFromModal = () => {
         if (registeredPlayers.length < 6) {
@@ -332,16 +357,20 @@ export const RegistrationScreen: React.FC = () => {
                              ))}
                         </div>
                         
-                        <Button fullWidth onClick={() => setIsConfigConfirmed(true)} icon="check">
-                            Continuar y Registrar
-                        </Button>
-                        
-                        <button 
-                            onClick={() => setShowSkipConfirm(true)}
-                            className="w-full mt-4 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors py-2"
-                        >
-                            Omitir
-                        </button>
+                        <div className="flex flex-col gap-3 w-full">
+                            <Button fullWidth onClick={() => setIsConfigConfirmed(true)} icon="play_arrow">
+                                Registrar Jugadores
+                            </Button>
+                            
+                            <Button 
+                                fullWidth 
+                                variant="secondary"
+                                onClick={() => setShowSkipConfirm(true)}
+                                icon="shuffle"
+                            >
+                                Nombres Aleatorios
+                            </Button>
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -518,13 +547,50 @@ export const RegistrationScreen: React.FC = () => {
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowSkipConfirm(false)}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col p-6 items-center text-center animate-float">
                         <span className="material-symbols-outlined text-4xl text-amber-500 mb-2">warning</span>
-                        <h3 className="typo-h3 mb-2">¿Saltar Registro?</h3>
+                        <h3 className="typo-h3 mb-2">¿Usar Nombres Aleatorios?</h3>
                         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                             Se asignarán <strong>6 jugadores genéricos</strong> con colores predeterminados. Podrás usar la Bitácora y la Calculadora, pero no tendrás nombres personalizados.
+                             Se generarán <strong>{totalPlayers} perfiles</strong> al azar. Para el cálculo de puntaje, se asumirá el pacto <strong>Longwang</strong> para todos.
                         </p>
                         <div className="flex gap-3 w-full">
                             <button onClick={() => setShowSkipConfirm(false)} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Cancelar</button>
                             <button onClick={handleSkipRegistration} className="flex-1 py-3 rounded-xl bg-primary text-white font-bold">Continuar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Random Players Summary Modal */}
+            {showRandomSummary && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowRandomSummary(false)}></div>
+                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
+                        <div className="p-5 border-b border-slate-100 bg-white text-center">
+                             <span className="material-symbols-outlined text-4xl text-primary mb-2">shuffle</span>
+                            <h3 className="typo-h3">Equipo Aleatorio</h3>
+                            <p className="text-xs text-slate-500 mt-1">Estos son los jugadores generados</p>
+                        </div>
+                        <div className="p-4 overflow-y-auto bg-[#f8fafc]">
+                            <div className="space-y-3">
+                                {randomPlayers.map((p) => {
+                                    const style = getColorStyle(p.color);
+                                    return (
+                                        <div key={p.id} className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                                            <div className={`size-10 rounded-full flex items-center justify-center ${style.bg} border ${style.border}`}>
+                                                <span className={`material-symbols-outlined text-xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="font-bold text-slate-800">{p.name}</p>
+                                                <p className="text-[10px] uppercase font-bold text-slate-400">Pacto: Longwang</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
+                            <Button fullWidth onClick={handleConfirmRandomGame} icon="play_arrow">
+                                Jugar Ahora
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -760,10 +826,7 @@ export const LeaderboardScreen: React.FC = () => {
             player: bestPlayer,
             count: max,
             title: 'Maestro de Minijuegos',
-            icon: 'trophy',
-            colorClass: 'text-amber-600',
-            bgClass: 'bg-amber-100',
-            borderClass: 'border-amber-200'
+            icon: 'trophy'
         };
     };
 
@@ -771,10 +834,10 @@ export const LeaderboardScreen: React.FC = () => {
         if (!gameLog?.mentions || !results.length) return [];
         
         const categories = [
-             { id: 'strategy', title: 'El Más Estratégico', icon: 'psychology', colorClass: 'text-purple-600', bgClass: 'bg-purple-100', borderClass: 'border-purple-200', gradientClass: 'from-purple-50' },
-             { id: 'chaos', title: 'El Más Caótico', icon: 'local_fire_department', colorClass: 'text-red-600', bgClass: 'bg-red-100', borderClass: 'border-red-200', gradientClass: 'from-red-50' },
-             { id: 'fun', title: 'Quien Más Hizo Reír', icon: 'sentiment_very_satisfied', colorClass: 'text-amber-600', bgClass: 'bg-amber-100', borderClass: 'border-amber-200', gradientClass: 'from-amber-50' },
-             { id: 'liar', title: 'El Mejor Mentiroso', icon: 'theater_comedy', colorClass: 'text-slate-600', bgClass: 'bg-slate-100', borderClass: 'border-slate-200', gradientClass: 'from-slate-50' },
+             { id: 'strategy', title: 'El Más Estratégico', icon: 'psychology' },
+             { id: 'chaos', title: 'El Más Caótico', icon: 'local_fire_department' },
+             { id: 'fun', title: 'Quien Más Hizo Reír', icon: 'sentiment_very_satisfied' },
+             { id: 'liar', title: 'El Mejor Mentiroso', icon: 'theater_comedy' },
         ];
 
         const honors: any[] = [];
@@ -827,6 +890,67 @@ export const LeaderboardScreen: React.FC = () => {
             case 'black': return {bg: 'bg-slate-900', text: 'text-slate-900', border: 'border-slate-800'};
             case 'white': return {bg: 'bg-white', text: 'text-slate-600', border: 'border-slate-300'};
             default: return {bg: 'bg-slate-500', text: 'text-slate-600', border: 'border-slate-200'};
+        }
+    };
+
+    const getHonorColorStyles = (color: GameColor) => {
+        switch(color) {
+            case 'red': return {
+                gradient: 'from-red-50', 
+                border: 'border-red-200', 
+                bgIcon: 'bg-red-100', 
+                textIcon: 'text-red-600',
+                textTitle: 'text-red-800',
+                badge: 'bg-red-100 text-red-700'
+            };
+            case 'blue': return {
+                gradient: 'from-blue-50', 
+                border: 'border-blue-200', 
+                bgIcon: 'bg-blue-100', 
+                textIcon: 'text-blue-600',
+                textTitle: 'text-blue-800',
+                badge: 'bg-blue-100 text-blue-700'
+            };
+            case 'green': return {
+                gradient: 'from-green-50', 
+                border: 'border-green-200', 
+                bgIcon: 'bg-green-100', 
+                textIcon: 'text-green-600',
+                textTitle: 'text-green-800',
+                badge: 'bg-green-100 text-green-700'
+            };
+            case 'yellow': return {
+                gradient: 'from-yellow-50', 
+                border: 'border-yellow-200', 
+                bgIcon: 'bg-yellow-100', 
+                textIcon: 'text-yellow-600',
+                textTitle: 'text-yellow-800',
+                badge: 'bg-yellow-100 text-yellow-700'
+            };
+            case 'black': return {
+                gradient: 'from-slate-100', 
+                border: 'border-slate-300', 
+                bgIcon: 'bg-slate-200', 
+                textIcon: 'text-slate-700',
+                textTitle: 'text-slate-800',
+                badge: 'bg-slate-200 text-slate-800'
+            };
+            case 'white': return {
+                gradient: 'from-slate-50', 
+                border: 'border-slate-200', 
+                bgIcon: 'bg-white border border-slate-100', 
+                textIcon: 'text-slate-500', 
+                textTitle: 'text-slate-600',
+                badge: 'bg-slate-100 text-slate-600'
+            };
+            default: return {
+                gradient: 'from-slate-50',
+                border: 'border-slate-100',
+                bgIcon: 'bg-slate-100',
+                textIcon: 'text-slate-500',
+                textTitle: 'text-slate-600',
+                badge: 'bg-slate-100 text-slate-500'
+            };
         }
     };
 
@@ -947,28 +1071,28 @@ export const LeaderboardScreen: React.FC = () => {
                         <h3 className="text-center typo-h3 mb-4 text-slate-500">Menciones Honoríficas</h3>
                         <div className="grid gap-3">
                             {minigameHonor && (
-                                <div className="bg-gradient-to-r from-amber-50 to-white p-4 rounded-xl border border-amber-100 flex items-center gap-4 shadow-sm">
-                                    <div className="size-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                                        <span className="material-symbols-outlined text-2xl">trophy</span>
+                                <div className={`bg-gradient-to-r ${getHonorColorStyles(minigameHonor.player.color).gradient} to-white p-4 rounded-xl border ${getHonorColorStyles(minigameHonor.player.color).border} flex items-center gap-4 shadow-sm`}>
+                                    <div className={`size-12 rounded-full flex items-center justify-center shrink-0 ${getHonorColorStyles(minigameHonor.player.color).bgIcon} ${getHonorColorStyles(minigameHonor.player.color).textIcon}`}>
+                                        <span className="material-symbols-outlined text-2xl">{minigameHonor.icon}</span>
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-baseline">
-                                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">{minigameHonor.title}</p>
-                                            <span className="text-xs font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded">{minigameHonor.count} {minigameHonor.count === 1 ? 'Victoria' : 'Victorias'}</span>
+                                            <p className={`text-xs font-bold uppercase tracking-wider ${getHonorColorStyles(minigameHonor.player.color).textTitle}`}>{minigameHonor.title}</p>
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${getHonorColorStyles(minigameHonor.player.color).badge}`}>{minigameHonor.count} {minigameHonor.count === 1 ? 'Victoria' : 'Victorias'}</span>
                                         </div>
                                         <p className="font-bold text-slate-900 text-lg">{minigameHonor.player.name}</p>
                                     </div>
                                 </div>
                             )}
                             {categoryHonors.map((honor) => (
-                                <div key={honor.id} className={`bg-gradient-to-r ${honor.gradientClass} to-white p-4 rounded-xl border ${honor.borderClass} flex items-center gap-4 shadow-sm`}>
-                                    <div className={`size-12 rounded-full ${honor.bgClass} flex items-center justify-center ${honor.colorClass} shrink-0`}>
+                                <div key={honor.id} className={`bg-gradient-to-r ${getHonorColorStyles(honor.player.color).gradient} to-white p-4 rounded-xl border ${getHonorColorStyles(honor.player.color).border} flex items-center gap-4 shadow-sm`}>
+                                    <div className={`size-12 rounded-full flex items-center justify-center shrink-0 ${getHonorColorStyles(honor.player.color).bgIcon} ${getHonorColorStyles(honor.player.color).textIcon}`}>
                                         <span className="material-symbols-outlined text-2xl">{honor.icon}</span>
                                     </div>
                                     <div className="flex-1">
                                          <div className="flex justify-between items-baseline">
-                                            <p className={`text-xs font-bold uppercase tracking-wider ${honor.colorClass}`}>{honor.title}</p>
-                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${honor.bgClass} ${honor.colorClass}`}>{honor.count} {honor.count === 1 ? 'Voto' : 'Votos'}</span>
+                                            <p className={`text-xs font-bold uppercase tracking-wider ${getHonorColorStyles(honor.player.color).textTitle}`}>{honor.title}</p>
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${getHonorColorStyles(honor.player.color).badge}`}>{honor.count} {honor.count === 1 ? 'Voto' : 'Votos'}</span>
                                         </div>
                                         <p className="font-bold text-slate-900 text-lg">{honor.player.name}</p>
                                     </div>
