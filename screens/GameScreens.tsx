@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Header, Card, Button, BottomBar } from '../components/UI';
 import { Player, GameColor } from '../types';
@@ -94,37 +94,306 @@ export const GameSessionScreen: React.FC = () => {
 };
 
 // --- Minigame Selector ---
+
+type MinigameType = 'Individual' | 'Team' | 'Special';
+
+interface Minigame {
+    id: string;
+    title: string;
+    type: MinigameType;
+    description: string;
+}
+
+const MINIGAMES_DB: Minigame[] = [
+    // Individual (Red) - 6
+    { id: 'i1', type: 'Individual', title: 'Del Ahogado, El Sombrero', description: 'A la cuenta de tres, todos los jugadores deben contener la respiración. El primero en soltarla o inhalar pierde un turno y debe imitar a un pez fuera del agua durante 10 segundos.\n\nGanarán los 2 jugadores que más tiempo aguanten la respiración.' },
+    { id: 'i2', type: 'Individual', title: 'Miradas Incesantes', description: 'El jugador que espabile, pierde. Todos tienen que mirarse los unos a los otros. Se descalifica el que tape sus ojos.\n\nSi después de 30 segundos nadie pierde, todos pierden. Puede haber varios ganadores.' },
+    { id: 'i3', type: 'Individual', title: 'Sonrisas Contagiosas', description: 'El jugador que sonría, pierde. Todos los jugadores pueden decir y hacer lo que quieran para hacer reír a los demás, pero no pueden tocarlos y deben siempre mantener contacto visual.\n\nSi después de 30 segundos nadie pierde, todos pierden. Puede haber varios ganadores.' },
+    { id: 'i4', type: 'Individual', title: 'Balidos y Onomatopeyas', description: 'Por turnos, cada jugador debe imitar el sonido de un animal o inventárselo, pero primero debe repetir, en orden, los sonidos de los jugadores anteriores (máximo 5 segundos para recordar cada sonido).\n\nEl Minijuego termina cuando haya 2 perdedores o hayan pasado 5 minutos. Si nadie pierde, todos pierden.' },
+    { id: 'i5', type: 'Individual', title: 'Besos Ruidosos', description: 'Entre todos, por turnos, se contará desde el 1 hasta el 50. Cuando un jugador deba decir un múltiplo de 3, debe mandarle un beso a alguien en lugar de decir el número. Quien se equivoque o tarde 3 segundos, pierde.\n\nCuando haya tres o cinco jugadores, el beso es con múltiplos de 2; cuando haya seis, con múltiplos de 5.\n\nSi nadie pierde al llegar al 50, todos pierden.' },
+    { id: 'i6', type: 'Individual', title: '¡Preguntas Difíciles!', description: 'Cada jugador, por turnos, le hace una pregunta al de su derecha, quien debe responder con otra pregunta (ninguna afirmación) y dirigirla al siguiente jugador, manteniendo la cadena y el sentido entre las preguntas.\n\nPierde quien repita una pregunta, responda con algo que no sea una pregunta o tarde más de 5 segundos en responder. El Minijuego termina cuando dos jugadores pierdan.' },
+
+    // Team (Blue) - 5
+    { id: 't1', type: 'Team', title: 'Ni Finura Ni Motricidad', description: 'Juego en parejas. Por turnos, sigan la siguiente secuencia con sus manos:\n\nAplaudir - Chocar palma izquierda - Aplaudir - Chocar palma derecha - Aplaudir - Chocar dorso derecho - Aplaudir - Chocar dorso izquierdo - Aplaudir - Decir número de secuencia.\n\nLleven cuenta de cuántas secuencias terminan. Cada pareja tendrá 1 minuto para hacer cuantas secuencias pueda sin error. Gana la que haga más.' },
+    { id: 't2', type: 'Team', title: 'Tontos, Ciegos Y Mudos', description: 'Por turnos, un equipo le dice a un adversario un objeto (1 palabra) que se encuentre en una casa u oficina. Este jugador debe hacer que su equipo adivine el objeto (1 minuto máximo) haciendo mímicas sin decir palabras ni hacer formas de letras y con los ojos vendados o cerrados.\n\nEl equipo que adivine más rápido, gana. ¿Nadie adivina? Todos pierden.' },
+    { id: 't3', type: 'Team', title: 'No Apto Para Lentos', description: 'El Elegido define una temática. Por turnos, cada jugador tendrá 3 segundos para decir una palabra o expresión que esté relacionada con dicha temática. Quien falle, queda eliminado.\n\nCuando todos los integrantes de un equipo sean eliminados, ese equipo pierde y el Minijuego termina. El otro equipo gana, incluyendo sus jugadores eliminados.' },
+    { id: 't4', type: 'Team', title: '“El Arte Es Subjetivo”', description: 'Un integrante de cada equipo recibirá de un adversario una palabra (o nombre), y deberá dibujar pistas para que sus compañeros la adivinen en máximo 1 minuto. No se permite escribir letras ni números.\n\nLa palabra (o nombre) estará relacionada con una categoría que El Elegido escoja entre: Película, Persona, Animal, Oficio u Objeto. El equipo que adivine más rápido, gana.' },
+    { id: 't5', type: 'Team', title: 'O-C-I-T-Ó-A-C', description: 'Por turnos, un equipo le entrega a su rival una palabra relacionada con el mejor juego que existe (sí, Los Dioses Están Locos). Ese equipo tendrá 1 minuto para deletrear la palabra al revés, turnándose entre sus integrantes para decir una letra cada uno.\n\nLa palabra debe ser máximo de 10 letras. El equipo que lo deletree más rápido y sin errores, gana.' },
+
+    // Special (Green) - 7
+    { id: 's1', type: 'Special', title: 'Cuentas Traicioneras', description: 'Todos menos El Elegido seleccionarán a un Valiente que enfrentará al Elegido en un duelo. Los otros jugadores, por turnos y rápidamente, dirán un número entre 1 y 9, hasta decir seis números en total.\n\nAl decir el sexto dígito, el primer jugador entre El Elegido y El Valiente que diga el resultado de la suma de los números, gana. Tienen un solo intento. Si ambos se equivocan o tardan 5 segundos, ganan los otros.' },
+    { id: 's2', type: 'Special', title: 'Cinéfilos Unidos', description: 'El Elegido escribe en secreto el nombre de una película en español y selecciona a un adversario, a quien le dice el nombre de la película, para que este logre que sus compañeros no-elegidos adivinen la película en 1 minuto o menos. Este jugador podrá comunicar máximo 5 pistas (sin decir parte del nombre) y responder todas las preguntas que quiera.\n\nSi alguno adivina, todos ganan excepto El Elegido. Sino, gana El Elegido.' },
+    { id: 's3', type: 'Special', title: 'Mentir Es Pecado', description: 'El Elegido tomará 1 Reliquia y 1 Plaga que esconderá cada una en una mano, y dirá dónde está la Reliquia (puede mentir). Los demás deben elegir la mano donde crean que está la Reliquia.\n\nCada jugador que acierte recibe el Beneficio de la Victoria. El Elegido recibe un Beneficio de la Victoria por cada Jugador al que logre engañar.' },
+    { id: 's4', type: 'Special', title: 'Si Las Miradas Mataran...', description: 'Todos se sientan en círculo y se miran unos a otros. Un jugador, seleccionado en secreto con los Destinos, debe asesinar a un adversario guiñándole un ojo sin ser descubierto. Quien reciba el guiño, espera 3 segundos y muere dramáticamente sin revelar al culpable.\n\nTras dicha muerte, se hace una votación para sentenciar al culpable. Si sentencian a un inocente, gana el asesino. Si sentencian al asesino, ganan los inocentes.' },
+    { id: 's5', type: 'Special', title: 'Al Caído, Caerle', description: 'El Elegido pondrá a prueba el equilibrio de sus adversarios, los cuales deberán mantenerse de pie mientras que El Elegido, cada 5 segundos, da instrucciones de posición o movimiento para aumentar la dificultad. Quien pierda el equilibrio, queda descalificado.\n\nCada jugador que resista durante 1 minuto recibe el Beneficio de la Victoria. Por cada jugador descalificado, El Elegido gana un Beneficio de la Victoria.' },
+    { id: 's6', type: 'Special', title: '¿Quién Dibujó Esto?', description: 'El Elegido escribe en secreto una palabra relacionada con una categoría entre: Película, Persona, Animal, Oficio u Objeto. Otro jugador verá la palabra y dibujará con los ojos vendados pistas de esa palabra sin usar letras ni números. El resto tendrá 1 minuto para adivinar y escribir en secreto la palabra.\n\nCada uno que acierte gana el Beneficio de la Victoria. El dibujante gana un Beneficio por cada acierto. El Elegido gana un Beneficio por cada desacierto.' },
+    { id: 's7', type: 'Special', title: 'Danza De La Lluvia', description: 'El Elegido deberá crear una danza con 4 pasos distintos (cada uno con movimiento y sonido). Luego, el resto de jugadores deberá imitarla exactamente, de pie y en orden.\n\nQuien se niegue a danzar perderá 1 Reliquia (o no recibirá la siguiente). Si El Elegido se niega, quien cree la danza recibirá 1 Reliquia adicional.\n\nTodos los que hagan la danza ganan un Beneficio de la Victoria.' },
+];
+
 export const MinigameSelectorScreen: React.FC = () => {
+    const navigate = useNavigate();
+    
+    // State
+    const [filters, setFilters] = useState<MinigameType[]>(['Individual', 'Team', 'Special']);
+    const [isShuffling, setIsShuffling] = useState(false);
+    const [drawnCard, setDrawnCard] = useState<Minigame | null>(null);
+    const [tempDisplayCard, setTempDisplayCard] = useState<Minigame | null>(null); // For shuffle animation
+    
+    // Scroll Detection State
+    const descriptionRef = useRef<HTMLDivElement>(null);
+    const [canScrollDown, setCanScrollDown] = useState(false);
+    const [canScrollUp, setCanScrollUp] = useState(false);
+
+    // Derived
+    const availablePool = MINIGAMES_DB.filter(game => filters.includes(game.type));
+    const canDraw = availablePool.length > 0 && !isShuffling;
+
+    // Toggle Filter
+    const toggleFilter = (type: MinigameType) => {
+        const newFilters = filters.includes(type) 
+            ? filters.filter(t => t !== type) 
+            : [...filters, type];
+
+        setFilters(newFilters);
+        // Instant reset when changing filters (restart to deck)
+        setDrawnCard(null);
+    };
+
+    // Scroll Checker
+    const checkScroll = () => {
+        if (descriptionRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = descriptionRef.current;
+            // Show bottom fade if content is taller than container AND we haven't scrolled to bottom
+            setCanScrollDown(scrollHeight > clientHeight && scrollTop + clientHeight < scrollHeight - 5);
+            // Show top fade if we have scrolled down
+            setCanScrollUp(scrollTop > 5);
+        }
+    };
+
+    // Draw Logic
+    const handleDraw = () => {
+        if (!canDraw) return;
+        
+        setIsShuffling(true);
+        setDrawnCard(null);
+
+        // Shuffle Animation Logic
+        let iterations = 0;
+        const maxIterations = 15; // How many flips before stopping
+        const interval = setInterval(() => {
+            const randomTemp = availablePool[Math.floor(Math.random() * availablePool.length)];
+            setTempDisplayCard(randomTemp);
+            iterations++;
+
+            if (iterations >= maxIterations) {
+                clearInterval(interval);
+                finishDraw();
+            }
+        }, 100); // Speed of shuffle
+    };
+
+    const finishDraw = () => {
+        const finalCard = availablePool[Math.floor(Math.random() * availablePool.length)];
+        setDrawnCard(finalCard);
+        setTempDisplayCard(null);
+        setIsShuffling(false);
+    };
+
+    // Re-check scroll on card change
+    useEffect(() => {
+        checkScroll();
+        // Allow time for layout to settle
+        const t = setTimeout(checkScroll, 100);
+        return () => clearTimeout(t);
+    }, [drawnCard, tempDisplayCard, isShuffling]);
+
+    const navigateToWinnerLog = () => {
+        // Pass state to auto-open the modal in Victory Log
+        navigate('/victory-log', { state: { openMinigameModal: true } });
+    };
+
+    // Style Helpers - CLEAN & MINIMALIST
+    const getCardStyles = (type?: MinigameType) => {
+        if (!type) return { 
+            bgHeader: 'bg-slate-50', 
+            textHeader: 'text-slate-400', 
+            textTitle: 'text-slate-500', 
+            icon: 'text-slate-300',
+            border: 'border-slate-200',
+            divider: 'bg-slate-200'
+        };
+        switch(type) {
+            case 'Individual': return { 
+                bgHeader: 'bg-red-50', 
+                textHeader: 'text-red-500', 
+                textTitle: 'text-red-600',
+                icon: 'text-red-400',
+                border: 'border-red-100',
+                divider: 'bg-red-100'
+            };
+            case 'Team': return { 
+                bgHeader: 'bg-blue-50', 
+                textHeader: 'text-blue-500', 
+                textTitle: 'text-blue-600',
+                icon: 'text-blue-400',
+                border: 'border-blue-100',
+                divider: 'bg-blue-100'
+            };
+            case 'Special': return { 
+                bgHeader: 'bg-green-50', 
+                textHeader: 'text-green-500', 
+                textTitle: 'text-green-600',
+                icon: 'text-green-400',
+                border: 'border-green-100',
+                divider: 'bg-green-100'
+            };
+            default: return { 
+                bgHeader: 'bg-slate-50', 
+                textHeader: 'text-slate-400', 
+                textTitle: 'text-slate-500', 
+                icon: 'text-slate-300',
+                border: 'border-slate-200',
+                divider: 'bg-slate-200'
+            };
+        }
+    };
+
+    // Determine what to show
+    const displayCard = isShuffling ? tempDisplayCard : drawnCard;
+    const cardStyles = getCardStyles(displayCard?.type);
+    const hasActiveCard = displayCard || isShuffling;
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Selector de Minijuegos" actionIcon="settings" />
-            <div className="flex-1 flex flex-col items-center w-full px-4 py-6 space-y-6 pb-28">
-                <div className="w-full space-y-3">
-                    <h3 className="typo-h3 px-1">Tipo de Minijuegos</h3>
-                    <div className="w-full flex gap-3 overflow-x-auto no-scrollbar py-1">
-                        <button className="flex h-10 flex-1 shrink-0 items-center justify-center rounded-full bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-500/20 px-6">Individual</button>
-                        <button className="flex h-10 flex-1 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/20 px-6">En Equipo</button>
-                        <button className="flex h-10 flex-1 shrink-0 items-center justify-center rounded-full bg-green-500 text-white font-bold text-sm shadow-lg shadow-green-500/20 px-6">Especial</button>
-                    </div>
-                </div>
-
-                <div className="w-full">
-                    <div className="flex flex-col items-stretch justify-start rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/60 overflow-hidden relative p-6 gap-4">
-                        <div>
-                            <h3 className="typo-h2 mb-1">La Ira de Poseidón</h3>
-                            <p className="text-action font-bold text-sm">Tipo: Desafío Físico</p>
-                        </div>
-                        <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                            <p className="typo-body">
-                                "Todos los jugadores deben contener la respiración. El primero en soltarla pierde un turno y debe imitar a un pez."
-                            </p>
-                        </div>
-                    </div>
+            <Header 
+                title="Selector de Minijuegos" 
+                actionIcon="settings" 
+                onBack={() => navigate('/game')} 
+            />
+            
+            {/* Filters */}
+            <div className="w-full px-4 pt-4 pb-2 z-20">
+                <h3 className="typo-caption mb-2 ml-1">Filtrar por Tipo</h3>
+                <div className="flex gap-2 w-full">
+                    {[
+                        { id: 'Individual', label: 'Individual', color: 'red' },
+                        { id: 'Team', label: 'En Equipo', color: 'blue' },
+                        { id: 'Special', label: 'Especial', color: 'green' }
+                    ].map((f) => {
+                        const isActive = filters.includes(f.id as MinigameType);
+                        return (
+                            <button 
+                                key={f.id}
+                                onClick={() => toggleFilter(f.id as MinigameType)}
+                                className={`flex-1 py-2 rounded-full text-xs font-bold transition-all border-2 
+                                    ${isActive 
+                                        ? `bg-${f.color}-500 text-white border-${f.color}-500 shadow-md` 
+                                        : `bg-white text-slate-400 border-slate-200 hover:border-${f.color}-200`
+                                    }`}
+                            >
+                                {f.label}
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
+
+            {/* Main Stage */}
+            <div className={`flex-1 flex flex-col items-center p-4 relative min-h-[360px] pb-28 overflow-y-auto overflow-x-hidden no-scrollbar transition-all duration-300 ${hasActiveCard ? 'justify-start pt-2' : 'justify-center'}`}>
+                
+                {/* Empty State / Deck */}
+                {!displayCard && !isShuffling && (
+                    <div className="flex flex-col items-center text-center opacity-60 animate-float transition-all duration-300">
+                        <div className="w-48 h-64 bg-slate-200 rounded-2xl border-4 border-slate-300 border-dashed flex items-center justify-center mb-4 relative">
+                            <span className="material-symbols-outlined text-6xl text-slate-400">playing_cards</span>
+                            <div className="absolute -right-2 -bottom-2 size-12 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200">
+                                <span className="font-bold text-slate-400 text-xs">{availablePool.length}</span>
+                            </div>
+                        </div>
+                        <p className="typo-h3 text-slate-400">Toca para sacar carta</p>
+                    </div>
+                )}
+
+                {/* The Card - Minimalist Flex Design without Exit Animation */}
+                {displayCard && (
+                    <div 
+                        className={`relative w-full max-w-[320px] aspect-[63/88] bg-white rounded-[2rem] shadow-xl overflow-hidden flex flex-col 
+                            transition-all duration-300 ease-in-out border-2 ${cardStyles.border}
+                            ${isShuffling ? 'scale-95 blur-[1px]' : 'animate-pop-in'}
+                        `}
+                    >
+                        
+                        {/* Header: Category Icon & Name */}
+                        <div className={`w-full py-4 px-4 flex flex-col items-center justify-center shrink-0 border-b border-dashed ${cardStyles.border} ${cardStyles.bgHeader}`}>
+                            <span className={`material-symbols-outlined text-2xl mb-1 ${cardStyles.icon}`}>
+                                {displayCard.type === 'Individual' ? 'person' : displayCard.type === 'Team' ? 'groups' : 'auto_awesome'}
+                            </span>
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${cardStyles.textHeader}`}>
+                                {displayCard.type === 'Team' ? 'En Equipo' : displayCard.type}
+                            </span>
+                        </div>
+
+                        {/* Body: Flex Column to handle variable content height */}
+                        <div className="flex-1 flex flex-col overflow-hidden relative w-full">
+                            
+                            {/* Title Section (Auto height, will push description down) */}
+                            <div className="px-6 pt-5 pb-2 text-center shrink-0 z-10">
+                                <h2 className={`font-cartoon text-2xl leading-tight ${cardStyles.textTitle}`}>
+                                    {displayCard.title}
+                                </h2>
+                            </div>
+
+                            {/* Divider Pill */}
+                            <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 ${cardStyles.divider}`}></div>
+
+                            {/* Description Section (Fills remaining space) */}
+                            <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden relative w-full mb-2">
+                                {/* Top Fade (Dynamic) */}
+                                <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollUp ? 'opacity-100' : 'opacity-0'}`}></div>
+
+                                <div 
+                                    ref={descriptionRef}
+                                    onScroll={checkScroll}
+                                    className="h-full overflow-y-auto no-scrollbar text-center flex items-start justify-center"
+                                >
+                                    <p className="font-rounded font-semibold text-[17px] text-slate-600 leading-snug w-full whitespace-pre-line pb-4 pt-2">
+                                        {displayCard.description}
+                                    </p>
+                                </div>
+                                
+                                {/* Bottom Fade (Dynamic) */}
+                                <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 ${canScrollDown ? 'opacity-100' : 'opacity-0'}`}></div>
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+            </div>
             
-            <BottomBar>
-                 <Button fullWidth className="bg-action shadow-[0_4px_20px_rgba(37,140,244,0.4)]">Seleccionar Minijuego</Button>
+            {/* Controls */}
+            <BottomBar className="bg-white border-t border-slate-100">
+                 <div className="flex w-full gap-3 items-center">
+                     {/* Secondary Action: Register Winner */}
+                    {drawnCard && !isShuffling && (
+                        <Button 
+                            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 shadow-sm px-0 active:bg-slate-200" 
+                            onClick={navigateToWinnerLog} 
+                            icon="emoji_events"
+                        >
+                            <span className="text-sm font-bold truncate">Registrar</span>
+                        </Button>
+                    )}
+
+                    {/* Primary Action: Shuffle/Draw */}
+                    <Button 
+                        className={`flex-[2] shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action ${isShuffling ? 'opacity-80' : ''}`}
+                        onClick={handleDraw} 
+                        disabled={availablePool.length === 0 || isShuffling}
+                        icon={isShuffling ? 'cached' : 'style'}
+                    >
+                        {isShuffling ? '...' : drawnCard ? 'Otra Carta' : 'Sacar Carta'}
+                    </Button>
+                 </div>
             </BottomBar>
         </div>
     );
@@ -182,6 +451,8 @@ export const VictoryLogScreen: React.FC = () => {
     
     // Check if we came from calculator
     const isFromCalculator = location.state?.fromCalculator;
+    // Check if we came from Minigame Selector to auto-open modal
+    const shouldAutoOpenModal = location.state?.openMinigameModal;
 
     // Core stats for Leaderboard compatibility
     // 'mentions' structure: { [category: string]: { [playerId: string]: number } }
@@ -200,6 +471,7 @@ export const VictoryLogScreen: React.FC = () => {
     
     // New UI State for Vote Feedback
     const [justVotedId, setJustVotedId] = useState<string | null>(null);
+    const [isClearingVotes, setIsClearingVotes] = useState(false);
 
     // Fisher-Yates Shuffle
     const shuffle = (array: string[]) => {
@@ -211,6 +483,16 @@ export const VictoryLogScreen: React.FC = () => {
         }
         return array;
     }
+
+    // Initialize Modal from Navigation State
+    useEffect(() => {
+        if (shouldAutoOpenModal) {
+            setShowMinigameModal(true);
+            // We don't want to re-open it if the user closes it and component updates, 
+            // but cleaning location state is tricky in React Router v6 without navigation.
+            // For this app flow, it's acceptable.
+        }
+    }, [shouldAutoOpenModal]);
 
     useEffect(() => {
         const storedPlayers = localStorage.getItem('game_players');
@@ -296,6 +578,17 @@ export const VictoryLogScreen: React.FC = () => {
         setShowMinigameModal(true);
     };
 
+    // Smart Close Logic: If we came here from auto-open, go back to selector. Else, just close modal.
+    const handleCloseMinigameModal = () => {
+        setShowMinigameModal(false);
+        setEditingRecordId(null);
+        setSelectedWinners([]);
+        
+        if (shouldAutoOpenModal) {
+            navigate(-1);
+        }
+    };
+
     const deleteMinigameRecord = () => {
         if (!editingRecordId) return;
 
@@ -311,9 +604,7 @@ export const VictoryLogScreen: React.FC = () => {
         setMinigameHistory(newHistory);
         recalculateStats(newHistory, log.mentions); // Keep mentions, recalc minigames
 
-        setShowMinigameModal(false);
-        setEditingRecordId(null);
-        setSelectedWinners([]);
+        handleCloseMinigameModal(); // Use smart close
     };
 
     const confirmMinigame = () => {
@@ -350,9 +641,14 @@ export const VictoryLogScreen: React.FC = () => {
         recalculateStats(newHistory, log.mentions);
 
         // Reset
-        setSelectedWinners([]);
-        setEditingRecordId(null);
         setShowMinigameModal(false);
+        setEditingRecordId(null);
+        setSelectedWinners([]);
+
+        // Smart return if came from game
+        if (shouldAutoOpenModal) {
+            navigate(-1);
+        }
     };
 
     // Helper to recalculate total minigame wins based on history
@@ -406,13 +702,18 @@ export const VictoryLogScreen: React.FC = () => {
     const clearCategoryVotes = () => {
         if (!activeCategory) return;
         
-        setLog(prev => {
-            const newMentions = { ...prev.mentions };
-            delete newMentions[activeCategory];
-            return { ...prev, mentions: newMentions };
-        });
-        setShowVoteModal(false);
-        setActiveCategory(null);
+        setIsClearingVotes(true);
+
+        setTimeout(() => {
+            setLog(prev => {
+                const newMentions = { ...prev.mentions };
+                delete newMentions[activeCategory];
+                return { ...prev, mentions: newMentions };
+            });
+            setShowVoteModal(false);
+            setActiveCategory(null);
+            setIsClearingVotes(false);
+        }, 700); // 700ms duration
     }
 
     const getColorStyle = (color: GameColor) => {
@@ -448,7 +749,7 @@ export const VictoryLogScreen: React.FC = () => {
         <div className="flex min-h-screen flex-col bg-[#f5f7f8]">
             <Header title="Bitácora de Partida" actionIcon="settings" onBack={handleBack} />
             
-            <div className="flex-1 px-4 pt-6 pb-24 overflow-y-auto no-scrollbar">
+            <div className="flex-1 px-4 pt-6 pb-36 overflow-y-auto no-scrollbar">
                 
                 {/* Header Card */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8 text-center relative overflow-hidden">
@@ -473,7 +774,7 @@ export const VictoryLogScreen: React.FC = () => {
                                 onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
                                 className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors"
                             >
-                                {isHistoryExpanded ? 'Ocultar Lista' : 'Ver Historial'}
+                                {isHistoryExpanded ? 'Ocultar Lista' : 'Mostrar Lista'}
                                 <span className={`material-symbols-outlined text-sm transition-transform ${isHistoryExpanded ? 'rotate-180' : ''}`}>expand_more</span>
                             </button>
                         </div>
@@ -571,9 +872,18 @@ export const VictoryLogScreen: React.FC = () => {
             {/* Minigame Winner Modal */}
             {showMinigameModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMinigameModal(false)}></div>
+                    {/* BACKDROP with Smart Close */}
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseMinigameModal}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
-                        <div className="p-5 border-b border-slate-100 bg-white text-center">
+                        <div className="p-5 border-b border-slate-100 bg-white text-center relative">
+                            {/* NEW: Explicit X Button */}
+                            <button 
+                                onClick={handleCloseMinigameModal}
+                                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+
                             <h3 className="typo-h3 text-slate-900">{editingRecordId ? 'Editar Resultado' : '¿Quién Ganó el Minijuego?'}</h3>
                             <p className="text-sm text-slate-500 mt-1 font-medium">Selecciona los ganadores de la Ronda</p>
                         </div>
@@ -604,14 +914,15 @@ export const VictoryLogScreen: React.FC = () => {
                         
                         <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
                             <div className="flex items-center gap-3">
+                                {/* CANCEL Button with Smart Close */}
                                 <button 
-                                    onClick={() => setShowMinigameModal(false)}
+                                    onClick={handleCloseMinigameModal}
                                     className="px-4 py-3 font-bold text-slate-500 hover:text-slate-800 transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <Button className="flex-1 shadow-xl shadow-primary/20" onClick={confirmMinigame}>
-                                    {(selectedWinners.length === 0 || selectedWinners.length === players.length) ? 'No hubo Ganadores' : 'Confirmar'}
+                                    {(selectedWinners.length === 0 || selectedWinners.length === players.length) ? 'No Hubo Ganadores' : 'Confirmar'}
                                 </Button>
                             </div>
                             
@@ -631,8 +942,21 @@ export const VictoryLogScreen: React.FC = () => {
             {/* Vote Modal */}
             {showVoteModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowVoteModal(false)}></div>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isClearingVotes && setShowVoteModal(false)}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
+                         
+                         {/* Deletion Feedback Overlay - Moved here to cover the whole modal */}
+                         {isClearingVotes && (
+                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-300">
+                                <div className="flex flex-col items-center justify-center animate-pop-in">
+                                    <div className="size-14 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-3 shadow-xl border-4 border-white">
+                                        <span className="material-symbols-outlined text-3xl font-bold">delete</span>
+                                    </div>
+                                    <p className="text-red-500 font-bold text-lg animate-pulse">¡Votos Eliminados!</p>
+                                </div>
+                            </div>
+                         )}
+
                          <div className="p-5 border-b border-slate-100 bg-white text-center">
                             <h3 className="typo-h3 text-slate-900">{getActiveCategoryModalTitle()}</h3>
                             <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wide">
@@ -640,7 +964,7 @@ export const VictoryLogScreen: React.FC = () => {
                             </p>
                             <p className="text-sm text-slate-500 mt-2 font-medium">Toca al jugador que merece este título</p>
                         </div>
-                        <div className="p-5 overflow-y-auto grid grid-cols-2 gap-3 bg-[#f8fafc]">
+                        <div className="p-5 overflow-y-auto grid grid-cols-2 gap-3 bg-[#f8fafc] relative">
                              {players.map(p => {
                                 const style = getColorStyle(p.color);
                                 const isJustVoted = justVotedId === p.id;
@@ -649,7 +973,7 @@ export const VictoryLogScreen: React.FC = () => {
                                     <button 
                                         key={p.id}
                                         onClick={() => confirmVote(p.id)}
-                                        disabled={justVotedId !== null} // Disable all during feedback animation
+                                        disabled={justVotedId !== null || isClearingVotes} // Disable all during feedback animation
                                         className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-28 shadow-sm active:scale-95 overflow-hidden ${isJustVoted ? 'bg-green-50 border-green-500 scale-105' : 'border-white bg-white hover:border-slate-200'}`}
                                     >
                                         <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform ${isJustVoted ? 'scale-110' : ''}`}>
@@ -672,11 +996,12 @@ export const VictoryLogScreen: React.FC = () => {
                              })}
                         </div>
                         <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
-                            <Button variant="outline" fullWidth onClick={() => setShowVoteModal(false)}>Cancelar</Button>
+                            <Button variant="outline" fullWidth onClick={() => setShowVoteModal(false)} disabled={isClearingVotes}>Cancelar</Button>
                             
                             <button 
                                 onClick={clearCategoryVotes} 
-                                className="w-full py-3 rounded-xl text-danger font-bold text-sm hover:bg-red-50 transition-colors flex items-center justify-center gap-2 mt-2"
+                                disabled={isClearingVotes}
+                                className="w-full py-3 rounded-xl text-danger font-bold text-sm hover:bg-red-50 transition-colors flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
                             >
                                 <span className="material-symbols-outlined icon-sm">delete</span> Borrar votos de esta categoría
                             </button>

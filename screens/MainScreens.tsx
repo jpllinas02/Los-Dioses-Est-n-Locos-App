@@ -61,15 +61,14 @@ export const HomeScreen: React.FC = () => {
                 </div>
                 
                 <div className="w-full flex flex-col gap-4 mt-auto mb-8">
-                    <button onClick={handleStartGame} className="group relative w-full h-20 bg-primary hover:bg-primary-dark text-white rounded-2xl shadow-[0_6px_0_0_#3b0764] active:shadow-none active:translate-y-[6px] transition-all duration-150 flex items-center justify-between px-6 overflow-hidden">
-                        <div className="flex flex-col items-start z-10">
-                            <span className="text-xl font-black tracking-wide uppercase italic">Empezar Partida</span>
-                            <span className="text-xs font-medium text-purple-200">¡Desafía al Olimpo!</span>
-                        </div>
-                        <div className="size-10 rounded-full bg-white/20 flex items-center justify-center z-10">
-                            <span className="material-symbols-outlined text-yellow-300 fill-current animate-pulse" style={{fontVariationSettings: "'FILL' 1"}}>bolt</span>
-                        </div>
+                    <button 
+                        onClick={handleStartGame} 
+                        className="group relative w-full py-5 bg-primary hover:bg-primary-dark text-white rounded-2xl shadow-[0_8px_25px_rgba(51,13,242,0.4)] active:scale-[0.98] transition-all duration-200 flex flex-col items-center justify-center gap-0.5 overflow-hidden"
+                    >
+                        <span className="text-xl font-bold tracking-tight">Empieza Partida Nueva</span>
+                        <span className="text-sm font-medium text-purple-200/80">O Retoma una iniciada</span>
                     </button>
+                    
                     <div className="grid grid-cols-2 gap-4 w-full">
                         <Button variant="outline" onClick={() => navigate('/learn-intro')} className="shadow-[0_4px_0_0_#cbd5e1]">
                             <span className="material-symbols-outlined text-purple-500">menu_book</span> Aprender
