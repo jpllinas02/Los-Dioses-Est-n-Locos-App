@@ -138,15 +138,41 @@ export const MinigameSelectorScreen: React.FC = () => {
     const [isShuffling, setIsShuffling] = useState(false);
     const [drawnCard, setDrawnCard] = useState<Minigame | null>(null);
     const [tempDisplayCard, setTempDisplayCard] = useState<Minigame | null>(null); // For shuffle animation
+    const [cooldown, setCooldown] = useState(0); // Lockout timer
+    
+    // Used Cards Persistence
+    const [usedCards, setUsedCards] = useState<string[]>([]);
     
     // Scroll Detection State
     const descriptionRef = useRef<HTMLDivElement>(null);
     const [canScrollDown, setCanScrollDown] = useState(false);
     const [canScrollUp, setCanScrollUp] = useState(false);
 
-    // Derived
-    const availablePool = MINIGAMES_DB.filter(game => filters.includes(game.type));
-    const canDraw = availablePool.length > 0 && !isShuffling;
+    // Cooldown Timer Logic
+    useEffect(() => {
+        let interval: any;
+        if (cooldown > 0) {
+            interval = setTimeout(() => setCooldown(c => c - 1), 1000);
+        }
+        return () => clearTimeout(interval);
+    }, [cooldown]);
+
+    // Load used cards on mount
+    useEffect(() => {
+        const storedUsed = localStorage.getItem('game_minigame_history_ids');
+        if (storedUsed) {
+            setUsedCards(JSON.parse(storedUsed));
+        }
+    }, []);
+
+    // Derived: Available Pool considers Filters AND Excludes Used Cards
+    const filteredByFilters = MINIGAMES_DB.filter(game => filters.includes(game.type));
+    const availablePool = filteredByFilters.filter(game => !usedCards.includes(game.id));
+    
+    // Determine if we need to reset pool
+    const poolExhausted = filteredByFilters.length > 0 && availablePool.length === 0;
+
+    const canDraw = (availablePool.length > 0 || poolExhausted) && !isShuffling && cooldown === 0;
 
     // Toggle Filter
     const toggleFilter = (type: MinigameType) => {
@@ -163,123 +189,119 @@ export const MinigameSelectorScreen: React.FC = () => {
     const checkScroll = () => {
         if (descriptionRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = descriptionRef.current;
-            // Show bottom fade if content is taller than container AND we haven't scrolled to bottom
             setCanScrollDown(scrollHeight > clientHeight && scrollTop + clientHeight < scrollHeight - 5);
-            // Show top fade if we have scrolled down
             setCanScrollUp(scrollTop > 5);
         }
     };
 
+    const resetPool = () => {
+        // Only reset cards that match current filters (or just reset all to be safe/simple)
+        setUsedCards([]);
+        localStorage.removeItem('game_minigame_history_ids');
+    }
+
     // Draw Logic
     const handleDraw = () => {
-        if (!canDraw) return;
+        if (isShuffling || cooldown > 0) return;
+
+        // Auto-reset if pool exhausted
+        if (poolExhausted) {
+            resetPool();
+            // Don't return, allow drawing immediately after reset for better UX
+        }
         
+        // Check availability again (in case we just reset)
+        // We need to calculate pool locally because state update might be async
+        const currentUsed = poolExhausted ? [] : usedCards;
+        const currentPool = MINIGAMES_DB.filter(game => filters.includes(game.type) && !currentUsed.includes(game.id));
+        
+        if (currentPool.length === 0) return; // Should allow draw now
+
         setIsShuffling(true);
         setDrawnCard(null);
 
-        // Shuffle Animation Logic
+        // Shuffle Animation
         let iterations = 0;
-        const maxIterations = 15; // How many flips before stopping
+        const maxIterations = 15; 
         const interval = setInterval(() => {
-            const randomTemp = availablePool[Math.floor(Math.random() * availablePool.length)];
+            const randomTemp = currentPool[Math.floor(Math.random() * currentPool.length)];
             setTempDisplayCard(randomTemp);
             iterations++;
 
             if (iterations >= maxIterations) {
                 clearInterval(interval);
-                finishDraw();
+                finishDraw(currentPool);
             }
-        }, 100); // Speed of shuffle
+        }, 80); 
     };
 
-    const finishDraw = () => {
-        const finalCard = availablePool[Math.floor(Math.random() * availablePool.length)];
+    const finishDraw = (currentPool: Minigame[]) => {
+        const finalCard = currentPool[Math.floor(Math.random() * currentPool.length)];
+        
+        // Save as used
+        const newUsed = [...usedCards, finalCard.id];
+        // If we just reset, newUsed is just [finalCard.id]
+        const actualUsed = poolExhausted ? [finalCard.id] : newUsed;
+        
+        setUsedCards(actualUsed);
+        localStorage.setItem('game_minigame_history_ids', JSON.stringify(actualUsed));
+
         setDrawnCard(finalCard);
         setTempDisplayCard(null);
         setIsShuffling(false);
+        setCooldown(3); // Lock for 3 seconds to prevent accidental skip
     };
 
     // Re-check scroll on card change
     useEffect(() => {
         checkScroll();
-        // Allow time for layout to settle
         const t = setTimeout(checkScroll, 100);
         return () => clearTimeout(t);
     }, [drawnCard, tempDisplayCard, isShuffling]);
 
     const navigateToWinnerLog = () => {
-        // Pass state to auto-open the modal in Victory Log
         navigate('/victory-log', { state: { openMinigameModal: true } });
     };
 
-    // Style Helpers - CLEAN & MINIMALIST
+    // Style Helpers
     const getCardStyles = (type?: MinigameType) => {
         if (!type) return { 
-            bgHeader: 'bg-slate-50', 
-            textHeader: 'text-slate-400', 
-            textTitle: 'text-slate-500', 
-            icon: 'text-slate-300',
-            border: 'border-slate-200',
-            divider: 'bg-slate-200'
+            bgHeader: 'bg-slate-50', textHeader: 'text-slate-400', textTitle: 'text-slate-500', 
+            icon: 'text-slate-300', border: 'border-slate-200', divider: 'bg-slate-200'
         };
         switch(type) {
             case 'Individual': return { 
-                bgHeader: 'bg-red-50', 
-                textHeader: 'text-red-500', 
-                textTitle: 'text-red-600',
-                icon: 'text-red-400',
-                border: 'border-red-100',
-                divider: 'bg-red-100'
+                bgHeader: 'bg-red-50', textHeader: 'text-red-500', textTitle: 'text-red-600',
+                icon: 'text-red-400', border: 'border-red-100', divider: 'bg-red-100'
             };
             case 'Team': return { 
-                bgHeader: 'bg-blue-50', 
-                textHeader: 'text-blue-500', 
-                textTitle: 'text-blue-600',
-                icon: 'text-blue-400',
-                border: 'border-blue-100',
-                divider: 'bg-blue-100'
+                bgHeader: 'bg-blue-50', textHeader: 'text-blue-500', textTitle: 'text-blue-600',
+                icon: 'text-blue-400', border: 'border-blue-100', divider: 'bg-blue-100'
             };
             case 'Special': return { 
-                bgHeader: 'bg-green-50', 
-                textHeader: 'text-green-500', 
-                textTitle: 'text-green-600',
-                icon: 'text-green-400',
-                border: 'border-green-100',
-                divider: 'bg-green-100'
+                bgHeader: 'bg-green-50', textHeader: 'text-green-500', textTitle: 'text-green-600',
+                icon: 'text-green-400', border: 'border-green-100', divider: 'bg-green-100'
             };
             default: return { 
-                bgHeader: 'bg-slate-50', 
-                textHeader: 'text-slate-400', 
-                textTitle: 'text-slate-500', 
-                icon: 'text-slate-300',
-                border: 'border-slate-200',
-                divider: 'bg-slate-200'
+                bgHeader: 'bg-slate-50', textHeader: 'text-slate-400', textTitle: 'text-slate-500', 
+                icon: 'text-slate-300', border: 'border-slate-200', divider: 'bg-slate-200'
             };
         }
     };
 
-    // Determine what to show
     const displayCard = isShuffling ? tempDisplayCard : drawnCard;
     const cardStyles = getCardStyles(displayCard?.type);
     const hasActiveCard = displayCard || isShuffling;
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header 
-                title="Selector de Minijuegos" 
-                actionIcon="settings" 
-                onBack={() => navigate('/game')} 
-            />
+            <Header title="Selector de Minijuegos" actionIcon="settings" onBack={() => navigate('/game')} />
             
             {/* Filters */}
             <div className="w-full px-4 pt-4 pb-2 z-20">
                 <h3 className="typo-caption mb-2 ml-1">Filtrar por Tipo</h3>
                 <div className="flex gap-2 w-full">
-                    {[
-                        { id: 'Individual', label: 'Individual', color: 'red' },
-                        { id: 'Team', label: 'En Equipo', color: 'blue' },
-                        { id: 'Special', label: 'Especial', color: 'green' }
-                    ].map((f) => {
+                    {[{ id: 'Individual', label: 'Individual', color: 'red' }, { id: 'Team', label: 'En Equipo', color: 'blue' }, { id: 'Special', label: 'Especial', color: 'green' }].map((f) => {
                         const isActive = filters.includes(f.id as MinigameType);
                         return (
                             <button 
@@ -303,27 +325,28 @@ export const MinigameSelectorScreen: React.FC = () => {
                 
                 {/* Empty State / Deck */}
                 {!displayCard && !isShuffling && (
-                    <div className="flex flex-col items-center text-center opacity-60 animate-float transition-all duration-300">
+                    <div 
+                        onClick={handleDraw}
+                        className="flex flex-col items-center text-center opacity-60 animate-float transition-all duration-300 cursor-pointer active:scale-95"
+                    >
                         <div className="w-48 h-64 bg-slate-200 rounded-2xl border-4 border-slate-300 border-dashed flex items-center justify-center mb-4 relative">
-                            <span className="material-symbols-outlined text-6xl text-slate-400">playing_cards</span>
+                            {poolExhausted ? (
+                                <span className="material-symbols-outlined text-6xl text-amber-400">replay</span>
+                            ) : (
+                                <span className="material-symbols-outlined text-6xl text-slate-400">playing_cards</span>
+                            )}
                             <div className="absolute -right-2 -bottom-2 size-12 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200">
-                                <span className="font-bold text-slate-400 text-xs">{availablePool.length}</span>
+                                <span className="font-bold text-slate-400 text-xs">{poolExhausted ? 0 : availablePool.length}</span>
                             </div>
                         </div>
-                        <p className="typo-h3 text-slate-400">Toca para sacar carta</p>
+                        <p className="typo-h3 text-slate-400">{poolExhausted ? '¡Mazo agotado!' : 'Toca para sacar carta'}</p>
+                        {poolExhausted && <p className="text-xs text-amber-500 font-bold mt-1">Se barajará automáticamente</p>}
                     </div>
                 )}
 
-                {/* The Card - Minimalist Flex Design without Exit Animation */}
+                {/* The Card */}
                 {displayCard && (
-                    <div 
-                        className={`relative w-full max-w-[320px] aspect-[63/88] bg-white rounded-[2rem] shadow-xl overflow-hidden flex flex-col 
-                            transition-all duration-300 ease-in-out border-2 ${cardStyles.border}
-                            ${isShuffling ? 'scale-95 blur-[1px]' : 'animate-pop-in'}
-                        `}
-                    >
-                        
-                        {/* Header: Category Icon & Name */}
+                    <div className={`relative w-full max-w-[320px] aspect-[63/88] bg-white rounded-[2rem] shadow-xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out border-2 ${cardStyles.border} ${isShuffling ? 'scale-95 blur-[1px]' : 'animate-pop-in'}`}>
                         <div className={`w-full py-4 px-4 flex flex-col items-center justify-center shrink-0 border-b border-dashed ${cardStyles.border} ${cardStyles.bgHeader}`}>
                             <span className={`material-symbols-outlined text-2xl mb-1 ${cardStyles.icon}`}>
                                 {displayCard.type === 'Individual' ? 'person' : displayCard.type === 'Team' ? 'groups' : 'auto_awesome'}
@@ -332,66 +355,42 @@ export const MinigameSelectorScreen: React.FC = () => {
                                 {displayCard.type === 'Team' ? 'En Equipo' : displayCard.type}
                             </span>
                         </div>
-
-                        {/* Body: Flex Column to handle variable content height */}
                         <div className="flex-1 flex flex-col overflow-hidden relative w-full">
-                            
-                            {/* Title Section (Auto height, will push description down) */}
                             <div className="px-6 pt-5 pb-2 text-center shrink-0 z-10">
-                                <h2 className={`font-cartoon text-2xl leading-tight ${cardStyles.textTitle}`}>
-                                    {displayCard.title}
-                                </h2>
+                                <h2 className={`font-cartoon text-2xl leading-tight ${cardStyles.textTitle}`}>{displayCard.title}</h2>
                             </div>
-
-                            {/* Divider Pill */}
                             <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 ${cardStyles.divider}`}></div>
-
-                            {/* Description Section (Fills remaining space) */}
                             <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden relative w-full mb-2">
-                                {/* Top Fade (Dynamic) */}
                                 <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollUp ? 'opacity-100' : 'opacity-0'}`}></div>
-
-                                <div 
-                                    ref={descriptionRef}
-                                    onScroll={checkScroll}
-                                    className="h-full overflow-y-auto no-scrollbar text-center flex items-start justify-center"
-                                >
-                                    <p className="font-rounded font-semibold text-[17px] text-slate-600 leading-snug w-full whitespace-pre-line pb-4 pt-2">
-                                        {displayCard.description}
-                                    </p>
+                                <div ref={descriptionRef} onScroll={checkScroll} className="h-full overflow-y-auto no-scrollbar text-center flex items-start justify-center">
+                                    <p className="font-rounded font-semibold text-[17px] text-slate-600 leading-snug w-full whitespace-pre-line pb-4 pt-2">{displayCard.description}</p>
                                 </div>
-                                
-                                {/* Bottom Fade (Dynamic) */}
                                 <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 ${canScrollDown ? 'opacity-100' : 'opacity-0'}`}></div>
                             </div>
-
                         </div>
                     </div>
                 )}
             </div>
             
-            {/* Controls */}
             <BottomBar className="bg-white border-t border-slate-100">
                  <div className="flex w-full gap-3 items-center">
-                     {/* Secondary Action: Register Winner */}
                     {drawnCard && !isShuffling && (
                         <Button 
                             className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 shadow-sm px-0 active:bg-slate-200" 
                             onClick={navigateToWinnerLog} 
                             icon="emoji_events"
+                            disabled={cooldown > 0}
                         >
                             <span className="text-sm font-bold truncate">Registrar</span>
                         </Button>
                     )}
-
-                    {/* Primary Action: Shuffle/Draw */}
                     <Button 
-                        className={`flex-[2] shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action ${isShuffling ? 'opacity-80' : ''}`}
+                        className={`flex-[2] shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action ${isShuffling || cooldown > 0 ? 'opacity-80' : ''}`}
                         onClick={handleDraw} 
-                        disabled={availablePool.length === 0 || isShuffling}
-                        icon={isShuffling ? 'cached' : 'style'}
+                        disabled={!canDraw && !poolExhausted}
+                        icon={isShuffling ? 'cached' : poolExhausted ? 'replay' : 'style'}
                     >
-                        {isShuffling ? '...' : drawnCard ? 'Otra Carta' : 'Sacar Carta'}
+                        {isShuffling ? '...' : cooldown > 0 ? `Espere... (${cooldown}s)` : poolExhausted ? 'Barajar de Nuevo' : drawnCard ? 'Otra Carta' : 'Sacar Carta'}
                     </Button>
                  </div>
             </BottomBar>
@@ -400,37 +399,250 @@ export const MinigameSelectorScreen: React.FC = () => {
 };
 
 // --- Oracle Screen ---
+
+type OracleType = 'Favorable' | 'Desfavorable' | 'Neutral';
+
+interface OracleCard {
+    id: string;
+    title: string;
+    type: OracleType;
+    description: string;
+}
+
+const ORACLES_DB: OracleCard[] = [
+    // --- FAVORABLE (6) ---
+    { id: 'fav1', type: 'Favorable', title: 'Oportunidad Dorada', description: 'Elige una opción entre:\n1. Ganar una Reliquia.\n2. Mover la ficha de cualquier jugador dos casillas hacia atrás.\nTú decides si puede activar alguna casilla especial hasta que regrese a su casilla.' },
+    { id: 'fav2', type: 'Favorable', title: 'El Nuevo Elegido', description: 'Elige el siguiente Minijuego que se jugará al final de la ronda.\nAdemás, el Símbolo del Elegido pasa a ser tuyo. Si ya lo era, lo mantendrás el siguiente turno.\nLos turnos de esta ronda no cambian.' },
+    { id: 'fav3', type: 'Favorable', title: 'Fuente de Poder', description: 'Elige una opción entre:\n1. Tomar un Poder de la pila, el que tú quieras, y baraja la pila.\n2. Perder una Plaga.' },
+    { id: 'fav4', type: 'Favorable', title: 'Caos Controlado', description: 'Elige una opción entre:\n1. Cambiar tu Pacto con el de otro jugador.\n2. Intercambiar un Poder al azar por una Plaga entre dos jugadores cualquiera.' },
+    { id: 'fav5', type: 'Favorable', title: 'Gloria Adicional', description: 'Si eres uno de los ganadores del siguiente Minijuego, recibes un Beneficio de la Victoria adicional.' },
+    { id: 'fav6', type: 'Favorable', title: 'Robo de Poder', description: 'Todos los jugadores te muestran sus Poderes. Quédate con uno de esos Poderes, el que quieras. Devuelve el resto a sus dueños.' },
+
+    // --- DESFAVORABLE (6) ---
+    { id: 'unfav1', type: 'Desfavorable', title: 'Cambio de Posición', description: 'Intercambia tu puesto con uno de los jugadores que estén en la casilla más distante de La Meta.\nNo activas casilla especial hasta que regreses a tu casilla. El otro jugador decide si activa su Oráculo inmediatamente.' },
+    { id: 'unfav2', type: 'Desfavorable', title: 'Sacrificio Inevitable', description: 'Elige 1 opción entre:\n1. Perder una Reliquia.\n2. Perder hasta tres Poderes (o los que tengas, si tienes menos).\nPara elegir una opción, debes tener al menos una Reliquia o un Poder, respectivamente. Si no tienes nada, pierdes tu próximo turno.' },
+    { id: 'unfav3', type: 'Desfavorable', title: 'Retroceso Menor', description: 'Mueve tu ficha 2 casillas hacia atrás. No activas casilla especial hasta que regreses a tu casilla.' },
+    { id: 'unfav4', type: 'Desfavorable', title: 'Dilema del Secreto', description: 'Elige una opción entre:\n1. Mover tu ficha tres casillas hacia atrás. No activas casilla especial hasta que regreses a tu casilla.\n2. Revelar tu Pacto a un adversario. Él no puede mostrárselo a nadie pero sí decir lo que quiera.' },
+    { id: 'unfav5', type: 'Desfavorable', title: 'Caridad Obligada', description: 'Elige una opción entre:\n1. Todos tus adversarios ganan un Poder.\n2. Perder una Reliquia (debes tener al menos una).' },
+    { id: 'unfav6', type: 'Desfavorable', title: 'Voto de Silencio', description: 'No puedes pronunciar ninguna palabra hasta el comienzo de tu siguiente turno, a menos que un Minijuego lo requiera. Si no cumples, pierdes 1 Reliquia (si no tienes, no recibirás la próxima).' },
+
+    // --- NEUTRAL (2) ---
+    { id: 'neu1', type: 'Neutral', title: 'Duelo por el Botín', description: 'Reta a un adversario a un Duelo.\nJugarán el primer Minijuego Individual que salga. El ganador:\n1. Roba 1 Reliquia al perdedor, o\n2. Roba 2 Poderes al perdedor.\nSi el perdedor no tiene lo elegido, se toma del banco. Si nadie pierde, cada quien decide si pierde 1 Reliquia o 2 Poderes.' },
+    { id: 'neu2', type: 'Neutral', title: 'Ley de Compensación', description: 'Si eres uno de los que está más cerca de La Meta, en tu siguiente turno Avanzar te costará dos acciones.\nSi eres uno de los que está más lejos de La Meta, en tu siguiente turno Usar Poder no te costará acción.' },
+];
+
 export const OracleScreen: React.FC = () => {
+    const navigate = useNavigate();
+
+    // State
+    const [isShuffling, setIsShuffling] = useState(false);
+    const [drawnCard, setDrawnCard] = useState<OracleCard | null>(null);
+    const [tempDisplayCard, setTempDisplayCard] = useState<OracleCard | null>(null);
+    const [usedCards, setUsedCards] = useState<string[]>([]);
+    const [cooldown, setCooldown] = useState(0); // Lockout timer
+
+    // Scroll States
+    const descriptionRef = useRef<HTMLDivElement>(null);
+    const [canScrollDown, setCanScrollDown] = useState(false);
+    const [canScrollUp, setCanScrollUp] = useState(false);
+
+    // Persistence Check
+    useEffect(() => {
+        const storedUsed = localStorage.getItem('game_oracle_history_ids');
+        if (storedUsed) {
+            setUsedCards(JSON.parse(storedUsed));
+        }
+    }, []);
+
+    // Cooldown Timer Logic
+    useEffect(() => {
+        let interval: any;
+        if (cooldown > 0) {
+            interval = setTimeout(() => setCooldown(c => c - 1), 1000);
+        }
+        return () => clearTimeout(interval);
+    }, [cooldown]);
+
+    // Derived
+    const availablePool = ORACLES_DB.filter(c => !usedCards.includes(c.id));
+    const poolExhausted = availablePool.length === 0;
+    
+    // Allow draw if there are cards, or if we need to shuffle (pool exhausted)
+    const canDraw = (availablePool.length > 0 || poolExhausted) && !isShuffling && cooldown === 0;
+
+    const resetPool = () => {
+        setUsedCards([]);
+        localStorage.removeItem('game_oracle_history_ids');
+    }
+
+    const handleActivate = () => {
+        if (isShuffling || cooldown > 0) return;
+
+        // Auto-reset logic
+        if (poolExhausted) {
+            resetPool();
+        }
+
+        const currentUsed = poolExhausted ? [] : usedCards;
+        // Use full DB, no filtering
+        const currentPool = ORACLES_DB.filter(c => !currentUsed.includes(c.id));
+        
+        if (currentPool.length === 0) return;
+
+        setIsShuffling(true);
+        setDrawnCard(null);
+
+        // Shuffle Animation
+        let iterations = 0;
+        const maxIterations = 15;
+        const interval = setInterval(() => {
+            const randomTemp = currentPool[Math.floor(Math.random() * currentPool.length)];
+            setTempDisplayCard(randomTemp);
+            iterations++;
+
+            if (iterations >= maxIterations) {
+                clearInterval(interval);
+                finishActivation(currentPool);
+            }
+        }, 80);
+    };
+
+    const finishActivation = (currentPool: OracleCard[]) => {
+        const finalCard = currentPool[Math.floor(Math.random() * currentPool.length)];
+        
+        const newUsed = [...usedCards, finalCard.id];
+        const actualUsed = poolExhausted ? [finalCard.id] : newUsed;
+        
+        setUsedCards(actualUsed);
+        localStorage.setItem('game_oracle_history_ids', JSON.stringify(actualUsed));
+
+        setDrawnCard(finalCard);
+        setTempDisplayCard(null);
+        setIsShuffling(false);
+        setCooldown(3); // Lock for 3 seconds
+    };
+
+    // Scroll Logic
+    const checkScroll = () => {
+        if (descriptionRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = descriptionRef.current;
+            setCanScrollDown(scrollHeight > clientHeight && scrollTop + clientHeight < scrollHeight - 5);
+            setCanScrollUp(scrollTop > 5);
+        }
+    };
+
+    useEffect(() => {
+        checkScroll();
+        const t = setTimeout(checkScroll, 100);
+        return () => clearTimeout(t);
+    }, [drawnCard, tempDisplayCard, isShuffling]);
+
+    // Visual Styles
+    const getOracleStyles = (type?: OracleType) => {
+        if (!type) return { 
+             bgHeader: 'bg-purple-50', textHeader: 'text-purple-400',
+             border: 'border-purple-200', icon: 'visibility', divider: 'bg-purple-100', textTitle: 'text-purple-600'
+        };
+        switch(type) {
+            case 'Favorable': return { 
+                bgHeader: 'bg-emerald-50', textHeader: 'text-emerald-500', 
+                border: 'border-emerald-100', icon: 'check_circle',
+                textTitle: 'text-emerald-600', divider: 'bg-emerald-100'
+            };
+            case 'Desfavorable': return { 
+                bgHeader: 'bg-rose-50', textHeader: 'text-rose-500', 
+                border: 'border-rose-100', icon: 'cancel',
+                textTitle: 'text-rose-600', divider: 'bg-rose-100'
+            };
+            case 'Neutral': return { 
+                bgHeader: 'bg-amber-50', textHeader: 'text-amber-500', 
+                border: 'border-amber-100', icon: 'remove_circle',
+                textTitle: 'text-amber-600', divider: 'bg-amber-100'
+            };
+        }
+    };
+
+    const displayCard = isShuffling ? tempDisplayCard : drawnCard;
+    const cardStyles = getOracleStyles(displayCard?.type);
+    const hasActiveCard = displayCard || isShuffling;
+
     return (
-        <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Activación de Oráculos" actionIcon="settings" />
-            <div className="flex-1 flex flex-col items-center px-6 pt-4 w-full pb-32">
-                <div className="w-full animate-float">
-                    <div className="relative flex flex-col overflow-hidden rounded-[2rem] bg-white shadow-xl border border-slate-100">
-                        <div className="relative h-64 w-full overflow-hidden bg-slate-100">
-                            <div className="h-full w-full bg-cover bg-center" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDO4FEqbIhBr1HqIATV6fhQX4eX9w-1oi9qG34WCkoxGmFzAjcI2KJtt5tktFV3QHcj35Ac0v7jySWvRo3wCtfrLcyXZB3bINfMKeYxHTpuPNCtkO_OUoYtBZlhet_ssQHHpz322Ynh4UTXCt80MIt8MXN6stSmiIy6svcltHWcv4hms_fnwW-2n1ECvyu4zhK4Qz0YuiEG24xSN4ERMDDlARKWGSjrDmCHiowNPMEJupqnBcrLZMivu-QqXarMWyLYs3ylCHYqPSc')"}}></div>
-                            <div className="absolute top-4 right-4 z-20">
-                                <div className="flex items-center gap-2 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md border border-white/20">
-                                    <span className="text-[10px] font-bold text-white uppercase tracking-widest opacity-90">TIPO</span>
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500 text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">Favorable</span>
-                                </div>
+        <div className="flex min-h-screen flex-col bg-[#fcfaff]"> {/* Subtle Purple Tint Background */}
+            <Header title="Oráculo Divino" actionIcon="settings" onBack={() => navigate('/game')} />
+            
+            <div className={`flex-1 flex flex-col items-center p-4 relative min-h-[360px] pb-28 overflow-y-auto overflow-x-hidden no-scrollbar transition-all duration-300 ${hasActiveCard ? 'justify-start pt-6' : 'justify-center'}`}>
+                
+                {/* Empty State / Deck */}
+                {!displayCard && !isShuffling && (
+                    <div 
+                        onClick={handleActivate}
+                        className="flex flex-col items-center text-center opacity-80 animate-float transition-all duration-300 cursor-pointer active:scale-95"
+                    >
+                        <div className="w-48 h-64 bg-purple-50 rounded-2xl border-4 border-purple-200 border-dashed flex items-center justify-center mb-4 relative">
+                            {poolExhausted ? (
+                                <span className="material-symbols-outlined text-6xl text-amber-400">replay</span>
+                            ) : (
+                                <span className="material-symbols-outlined text-6xl text-purple-300">auto_awesome</span>
+                            )}
+                            <div className="absolute -right-2 -bottom-2 size-12 bg-white rounded-full flex items-center justify-center shadow-md border border-purple-100">
+                                <span className="font-bold text-purple-400 text-xs">{poolExhausted ? 0 : availablePool.length}</span>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-4 p-7 pt-5">
-                            <div>
-                                <h3 className="typo-caption text-action mb-1.5">Resultado</h3>
-                                <h2 className="typo-h2">La Bendición del Trueno</h2>
+                        <p className="typo-h3 text-purple-900/50">{poolExhausted ? '¡Destinos Agotados!' : 'Invocar Oráculo'}</p>
+                        {poolExhausted && <p className="text-xs text-amber-500 font-bold mt-1">Se barajará automáticamente</p>}
+                    </div>
+                )}
+
+                {/* The Card */}
+                {displayCard && (
+                    <div className={`relative w-full max-w-[320px] aspect-[63/88] bg-white rounded-[2rem] shadow-xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out border-2 ${cardStyles.border} ${isShuffling ? 'scale-95 blur-[1px]' : 'animate-pop-in'}`}>
+                        {/* Header */}
+                        <div className={`w-full py-4 px-4 flex flex-col items-center justify-center shrink-0 border-b border-dashed ${cardStyles.border} ${cardStyles.bgHeader}`}>
+                            <span className={`material-symbols-outlined text-2xl mb-1 ${cardStyles.icon}`}>
+                                {cardStyles.icon}
+                            </span>
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${cardStyles.textHeader}`}>
+                                {displayCard.type}
+                            </span>
+                        </div>
+
+                        <div className="flex-1 flex flex-col overflow-hidden relative w-full bg-white">
+                             <div className="px-6 pt-5 pb-2 text-center shrink-0 z-10">
+                                <h2 className={`font-cartoon text-2xl leading-tight ${cardStyles.textTitle}`}>
+                                    {displayCard.title}
+                                </h2>
                             </div>
-                            <div className="h-px w-full bg-slate-100"></div>
-                            <p className="typo-body">
-                                Zeus te sonríe desde el Olimpo. La tormenta despeja el camino de tus enemigos. <span className="text-action font-bold bg-blue-50 px-1 rounded">Roba dos cartas de acción extra</span> inmediatamente.
-                            </p>
+
+                            <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 ${cardStyles.divider}`}></div>
+
+                            <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden relative w-full mb-2">
+                                <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollUp ? 'opacity-100' : 'opacity-0'}`}></div>
+                                
+                                <div ref={descriptionRef} onScroll={checkScroll} className="h-full overflow-y-auto no-scrollbar text-center flex items-start justify-center">
+                                    <p className="font-rounded font-semibold text-[17px] text-slate-600 leading-snug w-full whitespace-pre-line pb-4 pt-2">
+                                        {displayCard.description}
+                                    </p>
+                                </div>
+                                
+                                <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 ${canScrollDown ? 'opacity-100' : 'opacity-0'}`}></div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
-            <BottomBar>
-                <Button fullWidth className="bg-action shadow-[0_8px_20px_rgb(37,140,244,0.3)]" icon="auto_awesome">ACTIVAR ORÁCULO</Button>
+
+            <BottomBar className="bg-white border-t border-purple-50">
+                 <div className="flex w-full gap-3 items-center">
+                    <Button 
+                        fullWidth 
+                        className={`shadow-[0_4px_20px_rgba(147,51,234,0.3)] bg-purple-600 hover:bg-purple-700 text-white ${isShuffling || cooldown > 0 ? 'opacity-80' : ''}`} 
+                        onClick={handleActivate}
+                        disabled={!canDraw && !poolExhausted}
+                        icon={isShuffling ? 'cached' : poolExhausted ? 'replay' : 'visibility'}
+                    >
+                        {isShuffling ? 'Consultando...' : cooldown > 0 ? `Espere... (${cooldown}s)` : poolExhausted ? 'Restaurar' : drawnCard ? 'Otro Oráculo' : 'Revelar Destino'}
+                    </Button>
+                 </div>
             </BottomBar>
         </div>
     );
@@ -976,20 +1188,22 @@ export const VictoryLogScreen: React.FC = () => {
                                         disabled={justVotedId !== null || isClearingVotes} // Disable all during feedback animation
                                         className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-28 shadow-sm active:scale-95 overflow-hidden ${isJustVoted ? 'bg-green-50 border-green-500 scale-105' : 'border-white bg-white hover:border-slate-200'}`}
                                     >
-                                        <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform ${isJustVoted ? 'scale-110' : ''}`}>
-                                            <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
-                                        </div>
-                                        <div className="w-full text-center relative z-10">
-                                            <span className={`block text-sm font-bold truncate w-full ${isJustVoted ? 'text-green-700' : 'text-slate-700'}`}>{isJustVoted ? '¡Voto!' : p.name}</span>
-                                        </div>
-                                        
-                                        {/* Overlay Feedback Icon */}
-                                        {isJustVoted && (
-                                            <div className="absolute inset-0 flex items-center justify-center z-20">
-                                                <div className="size-10 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg animate-pop-in">
-                                                    <span className="material-symbols-outlined text-2xl font-bold">check</span>
+                                        {isJustVoted ? (
+                                            <div className="flex flex-col items-center justify-center w-full h-full animate-pop-in">
+                                                <div className="size-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg mb-2 border-4 border-white">
+                                                    <span className="material-symbols-outlined text-3xl font-bold">check</span>
                                                 </div>
+                                                <span className="text-green-600 font-bold text-sm animate-pulse">¡Voto!</span>
                                             </div>
+                                        ) : (
+                                            <>
+                                                <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform`}>
+                                                    <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
+                                                </div>
+                                                <div className="w-full text-center relative z-10">
+                                                    <span className="block text-sm font-bold truncate w-full text-slate-700">{p.name}</span>
+                                                </div>
+                                            </>
                                         )}
                                     </button>
                                 )
