@@ -25,39 +25,37 @@ export const GameSessionScreen: React.FC = () => {
             />
 
             <div className="flex-1 px-4 py-6">
+                {/* SECTION 1: CARD PILES */}
                 <h3 className="text-slate-400 tracking-wide text-xs font-bold uppercase px-1 pb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">bolt</span> Acciones Principales
+                    <span className="material-symbols-outlined text-base">style</span> PILAS DE CARTAS
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-8">
+                    {/* Minigame Card */}
                     <Card onClick={() => navigate('/minigame-selector')} className="h-64 border-4 border-white group" bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuAlkW3Xim0uV0HK2wLarIuDmnPNIxq6jxurfDoWcgSZFCnSnp0hxr3dUMh7AALzEB-Jt-KtfY7CdDHk7lAel5YbztNTT9y39EWZ4ZP_xLE7-aHS2eWLwDTc9j-Kp8WmsK17sl2a-ObIvNoekXKRK7ncyL3JdigLfAjcUG054BZ2EA2G5jG4MkLOPam8H1uNyb45kjrApoEC72QAapwFAR7ECEgl975PQ4rqaIYwqnv79kxuSnrLgfddpi1yS6iPbBuZmm4kjG0StSo">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        <div className="relative z-10 flex flex-col justify-end h-full p-4">
-                            <div className="size-12 rounded-xl bg-primary flex items-center justify-center shadow-lg border-2 border-white/20 mb-3">
-                                <span className="material-symbols-outlined text-white text-2xl">videogame_asset</span>
-                            </div>
-                            <h4 className="text-white text-lg font-extrabold leading-tight">Jugar Minijuego</h4>
-                            <p className="text-white/80 text-xs mt-1 font-medium">Desafía a los dioses.</p>
+                        {/* Darker overlay for better text contrast since icons are gone */}
+                        <div className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"></div>
+                        <div className="relative z-10 flex flex-col justify-center items-center h-full p-4 text-center">
+                            <h4 className="text-white text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md">Jugar Minijuego</h4>
                         </div>
                     </Card>
+                    
+                    {/* Oracle Card */}
                     <Card onClick={() => navigate('/oracle')} className="h-64 border-4 border-white group" bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuD9QZx7CtrJnAHf9WfZTyPOlTMAK7huKeUFgLtc33PrED9FikKC8usbyisSCOi2BuhW9d-S0tLyBUDMBiK6TOoPDH6JRgJCZgVj9G7sDmv4-KrLTdPS93yBc0VxGPm-pEYNK_gjxy266cH0TZBTo1tFrOg9RHQlJFGjxwImcPf5mCwVmTOOd6LB5o0f85239Cd1aL1iyspDGfYPpGdptQX4tqVOczJJbjZ6RFrzl8zBoRfDwyFQWNihIv34b0I9Yrw7t6SOra7hIC8">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        <div className="relative z-10 flex flex-col justify-end h-full p-4">
-                            <div className="size-12 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg border-2 border-white/20 mb-3">
-                                <span className="material-symbols-outlined text-white text-2xl">visibility</span>
-                            </div>
-                            <h4 className="text-white text-lg font-extrabold leading-tight">Activar Oráculo</h4>
-                            <p className="text-white/80 text-xs mt-1 font-medium">Consulta el destino.</p>
+                        <div className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"></div>
+                        <div className="relative z-10 flex flex-col justify-center items-center h-full p-4 text-center">
+                            <h4 className="text-white text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md">Activar Oráculo</h4>
                         </div>
                     </Card>
                 </div>
 
+                {/* SECTION 2: SUPPORT TOOLS */}
                 <h3 className="text-slate-400 tracking-wide text-xs font-bold uppercase px-1 pb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">build</span> Herramientas
+                    <span className="material-symbols-outlined text-base">widgets</span> HERRAMIENTAS DE APOYO
                 </h3>
                 <div className="grid grid-cols-3 gap-3 mb-8">
                      {[
-                         {icon: 'timer', color: 'teal', label: 'Temporizador', path: '/timer'},
-                         {icon: 'map', color: 'amber', label: 'Destinos', path: '/destinies-public'},
+                         {icon: 'timer', color: 'teal', label: 'Temporizador / Cronómetro', path: '/timer'},
+                         {icon: 'casino', color: 'amber', label: 'Destinos', path: '/destinies-public'}, // Icon changed to 'casino' (dice/randomness)
                          {icon: 'menu_book', color: 'pink', label: 'Bitácora', path: '/victory-log'},
                      ].map((t, i) => {
                          return (
@@ -69,7 +67,7 @@ export const GameSessionScreen: React.FC = () => {
                                 <div className={`size-12 rounded-full bg-${t.color}-50 text-${t.color}-600 flex items-center justify-center mb-3`}>
                                     <span className="material-symbols-outlined">{t.icon}</span>
                                 </div>
-                                <span className="text-xs font-bold text-slate-700 text-center flex flex-col items-center">
+                                <span className="text-xs font-bold text-slate-700 text-center flex flex-col items-center leading-tight">
                                     {t.label}
                                 </span>
                              </button>
@@ -412,24 +410,24 @@ interface OracleCard {
 
 const ORACLES_DB: OracleCard[] = [
     // --- FAVORABLE (6) ---
-    { id: 'fav1', type: 'Favorable', title: 'Oportunidad Dorada', description: 'Elige una opción entre:\n1. Ganar una Reliquia.\n2. Mover la ficha de cualquier jugador dos casillas hacia atrás.\nTú decides si puede activar alguna casilla especial hasta que regrese a su casilla.' },
-    { id: 'fav2', type: 'Favorable', title: 'El Nuevo Elegido', description: 'Elige el siguiente Minijuego que se jugará al final de la ronda.\nAdemás, el Símbolo del Elegido pasa a ser tuyo. Si ya lo era, lo mantendrás el siguiente turno.\nLos turnos de esta ronda no cambian.' },
+    { id: 'fav1', type: 'Favorable', title: 'Oportunidad Dorada', description: 'Elige una opción entre:\n1. Ganar una Reliquia.\n2. Mover la ficha de cualquier jugador dos casillas hacia atrás.\n\nTú decides si puede activar alguna casilla especial hasta que regrese a su casilla.' },
+    { id: 'fav2', type: 'Favorable', title: 'El Nuevo Elegido', description: 'Elige el siguiente Minijuego que se jugará al final de la ronda.\n\nAdemás, el Símbolo del Elegido pasa a ser tuyo. Si ya lo era, lo mantendrás el siguiente turno.\n\nLos turnos de esta ronda no cambian.' },
     { id: 'fav3', type: 'Favorable', title: 'Fuente de Poder', description: 'Elige una opción entre:\n1. Tomar un Poder de la pila, el que tú quieras, y baraja la pila.\n2. Perder una Plaga.' },
     { id: 'fav4', type: 'Favorable', title: 'Caos Controlado', description: 'Elige una opción entre:\n1. Cambiar tu Pacto con el de otro jugador.\n2. Intercambiar un Poder al azar por una Plaga entre dos jugadores cualquiera.' },
     { id: 'fav5', type: 'Favorable', title: 'Gloria Adicional', description: 'Si eres uno de los ganadores del siguiente Minijuego, recibes un Beneficio de la Victoria adicional.' },
-    { id: 'fav6', type: 'Favorable', title: 'Robo de Poder', description: 'Todos los jugadores te muestran sus Poderes. Quédate con uno de esos Poderes, el que quieras. Devuelve el resto a sus dueños.' },
+    { id: 'fav6', type: 'Favorable', title: 'Robo de Poder', description: 'Todos los jugadores te muestran sus Poderes. Quédate con uno de esos Poderes, el que quieras.\n\nDevuelve el resto a sus dueños.' },
 
     // --- DESFAVORABLE (6) ---
-    { id: 'unfav1', type: 'Desfavorable', title: 'Cambio de Posición', description: 'Intercambia tu puesto con uno de los jugadores que estén en la casilla más distante de La Meta.\nNo activas casilla especial hasta que regreses a tu casilla. El otro jugador decide si activa su Oráculo inmediatamente.' },
-    { id: 'unfav2', type: 'Desfavorable', title: 'Sacrificio Inevitable', description: 'Elige 1 opción entre:\n1. Perder una Reliquia.\n2. Perder hasta tres Poderes (o los que tengas, si tienes menos).\nPara elegir una opción, debes tener al menos una Reliquia o un Poder, respectivamente. Si no tienes nada, pierdes tu próximo turno.' },
-    { id: 'unfav3', type: 'Desfavorable', title: 'Retroceso Menor', description: 'Mueve tu ficha 2 casillas hacia atrás. No activas casilla especial hasta que regreses a tu casilla.' },
+    { id: 'unfav1', type: 'Desfavorable', title: 'Cambio de Posición', description: 'Intercambia tu puesto con uno de los jugadores que estén en la casilla más distante de La Meta.\n\nNo activas casilla especial hasta que regreses a tu casilla. El otro jugador decide si activa su Oráculo inmediatamente.' },
+    { id: 'unfav2', type: 'Desfavorable', title: 'Sacrificio Inevitable', description: 'Elige 1 opción entre:\n1. Perder una Reliquia.\n2. Perder hasta tres Poderes (o los que tengas, si tienes menos).\n\nPara elegir una opción, debes tener al menos una Reliquia o un Poder, respectivamente. Si no tienes nada, pierdes tu próximo turno.' },
+    { id: 'unfav3', type: 'Desfavorable', title: 'Retroceso Menor', description: 'Mueve tu ficha 2 casillas hacia atrás.\n\nNo activas casilla especial hasta que regreses a tu casilla.' },
     { id: 'unfav4', type: 'Desfavorable', title: 'Dilema del Secreto', description: 'Elige una opción entre:\n1. Mover tu ficha tres casillas hacia atrás. No activas casilla especial hasta que regreses a tu casilla.\n2. Revelar tu Pacto a un adversario. Él no puede mostrárselo a nadie pero sí decir lo que quiera.' },
     { id: 'unfav5', type: 'Desfavorable', title: 'Caridad Obligada', description: 'Elige una opción entre:\n1. Todos tus adversarios ganan un Poder.\n2. Perder una Reliquia (debes tener al menos una).' },
-    { id: 'unfav6', type: 'Desfavorable', title: 'Voto de Silencio', description: 'No puedes pronunciar ninguna palabra hasta el comienzo de tu siguiente turno, a menos que un Minijuego lo requiera. Si no cumples, pierdes 1 Reliquia (si no tienes, no recibirás la próxima).' },
+    { id: 'unfav6', type: 'Desfavorable', title: 'Voto de Silencio', description: 'No puedes pronunciar ninguna palabra hasta el comienzo de tu siguiente turno, a menos que un Minijuego lo requiera.\n\nSi no cumples, pierdes 1 Reliquia (si no tienes, no recibirás la próxima).' },
 
     // --- NEUTRAL (2) ---
-    { id: 'neu1', type: 'Neutral', title: 'Duelo por el Botín', description: 'Reta a un adversario a un Duelo.\nJugarán el primer Minijuego Individual que salga. El ganador:\n1. Roba 1 Reliquia al perdedor, o\n2. Roba 2 Poderes al perdedor.\nSi el perdedor no tiene lo elegido, se toma del banco. Si nadie pierde, cada quien decide si pierde 1 Reliquia o 2 Poderes.' },
-    { id: 'neu2', type: 'Neutral', title: 'Ley de Compensación', description: 'Si eres uno de los que está más cerca de La Meta, en tu siguiente turno Avanzar te costará dos acciones.\nSi eres uno de los que está más lejos de La Meta, en tu siguiente turno Usar Poder no te costará acción.' },
+    { id: 'neu1', type: 'Neutral', title: 'Duelo por el Botín', description: 'Reta a un adversario a un Duelo.\n\nJugarán el primer Minijuego Individual que salga. El ganador:\n1. Roba 1 Reliquia al perdedor, o\n2. Roba 2 Poderes al perdedor.\n\nSi el perdedor no tiene lo elegido, se toma del banco. Si nadie pierde, cada quien decide si pierde 1 Reliquia o 2 Poderes.' },
+    { id: 'neu2', type: 'Neutral', title: 'Ley de Compensación', description: 'Si eres uno de los que está más cerca de La Meta, en tu siguiente turno Avanzar te costará dos acciones.\n\nSi eres uno de los que está más lejos de La Meta, en tu siguiente turno Usar Poder no te costará acción.' },
 ];
 
 export const OracleScreen: React.FC = () => {

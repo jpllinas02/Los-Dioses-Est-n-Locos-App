@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Header, Card, Button, BottomBar } from '../components/UI';
 import { Player, PactType, GameColor } from '../types';
 
@@ -31,51 +31,84 @@ export const HomeScreen: React.FC = () => {
         navigate('/game');
     };
 
+    const navigateToPlaceholder = (title: string, description: string) => {
+        navigate('/extras', { state: { title, description } });
+    };
+
+    // Helper for 3D Button Style
+    // Removed 'uppercase' to allow Title Case (Nombre Propio)
+    const secondaryBtnClass = "relative w-full py-3 bg-white border-2 border-slate-200 border-b-[5px] border-b-slate-300 rounded-xl text-slate-600 font-extrabold text-sm tracking-wide active:border-b-2 active:translate-y-[3px] transition-all duration-100 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700";
+
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background overflow-hidden max-w-md mx-auto shadow-2xl">
              <div className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.08] mix-blend-multiply grayscale" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB3RwclW-6L2OYrgdY1Hk_rKW2-hQLFqhp8Ii5OYxEAUZTyH6S3YEG-0_vjW2fne3ekkbc0WtIMZ3EM9Whc-oPdIOabbYPutIEejGEvRvWtjqEGyU5bscKlRtjZ1h-IQe5kttxTtZsgdvD8WbuJPhwqNk4X9ddygeY6c6vEEgitYZAiBCNueDV-qgZszt9SJL1XlEtc6DiHmQ4pynpviq1EINlahGsDhGCblUg4xoE11XUZN2M4OrIdlh7rsjZM3H65rKndEHHRnD0")'}}></div>
             <div className="absolute inset-0 z-0 bg-gradient-to-b from-purple-100/40 via-background/50 to-background"></div>
 
-            <div className="relative z-10 w-full p-4 flex justify-between items-center pt-8">
-                <button className="flex items-center justify-center size-12 rounded-full bg-white shadow-sm border border-slate-200 text-slate-600 hover:text-primary transition-colors">
-                    <span className="material-symbols-outlined">settings</span>
-                </button>
-                <button className="flex items-center justify-center size-12 rounded-full bg-white shadow-sm border border-slate-200 text-slate-600 hover:text-primary transition-colors">
-                    <span className="material-symbols-outlined">volume_up</span>
-                </button>
-            </div>
+            {/* Top Bar Icons Removed per request */}
+            <div className="w-full pt-8"></div>
 
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 w-full">
-                <div className="flex flex-col items-center justify-center mb-10 w-full">
-                    <div className="relative w-48 h-48 mb-6">
+            <div className="relative z-10 flex-1 flex flex-col items-center px-6 w-full pt-4">
+                {/* Logo Section */}
+                <div className="flex flex-col items-center justify-center mb-8 w-full">
+                    <div className="relative w-40 h-40 mb-4">
                         <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
                         <div className="relative w-full h-full bg-gradient-to-br from-white to-purple-50 rounded-3xl border border-white/80 shadow-xl flex items-center justify-center p-4 animate-float">
                             <div className="w-full h-full bg-center bg-contain bg-no-repeat" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAWjwyX0TYR79Q1qqIZ8qT_iykfcOl-WeITNgC9FktM6HGOs5Lvz9VIFGVI_b7Gp6XwGzKVViIMBFBZuIPBdyNl25Csv0Lhe6nldJKQhSN7HjNVTC4TQUpXKMWXlDvv-2q7imiNsatYy8JYetX63eZh9QM4omeVU2zOch52VBWuD6eO2T6qkZmRLISa7CwLGB221LuJNWEaA76hPQHQfKk56qV5oFlp6dCzyqEg8HkClqzGPKDErSnZEG2gq29i1TxKky-ugQ5ZIFo")'}}></div>
                         </div>
                     </div>
-                    <h1 className="typo-h1 text-center drop-shadow-sm">
+                    <h1 className="typo-h1 text-center drop-shadow-sm leading-none">
                         Los Dioses <br/>
-                        <span className="text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-primary">Están Locos</span>
+                        <span className="text-4xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-primary">Están Locos</span>
                     </h1>
-                    <p className="mt-3 text-slate-500 typo-caption bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 shadow-sm backdrop-blur-sm">Companion App</p>
+                    {/* Updated Companion App Text Style */}
+                    <p className="mt-2 text-primary/60 font-bold uppercase tracking-[0.2em] text-[10px]">Aplicación Acompañante</p>
                 </div>
                 
-                <div className="w-full flex flex-col gap-4 mt-auto mb-8">
-                    <button 
-                        onClick={handleStartGame} 
-                        className="group relative w-full py-5 bg-primary hover:bg-primary-dark text-white rounded-2xl shadow-[0_8px_25px_rgba(51,13,242,0.4)] active:scale-[0.98] transition-all duration-200 flex flex-col items-center justify-center gap-0.5 overflow-hidden"
-                    >
-                        <span className="text-xl font-bold tracking-tight">Empieza Partida Nueva</span>
-                        <span className="text-sm font-medium text-purple-200/80">O Retoma una iniciada</span>
-                    </button>
+                {/* Menu System */}
+                <div className="w-full flex flex-col items-center justify-start flex-1 mb-8">
                     
-                    <div className="grid grid-cols-2 gap-4 w-full">
-                        <Button variant="outline" onClick={() => navigate('/learn-intro')} className="shadow-[0_4px_0_0_#cbd5e1]">
-                            <span className="material-symbols-outlined text-purple-500">menu_book</span> Aprender
-                        </Button>
-                        <Button variant="outline" onClick={() => navigate('/extras')} className="shadow-[0_4px_0_0_#cbd5e1]">
-                            <span className="material-symbols-outlined text-amber-500">emoji_events</span> Extras
-                        </Button>
+                    {/* Main Button - 3D Style with Aura & Increased Height & Softer Bottom Edge */}
+                    <div className="w-full max-w-xs mb-6">
+                        <button 
+                            onClick={handleStartGame} 
+                            // Changed shadow bottom color from #1a0b7e (blackish) to #280bc4 (vibrant dark blue)
+                            // Reduced 3D height from 8px to 6px for a cleaner look
+                            className="group relative w-full py-8 px-4 bg-[#330df2] text-white rounded-2xl shadow-[0_6px_0_0_#280bc4,0_0_40px_rgba(51,13,242,0.5)] active:shadow-none active:translate-y-[6px] transition-all duration-150 flex flex-col items-center justify-center hover:bg-[#3b16f2]"
+                        >
+                            <span className="text-xl font-extrabold tracking-tight leading-none mb-1">Empieza Partida Nueva</span>
+                            <span className="text-sm font-medium text-white/80 leading-none">O Retoma una iniciada</span>
+                        </button>
+                    </div>
+                    
+                    {/* Secondary List - Fun Video Game Menu Style */}
+                    <div className="flex flex-col gap-2.5 w-full max-w-[240px]">
+                        <button 
+                            className={secondaryBtnClass}
+                            onClick={() => navigateToPlaceholder("¿Cómo Usar Esta App?", "Aquí encontrarás una guía paso a paso sobre cómo utilizar todas las funciones de la aplicación acompañante para mejorar tu experiencia de juego.")}
+                        >
+                            ¿Cómo Usar Esta App?
+                        </button>
+
+                        <button 
+                            className={secondaryBtnClass}
+                            onClick={() => navigateToPlaceholder("Reglas Del Juego", "El reglamento completo de 'Los Dioses Están Locos' estará disponible aquí para consulta rápida durante tus partidas.")}
+                        >
+                            Reglas Del Juego
+                        </button>
+
+                        <button 
+                            className={secondaryBtnClass}
+                            onClick={() => navigateToPlaceholder("Configuración", "Próximamente podrás ajustar el volumen, idioma, notificaciones y otras preferencias de la aplicación desde este menú.")}
+                        >
+                            Configuración
+                        </button>
+
+                        <button 
+                            className={secondaryBtnClass}
+                            onClick={() => navigateToPlaceholder("Extras", "Esta sección contendrá Galería de imágenes, Prototipos y versiones iniciales, y Agradecimientos especiales.")}
+                        >
+                            Extras
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1112,17 +1145,25 @@ export const LeaderboardScreen: React.FC = () => {
 
 export const ExtrasScreen: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Get state from navigation or fallback defaults
+    const { title, description } = location.state || {
+        title: "Extras",
+        description: "Esta sección contendrá Galería de imágenes, Prototipos y versiones iniciales, y Agradecimientos especiales."
+    };
+
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Extras" actionIcon="settings" />
+            <Header title={title} actionIcon="settings" />
             <div className="flex-1 flex flex-col items-center justify-center px-6 bg-[#f6f5f8]">
                  <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center max-w-sm w-full">
                     <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span className="material-symbols-outlined text-4xl">construction</span>
                     </div>
                     <h2 className="text-2xl font-bold text-slate-900 mb-2">En Construcción</h2>
-                    <p className="text-slate-500 mb-8">
-                        Esta sección contendrá Galería de imágenes, Prototipos y versiones iniciales, y Agradecimientos especiales.
+                    <p className="text-slate-500 mb-8 leading-relaxed">
+                        {description}
                     </p>
                     <Button fullWidth variant="outline" onClick={() => navigate(-1)}>
                         Volver
