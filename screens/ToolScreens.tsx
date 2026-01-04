@@ -5,59 +5,133 @@ import { Player, GameColor } from '../types';
 
 // --- Timer Screen ---
 export const TimerScreen: React.FC = () => {
-    // State
-    const [totalTime, setTotalTime] = useState(60); // Default 1 minute
-    const [timeLeft, setTimeLeft] = useState(60);
+    // Modes: 'TIMER' (Countdown) | 'STOPWATCH' (Count Up with Target)
+    const [mode, setMode] = useState<'TIMER' | 'STOPWATCH'>('TIMER');
+
+    // totalTime represents the TARGET/MAX time in both modes
+    const [totalTime, setTotalTime] = useState(60); 
+    
+    // Counters
+    const [timeLeft, setTimeLeft] = useState(60); // For Timer Mode
+    const [elapsedTime, setElapsedTime] = useState(0); // For Stopwatch Mode
+
     const [isRunning, setIsRunning] = useState(false);
     
-    // Audio States
+    // Audio States - Soundtrack ON by default per request
     const [narrationOn, setNarrationOn] = useState(true);
-    const [soundtrackOn, setSoundtrackOn] = useState(false);
+    const [soundtrackOn, setSoundtrackOn] = useState(true);
 
     // Input Refs for manual editing
     const minutesInputRef = useRef<HTMLInputElement>(null);
     const secondsInputRef = useRef<HTMLInputElement>(null);
 
-    // Timer Logic
+    // Helper for TTS
+    const speak = (text: string) => {
+        if (!narrationOn || !window.speechSynthesis) return;
+        // Cancel previous utterances to avoid queue buildup
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1.1;
+        window.speechSynthesis.speak(utterance);
+    };
+
+    // Timer/Stopwatch Logic
     useEffect(() => {
         let interval: any = null;
-        if (isRunning && timeLeft > 0) {
+        if (isRunning) {
             interval = setInterval(() => {
-                setTimeLeft((prev) => prev - 1);
+                if (mode === 'TIMER') {
+                    // --- TIMER LOGIC (Countdown) ---
+                    if (timeLeft > 0) {
+                        const nextTime = timeLeft - 1;
+                        setTimeLeft(nextTime);
+                        if (nextTime === 0) {
+                            setIsRunning(false);
+                            speak("Tiempo terminado");
+                        }
+                    }
+                } else {
+                    // --- STOPWATCH LOGIC (Count Up Indefinitely) ---
+                    setElapsedTime((prev) => {
+                        const next = prev + 1;
+                        // Trigger alert exactly when hitting the target
+                        if (next === totalTime) {
+                            speak("Tiempo terminado");
+                        }
+                        return next;
+                    });
+                }
             }, 1000);
-        } else if (timeLeft === 0) {
-            setIsRunning(false);
-            // Optional: Play sound here
         }
         return () => clearInterval(interval);
-    }, [isRunning, timeLeft]);
+    }, [isRunning, timeLeft, mode, totalTime, narrationOn]);
 
-    // Formatters
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
+    // Check if we passed the limit (for Visual Feedback)
+    const isOvertime = mode === 'STOPWATCH' && elapsedTime >= totalTime && totalTime > 0;
+    const isTimerFinished = mode === 'TIMER' && timeLeft === 0;
+    const showAlertVisuals = (mode === 'STOPWATCH' && isOvertime) || (mode === 'TIMER' && isTimerFinished);
+
+    // Determine what to display in the big numbers
+    // When STOPPED/RESET: Show Target Time (so user can edit it)
+    // When RUNNING/PAUSED (mid-game): Show Active Counter
+    const isEditingTarget = !isRunning && (mode === 'TIMER' ? timeLeft === totalTime : elapsedTime === 0);
+    
+    const displayTime = isEditingTarget 
+        ? totalTime // Show Target for editing
+        : (mode === 'TIMER' ? timeLeft : elapsedTime); // Show active count
+
+    const minutes = Math.floor(displayTime / 60);
+    const seconds = displayTime % 60;
 
     const formatNumber = (num: number) => num.toString().padStart(2, '0');
 
     // Handlers
     const toggleTimer = () => {
-        if (timeLeft === 0) {
+        // If Timer ended, reset before starting
+        if (mode === 'TIMER' && timeLeft === 0) {
             setTimeLeft(totalTime);
         }
+        // If Stopwatch was reset, ensure we start from 0
+        if (mode === 'STOPWATCH' && elapsedTime === 0 && !isRunning) {
+            // just starting
+        }
+        
         setIsRunning(!isRunning);
     };
 
     const resetTimer = () => {
         setIsRunning(false);
+        // Reset counters to default states
         setTimeLeft(totalTime);
+        setElapsedTime(0);
+    };
+
+    const handleModeSwitch = (newMode: 'TIMER' | 'STOPWATCH') => {
+        if (isRunning) return; // Prevent switching while running
+        if (mode === newMode) return;
+        setIsRunning(false);
+        setMode(newMode);
+        // Reset values for clean switch
+        setTimeLeft(totalTime);
+        setElapsedTime(0);
     };
 
     const handleQuickSelect = (seconds: number) => {
-        if (isRunning) return;
+        if (isRunning) return; // Prevent changing time while running
+        // Logic: Sets the TARGET time.
         setTotalTime(seconds);
+        // Also reset the counters
         setTimeLeft(seconds);
+        setElapsedTime(0);
+        setIsRunning(false); 
     };
 
     const handleManualInput = (type: 'min' | 'sec', value: string) => {
+        // Only allow manual input if we are in the "Editing Target" state
+        // (i.e. stopped and reset). Otherwise it's confusing jumping digits.
+        if (!isEditingTarget) return; 
+
         let val = parseInt(value) || 0;
         if (type === 'sec' && val > 59) val = 59;
         if (val < 0) val = 0;
@@ -71,34 +145,66 @@ export const TimerScreen: React.FC = () => {
 
         setTotalTime(newTotal);
         setTimeLeft(newTotal);
+        setElapsedTime(0);
     };
 
     // SVG Circle Calculations
     const radius = 140; 
     const circumference = 2 * Math.PI * radius;
-    // Visually target the next second when running to consume immediately
-    const displayTime = isRunning ? Math.max(0, timeLeft - 1) : timeLeft;
-    const strokeDashoffset = circumference - (displayTime / totalTime) * circumference;
+    
+    let strokeDashoffset = 0;
+    
+    if (mode === 'TIMER') {
+        // Decreases as time runs out
+        const visualCurrent = timeLeft;
+        strokeDashoffset = circumference - (visualCurrent / totalTime) * circumference;
+    } else {
+        // Stopwatch: Fills up towards Target
+        // Cap at 100% fill if overtime
+        const progress = Math.min(elapsedTime / totalTime, 1);
+        strokeDashoffset = circumference - progress * circumference;
+    }
+
+    // Color logic
+    const circleColor = showAlertVisuals ? "#ef4444" : "#f44611"; // Red if alert, Orange default
 
     return (
-        <div className="flex h-screen w-full flex-col bg-[#f8fafc] font-display overflow-hidden text-slate-900">
-            <Header title="Temporizador" actionIcon="settings" />
+        <div className={`flex h-screen w-full flex-col font-display overflow-hidden text-slate-900 transition-colors duration-500 ${showAlertVisuals ? 'bg-red-50' : 'bg-[#f8fafc]'}`}>
+            <Header title={mode === 'TIMER' ? "Temporizador" : "Cronómetro"} actionIcon="settings" />
             
             <div className="relative z-10 flex flex-col h-full items-center">
                 
-                {/* Quick Select Options */}
-                <div className="w-full px-6 pt-6 pb-2">
+                {/* Mode Switcher - LOCKED WHEN RUNNING */}
+                <div className={`w-full px-6 pt-4 transition-all duration-300 ${isRunning ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                     <div className="flex bg-slate-100 p-1 rounded-xl relative isolate">
+                         <button 
+                            onClick={() => handleModeSwitch('TIMER')}
+                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all 
+                            ${mode === 'TIMER' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                         >
+                             Descendente
+                         </button>
+                         <button 
+                            onClick={() => handleModeSwitch('STOPWATCH')}
+                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all 
+                            ${mode === 'STOPWATCH' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                         >
+                             Ascendente
+                         </button>
+                     </div>
+                </div>
+
+                {/* Quick Select Options - LOCKED WHEN RUNNING */}
+                <div className={`w-full px-6 pt-4 pb-2 transition-all duration-300 h-auto ${isRunning ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
                     <div className="flex justify-between gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                          {[30, 60, 90].map((sec) => (
                              <button
                                 key={sec}
                                 onClick={() => handleQuickSelect(sec)}
-                                disabled={isRunning}
-                                className={`flex-1 py-4 rounded-xl text-base font-bold transition-all 
+                                className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all 
                                     ${totalTime === sec 
                                         ? 'bg-primary text-white shadow-md' 
                                         : 'bg-transparent text-slate-500 hover:bg-slate-50'}
-                                    ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}
                                 `}
                              >
                                  {Math.floor(sec / 60)}:{formatNumber(sec % 60)}
@@ -117,71 +223,104 @@ export const TimerScreen: React.FC = () => {
                                 <circle 
                                     cx="150" cy="150" r={radius} 
                                     fill="none" 
-                                    stroke="#e2e8f0" 
+                                    stroke={showAlertVisuals ? "#fecaca" : "#e2e8f0"} 
                                     strokeWidth="12"
                                     strokeLinecap="round"
                                 ></circle>
-                                {/* Progress Circle - Faster animation (duration-300) */}
+                                {/* Progress Circle */}
                                 <circle 
                                     cx="150" cy="150" r={radius} 
                                     fill="none" 
-                                    stroke={timeLeft < 10 && isRunning ? "#f44611" : "#f44611"} 
+                                    stroke={circleColor} 
                                     strokeDasharray={circumference} 
                                     strokeDashoffset={isNaN(strokeDashoffset) ? 0 : strokeDashoffset}
                                     strokeLinecap="round" 
                                     strokeWidth="12"
-                                    className="transition-all duration-300 ease-out"
+                                    className={`transition-all duration-300 ease-linear ${showAlertVisuals ? 'animate-pulse' : ''}`}
                                 ></circle>
                             </svg>
                             
                             {/* Absolute Overlay */}
                             <div className="absolute inset-0">
                                 {/* Timer Digits - Perfectly Centered */}
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pb-3">
-                                    <input 
-                                        ref={minutesInputRef}
-                                        type="number"
-                                        disabled={isRunning}
-                                        value={formatNumber(minutes)}
-                                        onChange={(e) => handleManualInput('min', e.target.value)}
-                                        className={`w-[110px] text-center text-7xl font-bold bg-transparent focus:outline-none p-0 leading-none tracking-tighter text-slate-900 placeholder-slate-900 selection:bg-primary/20`}
-                                    />
-                                    <span className="text-7xl font-bold text-slate-300 mx-0 pb-2">:</span>
-                                    <input 
-                                        ref={secondsInputRef}
-                                        type="number"
-                                        disabled={isRunning}
-                                        value={formatNumber(seconds)}
-                                        onChange={(e) => handleManualInput('sec', e.target.value)}
-                                        className={`w-[110px] text-center text-7xl font-bold bg-transparent focus:outline-none p-0 leading-none tracking-tighter text-slate-900 placeholder-slate-900 selection:bg-primary/20`}
-                                    />
-                                </div>
-                                
-                                {/* Reset Button - Positioned absolutely at bottom of circle area */}
-                                <div className="absolute bottom-12 left-0 right-0 flex justify-center">
-                                    <button 
-                                        onClick={resetTimer}
-                                        className="h-16 w-16 rounded-full flex items-center justify-center text-slate-300 hover:text-primary hover:bg-slate-50 transition-all active:scale-95"
-                                        title="Reiniciar"
-                                    >
-                                        <span className="material-symbols-outlined text-4xl">replay</span>
-                                    </button>
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pb-3">
+                                    
+                                    {/* Mode Label / Alert Label */}
+                                    <div className="h-8 flex items-center justify-center">
+                                        {showAlertVisuals ? (
+                                            <span className="text-red-500 font-black tracking-widest uppercase animate-bounce">¡TIEMPO!</span>
+                                        ) : (
+                                            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                                                {isEditingTarget ? 'Definir Meta' : (mode === 'STOPWATCH' ? `Meta: ${Math.floor(totalTime / 60)}:${formatNumber(totalTime % 60)}` : 'Tiempo Restante')}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* The Digits */}
+                                    <div className="flex items-center justify-center">
+                                        <input 
+                                            ref={minutesInputRef}
+                                            type="number"
+                                            disabled={!isEditingTarget} // Disable editing while running
+                                            value={formatNumber(minutes)}
+                                            onChange={(e) => handleManualInput('min', e.target.value)}
+                                            className={`w-[110px] text-center text-7xl font-bold bg-transparent focus:outline-none p-0 leading-none tracking-tighter placeholder-slate-900 selection:bg-primary/20 transition-colors ${showAlertVisuals ? 'text-red-500' : 'text-slate-900'} ${!isEditingTarget ? 'cursor-default' : ''}`}
+                                        />
+                                        <span className={`text-7xl font-bold mx-0 pb-2 transition-colors ${showAlertVisuals ? 'text-red-300' : 'text-slate-300'}`}>:</span>
+                                        <input 
+                                            ref={secondsInputRef}
+                                            type="number"
+                                            disabled={!isEditingTarget} // Disable editing while running
+                                            value={formatNumber(seconds)}
+                                            onChange={(e) => handleManualInput('sec', e.target.value)}
+                                            className={`w-[110px] text-center text-7xl font-bold bg-transparent focus:outline-none p-0 leading-none tracking-tighter placeholder-slate-900 selection:bg-primary/20 transition-colors ${showAlertVisuals ? 'text-red-500' : 'text-slate-900'} ${!isEditingTarget ? 'cursor-default' : ''}`}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                {/* Main Action Button - Now Above Audio */}
+                {/* Main Action Button Area */}
                 <div className="w-full px-4 mb-6">
-                    <Button 
-                        fullWidth 
-                        onClick={toggleTimer} 
-                        icon={isRunning ? "pause" : "play_arrow"}
-                        className="shadow-[0_8px_25px_rgba(51,13,242,0.3)] h-16 text-lg tracking-wide bg-primary hover:bg-primary-dark text-white"
-                    >
-                        {isRunning ? 'PAUSAR' : 'EMPEZAR'}
-                    </Button>
+                    {isEditingTarget ? (
+                        <Button 
+                            fullWidth 
+                            onClick={toggleTimer} 
+                            icon="play_arrow"
+                            className={`shadow-[0_8px_25px_rgba(51,13,242,0.3)] h-16 text-lg tracking-wide ${showAlertVisuals ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30' : 'bg-primary hover:bg-primary-dark'} text-white transition-colors`}
+                        >
+                            EMPEZAR
+                        </Button>
+                    ) : isRunning ? (
+                        <Button 
+                            fullWidth 
+                            onClick={toggleTimer} 
+                            icon="pause"
+                            className={`shadow-[0_8px_25px_rgba(51,13,242,0.3)] h-16 text-lg tracking-wide ${showAlertVisuals ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30' : 'bg-primary hover:bg-primary-dark'} text-white transition-colors`}
+                        >
+                            PAUSAR
+                        </Button>
+                    ) : (
+                        <div className="flex gap-3">
+                            <Button 
+                                variant="outline"
+                                className={`flex-1 h-16 text-lg tracking-wide ${showAlertVisuals ? 'border-red-200 text-red-600 bg-red-50 hover:bg-red-100' : ''} transition-colors shadow-sm`}
+                                onClick={resetTimer}
+                                icon="replay"
+                            >
+                                Reiniciar
+                            </Button>
+                            <Button 
+                                className={`flex-1 h-16 text-lg tracking-wide ${showAlertVisuals ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30' : 'bg-primary hover:bg-primary-dark'} text-white transition-colors shadow-[0_8px_25px_rgba(51,13,242,0.3)]`}
+                                onClick={toggleTimer}
+                                icon="play_arrow"
+                            >
+                                Continuar
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Audio Controls - Now Below Main Button, Orange Accent */}
@@ -714,6 +853,9 @@ export const DestiniesScreen: React.FC = () => {
     const [winnerId, setWinnerId] = useState<string | null>(null);
     const [resetLocked, setResetLocked] = useState(false);
     
+    // Secret Mode Reveal Logic
+    const [isSecretRevealed, setIsSecretRevealed] = useState(false);
+    
     // Switch Confirmation State
     const [pendingSwitchMode, setPendingSwitchMode] = useState<'PUBLIC' | 'SECRET' | null>(null);
 
@@ -840,6 +982,7 @@ export const DestiniesScreen: React.FC = () => {
             // Secret Mode starts immediately
             setGameState('SECRET_PHASE');
             setSeenPlayerIds([]);
+            setIsSecretRevealed(false);
         }
     };
 
@@ -849,6 +992,7 @@ export const DestiniesScreen: React.FC = () => {
         setSecretModalPlayer(null);
         setSeenPlayerIds([]);
         setExcludedIds([]);
+        setIsSecretRevealed(false);
         setPendingSwitchMode(null); // Clear any pending switch
     };
 
@@ -942,8 +1086,7 @@ export const DestiniesScreen: React.FC = () => {
                      <button 
                         onClick={() => handleSwitchMode('PUBLIC')}
                         className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all 
-                        ${mode === 'PUBLIC' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'} 
-                        ${pendingSwitchMode === 'PUBLIC' ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-300 relative z-10' : ''}`}
+                        ${mode === 'PUBLIC' ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                      >
                          {pendingSwitchMode === 'PUBLIC' ? '¿Confirmar?' : 'Público'}
                      </button>
@@ -1018,11 +1161,33 @@ export const DestiniesScreen: React.FC = () => {
                                  
                                  const style = getColorStyle(p.color);
                                  const hasSeen = seenPlayerIds.includes(p.id);
+                                 const isWinner = p.id === winnerId;
                                  
-                                 // Card State Logic
-                                 // If seen: Greyed out, Locked.
-                                 // If not seen: Colored, Clickable.
-                                 
+                                 // Case 1: Reveal Phase
+                                 if (isSecretRevealed) {
+                                     return (
+                                         <div key={p.id} className={`rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 h-32 animate-pop-in ${isWinner ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+                                             {isWinner ? (
+                                                 <>
+                                                    <div className="size-10 rounded-full bg-green-500 text-white flex items-center justify-center shadow-sm">
+                                                        <span className="material-symbols-outlined text-2xl">check</span>
+                                                    </div>
+                                                    <span className="font-black text-xl text-green-700 tracking-tight">SÍ</span>
+                                                 </>
+                                             ) : (
+                                                 <>
+                                                    <div className="size-10 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-sm">
+                                                        <span className="material-symbols-outlined text-2xl">close</span>
+                                                    </div>
+                                                    <span className="font-black text-xl text-slate-400 tracking-tight">NO</span>
+                                                 </>
+                                             )}
+                                             <span className="text-xs font-bold text-slate-500">{p.name}</span>
+                                         </div>
+                                     )
+                                 }
+
+                                 // Case 2: Seen (Locked)
                                  if (hasSeen) {
                                      return (
                                         <div key={p.id} className="bg-slate-100 rounded-xl border border-slate-200 p-4 flex flex-col items-center justify-center gap-2 opacity-60 h-32">
@@ -1032,6 +1197,7 @@ export const DestiniesScreen: React.FC = () => {
                                      )
                                  }
 
+                                 // Case 3: Pick Me (Active)
                                  return (
                                      <button 
                                         key={p.id}
@@ -1051,11 +1217,14 @@ export const DestiniesScreen: React.FC = () => {
                          <div className="absolute bottom-6 left-0 right-0 flex justify-center px-6">
                             <Button 
                                 fullWidth 
-                                onClick={resetGame}
+                                onClick={isSecretRevealed ? resetGame : () => setIsSecretRevealed(true)}
                                 disabled={!allCandidatesSeen}
-                                className={allCandidatesSeen ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-300 shadow-none'}
+                                className={allCandidatesSeen ? (isSecretRevealed ? 'bg-slate-900 text-white shadow-lg' : 'bg-primary text-white shadow-lg') : 'bg-slate-300 shadow-none'}
                             >
-                                {allCandidatesSeen ? 'Reiniciar Destinos' : 'Faltan jugadores por ver'}
+                                {!allCandidatesSeen 
+                                    ? 'Faltan jugadores por ver' 
+                                    : (isSecretRevealed ? 'Reiniciar Destinos' : 'Revelar Resultados')
+                                }
                             </Button>
                          </div>
                     </div>

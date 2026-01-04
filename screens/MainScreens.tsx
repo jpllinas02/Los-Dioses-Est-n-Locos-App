@@ -88,9 +88,9 @@ export const HomeScreen: React.FC = () => {
                         <span className="material-symbols-outlined text-4xl text-primary mb-2">save</span>
                         <h3 className="typo-h3 mb-2">Partida Encontrada</h3>
                         <p className="text-sm text-slate-500 mb-6">Existe una partida anterior guardada. ¿Deseas continuarla o empezar de cero?</p>
-                        <div className="flex flex-col gap-3 w-full">
-                            <button onClick={resumeGame} className="w-full py-3 rounded-xl bg-primary text-white font-bold shadow-md">Continuar Partida</button>
-                            <button onClick={startNewGame} className="w-full py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Nueva Partida (Borrar datos)</button>
+                        <div className="flex gap-3 w-full">
+                             <button onClick={startNewGame} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600 text-sm">Nueva Partida</button>
+                             <button onClick={resumeGame} className="flex-[2] py-3 rounded-xl bg-primary text-white font-bold shadow-md">Continuar Partida</button>
                         </div>
                     </div>
                 </div>
@@ -552,7 +552,7 @@ export const RegistrationScreen: React.FC = () => {
                         </p>
                         <div className="flex gap-3 w-full">
                             <button onClick={() => setShowSkipConfirm(false)} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Cancelar</button>
-                            <button onClick={handleSkipRegistration} className="flex-1 py-3 rounded-xl bg-primary text-white font-bold">Continuar</button>
+                            <button onClick={handleSkipRegistration} className="flex-[2] py-3 rounded-xl bg-primary text-white font-bold">Continuar</button>
                         </div>
                     </div>
                 </div>
@@ -607,7 +607,7 @@ export const RegistrationScreen: React.FC = () => {
                                 <p className="text-sm text-slate-500 mb-6">Se perderá todo el progreso del registro.</p>
                                 <div className="flex gap-3 w-full">
                                     <button onClick={() => setShowExitConfirm(false)} className="flex-1 py-3 rounded-xl bg-slate-100 font-bold text-slate-600">Quedarse</button>
-                                    <button onClick={() => navigate('/')} className="flex-1 py-3 rounded-xl bg-danger text-white font-bold">Salir</button>
+                                    <button onClick={() => navigate('/')} className="flex-[2] py-3 rounded-xl bg-danger text-white font-bold">Salir</button>
                                 </div>
                             </div>
                         ) : (

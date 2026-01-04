@@ -198,6 +198,7 @@ export const MinigameSelectorScreen: React.FC = () => {
         // Only reset cards that match current filters (or just reset all to be safe/simple)
         setUsedCards([]);
         localStorage.removeItem('game_minigame_history_ids');
+        setDrawnCard(null); // Clear card to show deck and reset state
     }
 
     // Draw Logic
@@ -207,7 +208,7 @@ export const MinigameSelectorScreen: React.FC = () => {
         // Auto-reset if pool exhausted
         if (poolExhausted) {
             resetPool();
-            // Don't return, allow drawing immediately after reset for better UX
+            return; // Explicitly stop here to force user to draw again
         }
         
         // Check availability again (in case we just reset)
@@ -340,7 +341,7 @@ export const MinigameSelectorScreen: React.FC = () => {
                             </div>
                         </div>
                         <p className="typo-h3 text-slate-400">{poolExhausted ? '¡Mazo agotado!' : 'Toca para sacar carta'}</p>
-                        {poolExhausted && <p className="text-xs text-amber-500 font-bold mt-1">Se barajará automáticamente</p>}
+                        {poolExhausted && <p className="text-xs text-amber-500 font-bold mt-1">Toca para revolver</p>}
                     </div>
                 )}
 
@@ -473,6 +474,7 @@ export const OracleScreen: React.FC = () => {
     const resetPool = () => {
         setUsedCards([]);
         localStorage.removeItem('game_oracle_history_ids');
+        setDrawnCard(null); // Clear active card to show deck and make reset obvious
     }
 
     const handleActivate = () => {
@@ -481,6 +483,7 @@ export const OracleScreen: React.FC = () => {
         // Auto-reset logic
         if (poolExhausted) {
             resetPool();
+            return; // Explicitly stop here to force user to draw again
         }
 
         const currentUsed = poolExhausted ? [] : usedCards;
@@ -589,7 +592,7 @@ export const OracleScreen: React.FC = () => {
                             </div>
                         </div>
                         <p className="typo-h3 text-purple-900/50">{poolExhausted ? '¡Destinos Agotados!' : 'Invocar Oráculo'}</p>
-                        {poolExhausted && <p className="text-xs text-amber-500 font-bold mt-1">Se barajará automáticamente</p>}
+                        {poolExhausted && <p className="text-xs text-amber-500 font-bold mt-1">Toca para revolver</p>}
                     </div>
                 )}
 
@@ -607,13 +610,8 @@ export const OracleScreen: React.FC = () => {
                         </div>
 
                         <div className="flex-1 flex flex-col overflow-hidden relative w-full bg-white">
-                             <div className="px-6 pt-5 pb-2 text-center shrink-0 z-10">
-                                <h2 className={`font-cartoon text-2xl leading-tight ${cardStyles.textTitle}`}>
-                                    {displayCard.title}
-                                </h2>
-                            </div>
-
-                            <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 ${cardStyles.divider}`}></div>
+                             {/* Title Removed - Only Divider remains, pushed down for spacing */}
+                            <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 mt-6 ${cardStyles.divider}`}></div>
 
                             <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden relative w-full mb-2">
                                 <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollUp ? 'opacity-100' : 'opacity-0'}`}></div>
@@ -648,7 +646,7 @@ export const OracleScreen: React.FC = () => {
     );
 };
 
-// --- Victory Log ---
+// --- Victory Log Screen ---
 interface MinigameRecord {
     id: string;
     round: number;
@@ -1088,14 +1086,6 @@ export const VictoryLogScreen: React.FC = () => {
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseMinigameModal}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
                         <div className="p-5 border-b border-slate-100 bg-white text-center relative">
-                            {/* NEW: Explicit X Button */}
-                            <button 
-                                onClick={handleCloseMinigameModal}
-                                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors"
-                            >
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-
                             <h3 className="typo-h3 text-slate-900">{editingRecordId ? 'Editar Resultado' : '¿Quién Ganó el Minijuego?'}</h3>
                             <p className="text-sm text-slate-500 mt-1 font-medium">Selecciona los ganadores de la Ronda</p>
                         </div>
@@ -1125,15 +1115,9 @@ export const VictoryLogScreen: React.FC = () => {
                         </div>
                         
                         <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
-                            <div className="flex items-center gap-3">
-                                {/* CANCEL Button with Smart Close */}
-                                <button 
-                                    onClick={handleCloseMinigameModal}
-                                    className="px-4 py-3 font-bold text-slate-500 hover:text-slate-800 transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                                <Button className="flex-1 shadow-xl shadow-primary/20" onClick={confirmMinigame}>
+                            <div className="flex gap-3 w-full">
+                                <Button variant="ghost" className="flex-1" onClick={handleCloseMinigameModal}>Cancelar</Button>
+                                <Button className="flex-[2] shadow-xl shadow-primary/20" onClick={confirmMinigame}>
                                     {(selectedWinners.length === 0 || selectedWinners.length === players.length) ? 'No Hubo Ganadores' : 'Confirmar'}
                                 </Button>
                             </div>
@@ -1209,15 +1193,15 @@ export const VictoryLogScreen: React.FC = () => {
                                 )
                              })}
                         </div>
-                        <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
-                            <Button variant="outline" fullWidth onClick={() => setShowVoteModal(false)} disabled={isClearingVotes}>Cancelar</Button>
+                        <div className="p-5 border-t border-slate-100 bg-white flex gap-3">
+                            <Button variant="outline" className="flex-1" onClick={() => setShowVoteModal(false)} disabled={isClearingVotes}>Cancelar</Button>
                             
                             <button 
                                 onClick={clearCategoryVotes} 
                                 disabled={isClearingVotes}
-                                className="w-full py-3 rounded-xl text-danger font-bold text-sm hover:bg-red-50 transition-colors flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+                                className="flex-1 py-3 rounded-xl text-danger font-bold text-sm hover:bg-red-50 border border-red-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                <span className="material-symbols-outlined icon-sm">delete</span> Borrar votos de esta categoría
+                                <span className="material-symbols-outlined icon-sm">delete</span> Borrar votos
                             </button>
                         </div>
                     </div>
