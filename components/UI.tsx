@@ -124,3 +124,35 @@ export const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', i
         </button>
     );
 };
+
+// --- NEW PLAYER NAME COMPONENT ---
+export const PlayerName: React.FC<{ name: string; className?: string }> = ({ name, className = "" }) => {
+    // 1. "Caos": Chaos effect (independent jittery letters)
+    if (name === "Caos") {
+        return (
+            <span className={`inline-flex ${className}`}>
+                {name.split('').map((char, i) => (
+                    <span 
+                        key={i} 
+                        className="animate-chaos inline-block origin-center" 
+                        style={{ animationDelay: `${i * -1.5}s`, animationDuration: `${1 + (i * 0.1)}s` }}
+                    >
+                        {char}
+                    </span>
+                ))}
+            </span>
+        );
+    }
+
+    // 2. "Error 404": Glitch effect (blinking/shifting)
+    if (name === "Error 404") {
+        return (
+            <span className={`animate-glitch font-mono text-red-800 tracking-tighter ${className}`}>
+                {name}
+            </span>
+        );
+    }
+
+    // Default
+    return <span className={className}>{name}</span>;
+};
