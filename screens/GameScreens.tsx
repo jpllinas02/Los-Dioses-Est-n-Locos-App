@@ -360,11 +360,15 @@ export const MinigameSelectorScreen: React.FC = () => {
                             </div>
                             <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 ${cardStyles.divider}`}></div>
                             <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden relative w-full mb-2">
-                                <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollUp ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 flex items-start justify-center pt-1 ${canScrollUp && !isShuffling ? 'opacity-100' : 'opacity-0'}`}>
+                                    <span className="material-symbols-outlined text-slate-300 animate-bounce">keyboard_arrow_up</span>
+                                </div>
                                 <div ref={descriptionRef} onScroll={checkScroll} className="h-full overflow-y-auto no-scrollbar text-center flex items-start justify-center">
                                     <p className="font-rounded font-semibold text-[17px] text-slate-600 leading-snug w-full whitespace-pre-line pb-4 pt-2">{displayCard.description}</p>
                                 </div>
-                                <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 ${canScrollDown ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 flex items-end justify-center pb-2 ${canScrollDown && !isShuffling ? 'opacity-100' : 'opacity-0'}`}>
+                                    <span className="material-symbols-outlined text-slate-300 animate-bounce">keyboard_arrow_down</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -375,7 +379,7 @@ export const MinigameSelectorScreen: React.FC = () => {
                  <div className="flex w-full gap-3 items-center">
                     {drawnCard && !isShuffling && (
                         <Button 
-                            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 shadow-sm px-0 active:bg-slate-200" 
+                            className="flex-1 bg-white text-slate-600 border-2 border-slate-200 border-b-[4px] border-b-slate-300 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-slate-50 px-0 rounded-xl"
                             onClick={navigateToWinnerLog} 
                             icon="emoji_events"
                             disabled={cooldown > 0}
@@ -612,7 +616,9 @@ export const OracleScreen: React.FC = () => {
                             <div className={`w-12 h-1.5 mx-auto rounded-full shrink-0 my-1 mt-6 ${cardStyles.divider}`}></div>
 
                             <div className="flex-1 px-6 pb-6 pt-2 overflow-hidden relative w-full mb-2">
-                                <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 ${canScrollUp ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-white via-white/90 to-transparent z-10 pointer-events-none transition-opacity duration-300 flex items-start justify-center pt-1 ${canScrollUp && !isShuffling ? 'opacity-100' : 'opacity-0'}`}>
+                                    <span className="material-symbols-outlined text-slate-300 animate-bounce">keyboard_arrow_up</span>
+                                </div>
                                 
                                 <div ref={descriptionRef} onScroll={checkScroll} className="h-full overflow-y-auto no-scrollbar text-center flex items-start justify-center">
                                     <p className="font-rounded font-semibold text-[17px] text-slate-600 leading-snug w-full whitespace-pre-line pb-4 pt-2">
@@ -620,7 +626,9 @@ export const OracleScreen: React.FC = () => {
                                     </p>
                                 </div>
                                 
-                                <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 ${canScrollDown ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none transition-opacity duration-300 z-10 flex items-end justify-center pb-2 ${canScrollDown && !isShuffling ? 'opacity-100' : 'opacity-0'}`}>
+                                    <span className="material-symbols-outlined text-slate-300 animate-bounce">keyboard_arrow_down</span>
+                                </div>
                             </div>
                         </div>
                     </div>
