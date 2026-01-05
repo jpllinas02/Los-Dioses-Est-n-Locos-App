@@ -577,6 +577,12 @@ export const RegistrationScreen: React.FC = () => {
                                             ref={nameInputRef}
                                             value={tempName}
                                             onChange={(e) => setTempName(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleNextName();
+                                                }
+                                            }}
                                             className={`w-full bg-slate-50 border-2 rounded-xl h-14 px-4 pl-12 font-bold text-lg outline-none transition-colors ${nameError ? 'border-red-300 focus:border-red-500' : 'border-slate-100 focus:border-primary'}`}
                                             placeholder="Escribe aquí..."
                                             autoFocus
@@ -801,6 +807,12 @@ export const RegistrationScreen: React.FC = () => {
                                                     id={`edit-name-input-${p.id}`}
                                                     value={editName}
                                                     onChange={(e) => setEditName(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            saveEditing();
+                                                        }
+                                                    }}
                                                     className="w-full bg-slate-50 border-2 border-primary rounded-xl h-12 px-4 font-bold text-lg outline-none mb-4 text-slate-900"
                                                     placeholder="Nombre"
                                                     autoFocus

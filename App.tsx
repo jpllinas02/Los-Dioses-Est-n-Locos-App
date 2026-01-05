@@ -8,6 +8,7 @@ import { GameSessionScreen, MinigameSelectorScreen, OracleScreen } from './scree
 import { VictoryLogScreen, CalculatorScreen, LeaderboardScreen } from './screens/LogsAndWinnerScreen';
 import { TimerScreen } from './screens/TimerScreen';
 import { DestiniesScreen } from './screens/DestiniesScreen';
+import { AppGuideScreen } from './screens/AppGuideScreen';
 
 // Component to handle initial redirect
 const InitialRedirect: React.FC = () => {
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                 {/* Main Menu */}
                 <Route path="/" element={<HomeScreen />} />
                 <Route path="/extras" element={<ExtrasScreen />} />
+                <Route path="/app-guide" element={<AppGuideScreen />} />
                 
                 {/* Game Setup */}
                 <Route path="/registration" element={<RegistrationScreen />} />

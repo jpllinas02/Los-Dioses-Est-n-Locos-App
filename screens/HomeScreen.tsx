@@ -78,7 +78,7 @@ export const HomeScreen: React.FC = () => {
                     <div className="flex flex-col gap-2.5 w-full max-w-[240px]">
                         <button 
                             className={secondaryBtnClass}
-                            onClick={() => navigateToPlaceholder("¿Cómo Usar Esta App?", "Aquí encontrarás una guía paso a paso sobre cómo utilizar todas las funciones de la aplicación acompañante para mejorar tu experiencia de juego.")}
+                            onClick={() => navigate('/app-guide')}
                         >
                             ¿Cómo Usar Esta App?
                         </button>
