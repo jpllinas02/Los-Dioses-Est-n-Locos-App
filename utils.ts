@@ -1,7 +1,7 @@
 import { GameColor } from './types';
 
-// Fisher-Yates Shuffle
-export const shuffle = (array: any[]) => {
+// Fisher-Yates Shuffle Generic
+export const shuffle = <T>(array: T[]): T[] => {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
         randomIndex = Math.floor(Math.random() * currentIndex);

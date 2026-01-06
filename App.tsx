@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ROUTES } from './constants';
 
 // 1. Screens
 import { HomeScreen } from './screens/HomeScreen';
@@ -15,44 +16,36 @@ import { DestiniesScreen } from './screens/DestiniesScreen';
 import { AppGuideScreen } from './screens/AppGuideScreen';
 import { RulebookScreen } from './screens/RulebookScreen';
 
-// Component to handle initial redirect
-const InitialRedirect: React.FC = () => {
-    const navigate = useNavigate();
-    useEffect(() => {
-        // Force redirect to home on mount
-        navigate('/');
-    }, []);
-    return null;
-}
-
 const App: React.FC = () => {
     return (
         <Router>
-            <InitialRedirect />
             <Routes>
                 {/* Main Menu */}
-                <Route path="/" element={<HomeScreen />} />
-                <Route path="/settings" element={<SettingScreen />} />
-                <Route path="/extras" element={<ExtraScreen />} />
-                <Route path="/app-guide" element={<AppGuideScreen />} />
-                <Route path="/rules" element={<RulebookScreen />} />
+                <Route path={ROUTES.HOME} element={<HomeScreen />} />
+                <Route path={ROUTES.SETTINGS} element={<SettingScreen />} />
+                <Route path={ROUTES.EXTRAS} element={<ExtraScreen />} />
+                <Route path={ROUTES.APP_GUIDE} element={<AppGuideScreen />} />
+                <Route path={ROUTES.RULES} element={<RulebookScreen />} />
                 
                 {/* Game Setup */}
-                <Route path="/registration" element={<RegistrationScreen />} />
+                <Route path={ROUTES.REGISTRATION} element={<RegistrationScreen />} />
                 
                 {/* Active Game Hub & Core Decks */}
-                <Route path="/game" element={<GameSessionScreen />} />
-                <Route path="/minigame-selector" element={<MinigameSelectorScreen />} />
-                <Route path="/oracle" element={<OracleScreen />} />
+                <Route path={ROUTES.GAME} element={<GameSessionScreen />} />
+                <Route path={ROUTES.MINIGAME_SELECTOR} element={<MinigameSelectorScreen />} />
+                <Route path={ROUTES.ORACLE} element={<OracleScreen />} />
                 
                 {/* Game Tools (Isolated) */}
-                <Route path="/timer" element={<TimerScreen />} />
-                <Route path="/destinies-public" element={<DestiniesScreen />} />
+                <Route path={ROUTES.TIMER} element={<TimerScreen />} />
+                <Route path={ROUTES.DESTINIES} element={<DestiniesScreen />} />
                 
                 {/* Game Stats, Logs & Results */}
-                <Route path="/victory-log" element={<VictoryLogScreen />} />
-                <Route path="/calculator" element={<CalculatorScreen />} />
-                <Route path="/leaderboard" element={<LeaderboardScreen />} />
+                <Route path={ROUTES.VICTORY_LOG} element={<VictoryLogScreen />} />
+                <Route path={ROUTES.CALCULATOR} element={<CalculatorScreen />} />
+                <Route path={ROUTES.LEADERBOARD} element={<LeaderboardScreen />} />
+
+                {/* Catch-all redirect */}
+                <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
             </Routes>
         </Router>
     );

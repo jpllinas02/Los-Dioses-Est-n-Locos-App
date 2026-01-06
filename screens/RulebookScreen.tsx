@@ -39,27 +39,13 @@ export const RulebookScreen: React.FC = () => {
                         Conviértete en el jugador con más puntos al final de la partida.
                     </h2>
                     
-                    <div className="text-sm text-slate-600 leading-relaxed">
-                        <p className="mb-3">Para lograrlo, tendrás que equilibrar tu estrategia:</p>
-                        
-                        <div className="grid grid-cols-1 gap-2">
-                            <div className="flex items-center gap-3 p-2 rounded-lg bg-cyan-50 border border-cyan-100">
-                                <span className="material-symbols-outlined text-cyan-600">diamond</span>
-                                <span className="text-sm text-slate-700">Colecciona <strong>Reliquias</strong></span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 rounded-lg bg-red-50 border border-red-100">
-                                <span className="material-symbols-outlined text-red-500">skull</span>
-                                <span className="text-sm text-slate-700">Evita las <strong>Plagas</strong></span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 rounded-lg bg-blue-50 border border-blue-100">
-                                <span className="material-symbols-outlined text-blue-600">sports_esports</span>
-                                <span className="text-sm text-slate-700">Gana <strong>Minijuegos</strong></span>
-                            </div>
-                            <div className="flex items-center gap-3 p-2 rounded-lg bg-yellow-50 border border-yellow-100">
-                                <span className="material-symbols-outlined text-yellow-600">bolt</span>
-                                <span className="text-sm text-slate-700">Usa <strong>Poderes</strong> divinos</span>
-                            </div>
-                        </div>
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <p className="text-sm text-slate-600 leading-7 font-medium">
+                            Acumula puntos coleccionando <strong className="text-cyan-600">Reliquias</strong>, 
+                            evitando las <strong className="text-purple-600">Plagas</strong> y 
+                            superando <strong className="text-blue-600">Minijuegos</strong> mientras 
+                            usas los <strong className="text-yellow-600">Poderes</strong> de los Dioses a tu conveniencia.
+                        </p>
                     </div>
 
                     <div className="pl-3 border-l-4 border-slate-200 py-1 mt-1">

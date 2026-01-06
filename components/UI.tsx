@@ -96,6 +96,26 @@ export const Card: React.FC<CardProps> = ({ children, className = "", onClick, b
     );
 };
 
+// --- NEW COMPONENT: ActionCard ---
+interface ActionCardProps {
+    title: string;
+    bgImage: string;
+    onClick: () => void;
+    className?: string;
+}
+
+export const ActionCard: React.FC<ActionCardProps> = ({ title, bgImage, onClick, className = "" }) => {
+    return (
+        <Card onClick={onClick} className={`h-64 border-4 border-white group ${className}`} bgImage={bgImage}>
+            {/* Darker overlay for better text contrast */}
+            <div className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"></div>
+            <div className="relative z-10 flex flex-col justify-center items-center h-full p-4 text-center">
+                <h4 className="text-white text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md">{title}</h4>
+            </div>
+        </Card>
+    );
+};
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
     icon?: string;
@@ -124,6 +144,23 @@ export const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', i
         </button>
     );
 };
+
+// --- NEW COMPONENT: MenuButton (For Main Screen Secondary Buttons) ---
+interface MenuButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    children: React.ReactNode;
+}
+
+export const MenuButton: React.FC<MenuButtonProps> = ({ children, className = "", ...props }) => {
+    return (
+        <button 
+            className={`relative w-full py-3 bg-white border-2 border-slate-200 border-b-[5px] border-b-slate-300 rounded-xl text-slate-600 font-extrabold text-sm tracking-wide active:border-b-2 active:translate-y-[3px] transition-all duration-100 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700 ${className}`}
+            {...props}
+        >
+            {children}
+        </button>
+    );
+};
+
 
 // --- NEW PLAYER NAME COMPONENT ---
 export const PlayerName: React.FC<{ name: string; className?: string }> = ({ name, className = "" }) => {

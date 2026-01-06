@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Button } from '../components/UI';
+import { ROUTES } from '../constants';
 
 export const AppGuideScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -134,7 +135,7 @@ export const AppGuideScreen: React.FC = () => {
     // --- RENDER: MAIN LIST VIEW ---
     return (
         <div className="flex min-h-screen flex-col bg-white">
-            <Header title="Guía Rápida" showBack={true} onBack={() => navigate('/')} />
+            <Header title="Guía Rápida" showBack={true} onBack={() => navigate(ROUTES.HOME)} />
             
             <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
                 <div className="text-center mb-8">
@@ -175,7 +176,7 @@ export const AppGuideScreen: React.FC = () => {
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 z-20">
-                <Button fullWidth onClick={() => navigate('/registration')}>
+                <Button fullWidth onClick={() => navigate(ROUTES.REGISTRATION)}>
                     ¡Entendido, a Jugar!
                 </Button>
             </div>

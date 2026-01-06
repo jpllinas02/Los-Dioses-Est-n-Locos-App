@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, Card, Button } from '../components/UI';
+import { Header, Button, ActionCard } from '../components/UI';
+import { ROUTES } from '../constants';
 
 // --- Game Session (Main Hub) ---
 export const GameSessionScreen: React.FC = () => {
@@ -8,7 +9,7 @@ export const GameSessionScreen: React.FC = () => {
     
     const handleEndGameClick = () => {
         // Direct navigation to calculator (which leads to leaderboard)
-        navigate('/calculator');
+        navigate(ROUTES.CALCULATOR);
     };
 
     return (
@@ -16,7 +17,7 @@ export const GameSessionScreen: React.FC = () => {
             <Header 
                 title="Partida Activa" 
                 showBack={true} 
-                onBack={() => navigate('/')}
+                onBack={() => navigate(ROUTES.HOME)}
                 actionIcon="settings"
             />
 
@@ -26,22 +27,19 @@ export const GameSessionScreen: React.FC = () => {
                     <span className="material-symbols-outlined text-base">style</span> PILAS DE CARTAS
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                    {/* Minigame Card */}
-                    <Card onClick={() => navigate('/minigame-selector')} className="h-64 border-4 border-white group" bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuAlkW3Xim0uV0HK2wLarIuDmnPNIxq6jxurfDoWcgSZFCnSnp0hxr3dUMh7AALzEB-Jt-KtfY7CdDHk7lAel5YbztNTT9y39EWZ4ZP_xLE7-aHS2eWLwDTc9j-Kp8WmsK17sl2a-ObIvNoekXKRK7ncyL3JdigLfAjcUG054BZ2EA2G5jG4MkLOPam8H1uNyb45kjrApoEC72QAapwFAR7ECEgl975PQ4rqaIYwqnv79kxuSnrLgfddpi1yS6iPbBuZmm4kjG0StSo">
-                        {/* Darker overlay for better text contrast since icons are gone */}
-                        <div className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"></div>
-                        <div className="relative z-10 flex flex-col justify-center items-center h-full p-4 text-center">
-                            <h4 className="text-white text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md">Jugar Minijuego</h4>
-                        </div>
-                    </Card>
+                    {/* Minigame Card - Refactored to ActionCard */}
+                    <ActionCard 
+                        title="Jugar Minijuego"
+                        onClick={() => navigate(ROUTES.MINIGAME_SELECTOR)}
+                        bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuAlkW3Xim0uV0HK2wLarIuDmnPNIxq6jxurfDoWcgSZFCnSnp0hxr3dUMh7AALzEB-Jt-KtfY7CdDHk7lAel5YbztNTT9y39EWZ4ZP_xLE7-aHS2eWLwDTc9j-Kp8WmsK17sl2a-ObIvNoekXKRK7ncyL3JdigLfAjcUG054BZ2EA2G5jG4MkLOPam8H1uNyb45kjrApoEC72QAapwFAR7ECEgl975PQ4rqaIYwqnv79kxuSnrLgfddpi1yS6iPbBuZmm4kjG0StSo"
+                    />
                     
-                    {/* Oracle Card */}
-                    <Card onClick={() => navigate('/oracle')} className="h-64 border-4 border-white group" bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuD9QZx7CtrJnAHf9WfZTyPOlTMAK7huKeUFgLtc33PrED9FikKC8usbyisSCOi2BuhW9d-S0tLyBUDMBiK6TOoPDH6JRgJCZgVj9G7sDmv4-KrLTdPS93yBc0VxGPm-pEYNK_gjxy266cH0TZBTo1tFrOg9RHQlJFGjxwImcPf5mCwVmTOOd6LB5o0f85239Cd1aL1iyspDGfYPpGdptQX4tqVOczJJbjZ6RFrzl8zBoRfDwyFQWNihIv34b0I9Yrw7t6SOra7hIC8">
-                        <div className="absolute inset-0 bg-black/40 transition-colors group-hover:bg-black/50"></div>
-                        <div className="relative z-10 flex flex-col justify-center items-center h-full p-4 text-center">
-                            <h4 className="text-white text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md">Activar Oráculo</h4>
-                        </div>
-                    </Card>
+                    {/* Oracle Card - Refactored to ActionCard */}
+                    <ActionCard 
+                        title="Activar Oráculo"
+                        onClick={() => navigate(ROUTES.ORACLE)}
+                        bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuD9QZx7CtrJnAHf9WfZTyPOlTMAK7huKeUFgLtc33PrED9FikKC8usbyisSCOi2BuhW9d-S0tLyBUDMBiK6TOoPDH6JRgJCZgVj9G7sDmv4-KrLTdPS93yBc0VxGPm-pEYNK_gjxy266cH0TZBTo1tFrOg9RHQlJFGjxwImcPf5mCwVmTOOd6LB5o0f85239Cd1aL1iyspDGfYPpGdptQX4tqVOczJJbjZ6RFrzl8zBoRfDwyFQWNihIv34b0I9Yrw7t6SOra7hIC8"
+                    />
                 </div>
 
                 {/* SECTION 2: SUPPORT TOOLS */}
@@ -50,9 +48,9 @@ export const GameSessionScreen: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-3 gap-3 mb-8">
                      {[
-                         {icon: 'timer', color: 'teal', label: 'Temporizador / Cronómetro', path: '/timer'},
-                         {icon: 'casino', color: 'amber', label: 'Destinos', path: '/destinies-public'}, // Icon changed to 'casino' (dice/randomness)
-                         {icon: 'menu_book', color: 'pink', label: 'Bitácora', path: '/victory-log'},
+                         {icon: 'timer', color: 'teal', label: 'Temporizador / Cronómetro', path: ROUTES.TIMER},
+                         {icon: 'casino', color: 'amber', label: 'Destinos', path: ROUTES.DESTINIES},
+                         {icon: 'menu_book', color: 'pink', label: 'Bitácora', path: ROUTES.VICTORY_LOG},
                      ].map((t, i) => {
                          return (
                              <button 

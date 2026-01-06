@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Button, BottomBar } from '../components/UI';
 import { MinigameType, Minigame } from '../types';
 import { MINIGAMES_DB } from '../data/minigames';
+import { ROUTES, STORAGE_KEYS } from '../constants';
 
 export const MinigameSelectorScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ export const MinigameSelectorScreen: React.FC = () => {
 
     // Load used cards on mount
     useEffect(() => {
-        const storedUsed = localStorage.getItem('game_minigame_history_ids');
+        const storedUsed = localStorage.getItem(STORAGE_KEYS.MINIGAME_HISTORY_IDS);
         if (storedUsed) {
             setUsedCards(JSON.parse(storedUsed));
         }
@@ -71,7 +72,7 @@ export const MinigameSelectorScreen: React.FC = () => {
     const resetPool = () => {
         // Only reset cards that match current filters (or just reset all to be safe/simple)
         setUsedCards([]);
-        localStorage.removeItem('game_minigame_history_ids');
+        localStorage.removeItem(STORAGE_KEYS.MINIGAME_HISTORY_IDS);
         setDrawnCard(null); // Clear card to show deck and reset state
     }
 
@@ -119,7 +120,7 @@ export const MinigameSelectorScreen: React.FC = () => {
         const actualUsed = poolExhausted ? [finalCard.id] : newUsed;
         
         setUsedCards(actualUsed);
-        localStorage.setItem('game_minigame_history_ids', JSON.stringify(actualUsed));
+        localStorage.setItem(STORAGE_KEYS.MINIGAME_HISTORY_IDS, JSON.stringify(actualUsed));
 
         setDrawnCard(finalCard);
         setTempDisplayCard(null);
@@ -135,7 +136,7 @@ export const MinigameSelectorScreen: React.FC = () => {
     }, [drawnCard, tempDisplayCard, isShuffling]);
 
     const navigateToWinnerLog = () => {
-        navigate('/victory-log', { state: { openMinigameModal: true } });
+        navigate(ROUTES.VICTORY_LOG, { state: { openMinigameModal: true } });
     };
 
     // Style Helpers
@@ -170,7 +171,7 @@ export const MinigameSelectorScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Selector de Minijuegos" actionIcon="settings" onBack={() => navigate('/game')} />
+            <Header title="Selector de Minijuegos" actionIcon="settings" onBack={() => navigate(ROUTES.GAME)} />
             
             {/* Filters */}
             <div className="w-full px-4 pt-4 pb-2 z-20">

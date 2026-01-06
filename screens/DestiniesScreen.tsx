@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Header, Button, PlayerName } from '../components/UI';
 import { Player, GameColor } from '../types';
 import { shuffle, DEFAULT_NAME_POOL } from '../utils';
+import { STORAGE_KEYS } from '../constants';
 
 export const DestiniesScreen: React.FC = () => {
     // Core Data
@@ -42,7 +43,7 @@ export const DestiniesScreen: React.FC = () => {
     };
 
     useEffect(() => {
-        const storedPlayers = localStorage.getItem('game_players');
+        const storedPlayers = localStorage.getItem(STORAGE_KEYS.PLAYERS);
         if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
             setPlayers(JSON.parse(storedPlayers));
         } else {

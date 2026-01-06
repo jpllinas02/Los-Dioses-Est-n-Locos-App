@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Button, BottomBar } from '../components/UI';
 import { Oracle, OracleType } from '../types';
 import { ORACLES_DB } from '../data/oracles';
+import { ROUTES, STORAGE_KEYS } from '../constants';
 
 export const OracleScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -21,7 +22,7 @@ export const OracleScreen: React.FC = () => {
 
     // Persistence Check
     useEffect(() => {
-        const storedUsed = localStorage.getItem('game_oracle_history_ids');
+        const storedUsed = localStorage.getItem(STORAGE_KEYS.ORACLE_HISTORY_IDS);
         if (storedUsed) {
             setUsedCards(JSON.parse(storedUsed));
         }
@@ -45,7 +46,7 @@ export const OracleScreen: React.FC = () => {
 
     const resetPool = () => {
         setUsedCards([]);
-        localStorage.removeItem('game_oracle_history_ids');
+        localStorage.removeItem(STORAGE_KEYS.ORACLE_HISTORY_IDS);
         setDrawnCard(null); // Clear active card to show deck and make reset obvious
     }
 
@@ -89,7 +90,7 @@ export const OracleScreen: React.FC = () => {
         const actualUsed = poolExhausted ? [finalCard.id] : newUsed;
         
         setUsedCards(actualUsed);
-        localStorage.setItem('game_oracle_history_ids', JSON.stringify(actualUsed));
+        localStorage.setItem(STORAGE_KEYS.ORACLE_HISTORY_IDS, JSON.stringify(actualUsed));
 
         setDrawnCard(finalCard);
         setTempDisplayCard(null);
@@ -143,7 +144,7 @@ export const OracleScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-[#fcfaff]"> {/* Subtle Purple Tint Background */}
-            <Header title="Oráculo Divino" actionIcon="settings" onBack={() => navigate('/game')} />
+            <Header title="Oráculo Divino" actionIcon="settings" onBack={() => navigate(ROUTES.GAME)} />
             
             <div className={`flex-1 flex flex-col items-center p-4 relative min-h-[360px] pb-28 overflow-y-auto overflow-x-hidden no-scrollbar transition-all duration-300 ${hasActiveCard ? 'justify-start pt-6' : 'justify-center'}`}>
                 

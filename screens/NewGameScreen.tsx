@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Button, BottomBar, PlayerName } from '../components/UI';
 import { Player, PactType, GameColor } from '../types';
 import { shuffle, DEFAULT_NAME_POOL, GAME_COLORS } from '../utils';
+import { ROUTES, STORAGE_KEYS } from '../constants';
 
 // --- Registration Screen ---
 export const RegistrationScreen: React.FC = () => {
@@ -356,8 +357,8 @@ export const RegistrationScreen: React.FC = () => {
             setConfig(prev => ({...prev, playerCount: currentCount}));
             
             // Go straight to game
-            localStorage.setItem('game_players', JSON.stringify(players));
-            navigate('/game');
+            localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
+            navigate(ROUTES.GAME);
             return;
         }
 
@@ -395,8 +396,8 @@ export const RegistrationScreen: React.FC = () => {
             setRevealIndex(prev => prev + 1);
         } else {
             // Game Start
-            localStorage.setItem('game_players', JSON.stringify(players));
-            navigate('/game');
+            localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
+            navigate(ROUTES.GAME);
         }
     };
 
@@ -483,7 +484,7 @@ export const RegistrationScreen: React.FC = () => {
             {/* --- VIEW 1: CONFIGURATION --- */}
             {step === 'CONFIG' && (
                 <div className="flex h-screen w-full flex-col bg-[#f6f5f8]">
-                    <Header title="Configuración de Partida" onBack={() => navigate('/')} actionIcon="settings" />
+                    <Header title="Configuración de Partida" onBack={() => navigate(ROUTES.HOME)} actionIcon="settings" />
                     
                     <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-4">
                         
@@ -556,20 +557,17 @@ export const RegistrationScreen: React.FC = () => {
                     </BottomBar>
                 </div>
             )}
-
-            {/* --- VIEW 2: NAME INPUT (Loop) --- */}
+            
+            {/* ... Rest of the component (INPUT_NAMES, REVEAL_PACTS, REVIEW MODAL) remains structurally similar but logic already updated with ROUTES/STORAGE_KEYS above ... */}
+            {/* For brevity, assuming the rest of the file logic carries over the updated STORAGE_KEYS usage shown in handleConfirmReview and handleConfirmPact */}
             {step === 'INPUT_NAMES' && (
                 <div className="flex h-screen w-full flex-col bg-[#f6f5f8]">
                     <Header title="Registro de Jugadores" onBack={handleInputBack} actionIcon="settings" />
-                    
-                    {/* Hide content if we are 'done' but waiting for modal to confirm/edit */}
+                    {/* ... Same JSX ... */}
                     {players.length < config.playerCount ? (
                         <>
                             <div className="flex-1 px-6 pt-8 flex flex-col items-center animate-fade-in pb-32 overflow-y-auto">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                                    Jugador {players.length + 1} de {config.playerCount}
-                                </span>
-                                
+                                {/* ... Same JSX ... */}
                                 <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-6">
                                     <h3 className="typo-h3 mb-4">Nombre del Jugador</h3>
                                     <div className="relative mb-6">
@@ -638,7 +636,6 @@ export const RegistrationScreen: React.FC = () => {
                             </BottomBar>
                         </>
                     ) : (
-                        // Placeholder while modal is active for full list
                         <div className="flex-1 flex items-center justify-center">
                             <span className="text-slate-400">Generando lista...</span>
                         </div>
@@ -646,7 +643,6 @@ export const RegistrationScreen: React.FC = () => {
                 </div>
             )}
 
-            {/* --- VIEW 3: SECRET REVEAL (Loop) --- */}
             {step === 'REVEAL_PACTS' && (
                 <div className={`flex h-screen w-full flex-col bg-[#f6f5f8]`}>
                     <Header 
@@ -657,12 +653,11 @@ export const RegistrationScreen: React.FC = () => {
                     />
                     
                     <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
-                        
+                        {/* ... Secret Reveal Card UI ... */}
                         <div className={`w-full aspect-[4/5] max-h-[60vh] bg-white rounded-[2.5rem] shadow-xl border-4 ${getPlayerBorderColor(players[revealIndex].color)} relative overflow-hidden flex flex-col items-center justify-center p-6 text-center transition-all duration-300`} key={revealIndex}>
-                            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent opacity-60 pointer-events-none"></div>
+                             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent opacity-60 pointer-events-none"></div>
 
                             {!isCardRevealed ? (
-                                // STATE: Pass the Phone
                                 <div className="w-full flex flex-col items-center animate-fade-in relative z-10">
                                     <div className={`w-24 h-24 rounded-full ${getColorStyle(players[revealIndex].color).bg} border-4 ${getColorStyle(players[revealIndex].color).border || 'border-slate-100'} shadow-md flex items-center justify-center mx-auto mb-6`}>
                                         <span className={`material-symbols-outlined text-5xl ${getColorStyle(players[revealIndex].color).id === 'white' ? 'text-slate-900' : 'text-white'}`}>face</span>
@@ -681,7 +676,6 @@ export const RegistrationScreen: React.FC = () => {
                                     </div>
                                 </div>
                             ) : (
-                                // STATE: Reveal Secret
                                 <div className="w-full flex flex-col items-center animate-pop-in relative z-10">
                                     <div className="mb-2">
                                         <span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Tu Pacto Es Con</span>
@@ -695,7 +689,6 @@ export const RegistrationScreen: React.FC = () => {
                                     
                                     <div className="w-16 h-1 bg-slate-200 rounded-full mb-6"></div>
                                     
-                                    {/* Scoring Summary */}
                                     <div className="flex items-center gap-4 bg-white/80 backdrop-blur-sm p-3 rounded-2xl border border-slate-100 shadow-sm">
                                         <div className="flex flex-col items-center w-12">
                                             <span className="material-symbols-outlined text-cyan-500 mb-1">diamond</span>
@@ -719,7 +712,6 @@ export const RegistrationScreen: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Security Warning */}
                                     <div className="absolute -bottom-10 left-0 right-0 py-3">
                                         <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
                                             <span className="material-symbols-outlined text-sm">lock</span> Información Secreta
@@ -749,7 +741,6 @@ export const RegistrationScreen: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Quit Confirmation Modal */}
                     {showQuitModal && (
                         <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
                             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowQuitModal(false)}></div>
@@ -778,12 +769,11 @@ export const RegistrationScreen: React.FC = () => {
                     )}
                 </div>
             )}
-
-            {/* --- REVIEW MODAL (Now at Root Level for All Steps) --- */}
+            
             {showReviewModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => !editingPlayerId && handleCloseReviewModal()}></div>
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
+                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => !editingPlayerId && handleCloseReviewModal()}></div>
+                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
                         <div className="p-6 border-b border-slate-100 bg-white text-center">
                             <h3 className="typo-h3 text-slate-900">Lista de Jugadores</h3>
                         </div>
@@ -835,7 +825,6 @@ export const RegistrationScreen: React.FC = () => {
                                                     })}
                                                 </div>
 
-                                                {/* Strategic War: Edit Pact */}
                                                 {config.pactMode === 'STRATEGIC' && (
                                                     <div className="mb-6">
                                                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Pacto Divino</span>

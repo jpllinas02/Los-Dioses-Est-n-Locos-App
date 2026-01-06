@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Header, Button, BottomBar, PlayerName } from '../components/UI';
 import { Player, GameColor } from '../types';
 import { shuffle, DEFAULT_NAME_POOL } from '../utils';
+import { ROUTES, STORAGE_KEYS } from '../constants';
 
 // --- Types for Log ---
 interface MinigameRecord {
@@ -49,9 +50,9 @@ export const VictoryLogScreen: React.FC = () => {
     }, [shouldAutoOpenModal]);
 
     useEffect(() => {
-        const storedPlayers = localStorage.getItem('game_players');
-        const storedLog = localStorage.getItem('game_log');
-        const storedHistory = localStorage.getItem('game_minigame_history');
+        const storedPlayers = localStorage.getItem(STORAGE_KEYS.PLAYERS);
+        const storedLog = localStorage.getItem(STORAGE_KEYS.LOG);
+        const storedHistory = localStorage.getItem(STORAGE_KEYS.MINIGAME_HISTORY);
 
         let currentPlayers: Player[] = [];
 
@@ -95,14 +96,14 @@ export const VictoryLogScreen: React.FC = () => {
     // Persistence
     useEffect(() => {
         if (players.length > 0) {
-            localStorage.setItem('game_log', JSON.stringify(log));
-            localStorage.setItem('game_minigame_history', JSON.stringify(minigameHistory));
+            localStorage.setItem(STORAGE_KEYS.LOG, JSON.stringify(log));
+            localStorage.setItem(STORAGE_KEYS.MINIGAME_HISTORY, JSON.stringify(minigameHistory));
         }
     }, [log, minigameHistory, players]);
 
     const handleBack = () => {
         if (isFromCalculator) {
-            navigate('/calculator', { state: { initialShowSummary: true } });
+            navigate(ROUTES.CALCULATOR, { state: { initialShowSummary: true } });
         } else {
             navigate(-1);
         }
@@ -292,7 +293,7 @@ export const VictoryLogScreen: React.FC = () => {
             <Header title="Bitácora de Partida" actionIcon="settings" onBack={handleBack} />
             
             <div className="flex-1 px-4 pt-6 pb-36 overflow-y-auto no-scrollbar">
-                
+                {/* ... Main Content ... */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8 text-center relative overflow-hidden">
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-500 mb-4">
                         <span className="material-symbols-outlined text-[32px]">emoji_events</span>
@@ -408,10 +409,10 @@ export const VictoryLogScreen: React.FC = () => {
                 </div>
             </div>
 
+            {/* ... Modals (Minigame & Vote) remain same JSX structure ... */}
             {/* Minigame Winner Modal */}
             {showMinigameModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    {/* BACKDROP with Smart Close */}
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseMinigameModal}></div>
                     <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
                         <div className="p-5 border-b border-slate-100 bg-white text-center relative">
@@ -543,7 +544,7 @@ export const VictoryLogScreen: React.FC = () => {
                 <BottomBar className="bg-white border-t border-slate-100">
                     <Button 
                         fullWidth 
-                        onClick={() => navigate('/calculator', { state: { initialShowSummary: true } })} 
+                        onClick={() => navigate(ROUTES.CALCULATOR, { state: { initialShowSummary: true } })} 
                         icon="check"
                     >
                         Volver al Resumen
@@ -573,8 +574,8 @@ export const CalculatorScreen: React.FC = () => {
 
     // Load players on mount
     useEffect(() => {
-        const storedPlayers = localStorage.getItem('game_players');
-        const storedStats = localStorage.getItem('game_stats');
+        const storedPlayers = localStorage.getItem(STORAGE_KEYS.PLAYERS);
+        const storedStats = localStorage.getItem(STORAGE_KEYS.STATS);
 
         if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
             const parsedPlayers = JSON.parse(storedPlayers);
@@ -612,7 +613,7 @@ export const CalculatorScreen: React.FC = () => {
     // Save stats whenever they change
     useEffect(() => {
         if (Object.keys(stats).length > 0) {
-            localStorage.setItem('game_stats', JSON.stringify(stats));
+            localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
         }
     }, [stats]);
 
@@ -683,7 +684,7 @@ export const CalculatorScreen: React.FC = () => {
             return;
         }
 
-        navigate('/game');
+        navigate(ROUTES.GAME);
     };
 
     const handleEditPlayerFromSummary = (index: number) => {
@@ -721,8 +722,8 @@ export const CalculatorScreen: React.FC = () => {
             };
         });
         
-        localStorage.setItem('game_results', JSON.stringify(finalResults));
-        navigate('/leaderboard');
+        localStorage.setItem(STORAGE_KEYS.RESULTS, JSON.stringify(finalResults));
+        navigate(ROUTES.LEADERBOARD);
     };
 
     // --- Touch Handlers ---
@@ -856,7 +857,7 @@ export const CalculatorScreen: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col gap-4 px-4 w-full max-w-md mx-auto">
-                            
+                            {/* ... Stat Inputs (Relics, Plagues, Powers) - Logic is same, JSX same ... */}
                             <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-100 transition-colors hover:border-cyan-200">
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center justify-center rounded-2xl bg-cyan-50 text-cyan-500 border border-cyan-100 shrink-0 h-16 w-16 shadow-sm">
@@ -932,7 +933,8 @@ export const CalculatorScreen: React.FC = () => {
                 // --- SUMMARY TABLE VIEW ---
                 <>
                     <div className="flex-1 overflow-y-auto p-4 pb-32">
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        {/* ... Summary Table ... */}
+                         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                             <div className="grid grid-cols-5 gap-2 p-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
                                 <div className="col-span-2 text-left pl-2">Jugador</div>
                                 <div><span className="material-symbols-outlined text-lg align-middle text-cyan-500">diamond</span></div>
@@ -986,7 +988,7 @@ export const CalculatorScreen: React.FC = () => {
                             <Button 
                                 fullWidth 
                                 variant="ghost" 
-                                onClick={() => navigate('/victory-log', { state: { fromCalculator: true } })} 
+                                onClick={() => navigate(ROUTES.VICTORY_LOG, { state: { fromCalculator: true } })} 
                                 icon="menu_book" 
                                 className="text-sm font-bold text-slate-500"
                             >
@@ -1007,6 +1009,7 @@ export const LeaderboardScreen: React.FC = () => {
     const [gameLog, setGameLog] = useState<{minigames: Record<string, number>, mentions?: Record<string, Record<string, number>>, decisions?: Record<string, number>} | null>(null);
     const [honorCounts, setHonorCounts] = useState<Record<string, number>>({});
 
+    // ... (calculateHonorCounts remains same) ...
     const calculateHonorCounts = (players: Player[], log: any) => {
         const counts: Record<string, number> = {};
         players.forEach(p => counts[p.id] = 0);
@@ -1041,8 +1044,8 @@ export const LeaderboardScreen: React.FC = () => {
     }
 
     useEffect(() => {
-        const storedResults = localStorage.getItem('game_results');
-        const storedLog = localStorage.getItem('game_log');
+        const storedResults = localStorage.getItem(STORAGE_KEYS.RESULTS);
+        const storedLog = localStorage.getItem(STORAGE_KEYS.LOG);
         let parsedLog = null;
         let parsedResults: Player[] = [];
 
@@ -1074,6 +1077,7 @@ export const LeaderboardScreen: React.FC = () => {
     const winner = results.length > 0 ? results[0] : null;
     const others = results.length > 1 ? results.slice(1) : [];
 
+    // ... (getMinigameHonor, getCategoryHonors, hasHonors, styleHelpers remain same) ...
     const getMinigameHonor = () => {
         if (!gameLog?.minigames || !results.length) return null;
         let max = 0;
@@ -1155,7 +1159,8 @@ export const LeaderboardScreen: React.FC = () => {
     const minigameHonor = getMinigameHonor();
     const categoryHonors = getCategoryHonors();
     const hasHonors = minigameHonor || categoryHonors.length > 0;
-
+    
+    // ... Color Helpers ...
     const getColorStyle = (color: GameColor) => {
         switch(color) {
             case 'red': return {bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-200'};
@@ -1169,6 +1174,7 @@ export const LeaderboardScreen: React.FC = () => {
     };
 
     const getHonorColorStyles = (color: GameColor) => {
+        // ... (Keep existing implementation) ...
         switch(color) {
             case 'red': return {
                 gradient: 'from-red-50', 
@@ -1228,8 +1234,9 @@ export const LeaderboardScreen: React.FC = () => {
             };
         }
     };
-
-    const getRank = (index: number) => {
+    
+    // ... (getRank remains same) ...
+     const getRank = (index: number) => {
         const actualRank = index + 1;
         if (index === 0) return 1;
         
@@ -1255,7 +1262,7 @@ export const LeaderboardScreen: React.FC = () => {
             <div className="flex min-h-screen flex-col bg-background items-center justify-center p-6 text-center">
                  <h2 className="typo-h2">No hay resultados aún</h2>
                  <p className="typo-body mb-4">Termina una partida para ver la tabla.</p>
-                 <Button onClick={()=>navigate('/game')}>Volver al Juego</Button>
+                 <Button onClick={()=>navigate(ROUTES.GAME)}>Volver al Juego</Button>
             </div>
         );
     }
@@ -1264,6 +1271,7 @@ export const LeaderboardScreen: React.FC = () => {
         <div className="flex min-h-screen flex-col bg-background">
             <Header title="Resultados Finales" actionIcon="share" />
             <div className="flex-1 overflow-y-auto pb-32 relative">
+                {/* ... Winner/Leaderboard UI remains same ... */}
                  <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none z-0"></div>
                  <div className="relative z-10 pt-4 pb-2 px-4 text-center mt-6">
                     <h1 className="typo-h1">
@@ -1387,8 +1395,8 @@ export const LeaderboardScreen: React.FC = () => {
             </div>
             
             <BottomBar className="bg-white border-t border-slate-100">
-                <Button variant="outline" className="flex-1" icon="home" onClick={()=>navigate('/')}>Inicio</Button>
-                <Button className="flex-[2]" onClick={()=>navigate('/registration')} icon="replay">Nueva Partida</Button>
+                <Button variant="outline" className="flex-1" icon="home" onClick={()=>navigate(ROUTES.HOME)}>Inicio</Button>
+                <Button className="flex-[2]" onClick={()=>navigate(ROUTES.REGISTRATION)} icon="replay">Nueva Partida</Button>
             </BottomBar>
         </div>
     );

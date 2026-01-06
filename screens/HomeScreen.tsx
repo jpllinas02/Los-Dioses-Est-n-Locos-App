@@ -1,36 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGameSession } from '../hooks/useGameSession';
+import { MenuButton } from '../components/UI';
+import { ROUTES } from '../constants';
 
 // --- Home Screen ---
 export const HomeScreen: React.FC = () => {
     const navigate = useNavigate();
+    const { hasActiveSession, startNewGame, resumeGame } = useGameSession();
     const [showResumeModal, setShowResumeModal] = useState(false);
 
     const handleStartGame = () => {
-        const existingData = localStorage.getItem('game_players');
-        if (existingData && JSON.parse(existingData).length > 0) {
+        if (hasActiveSession) {
             setShowResumeModal(true);
         } else {
-            navigate('/registration');
+            startNewGame();
         }
     };
-
-    const startNewGame = () => {
-        // Clear all game data
-        localStorage.removeItem('game_players');
-        localStorage.removeItem('game_results');
-        localStorage.removeItem('game_stats'); 
-        localStorage.removeItem('game_log');   
-        localStorage.removeItem('game_minigame_history'); 
-        navigate('/registration');
-    };
-
-    const resumeGame = () => {
-        navigate('/game');
-    };
-
-    // Helper for 3D Button Style
-    const secondaryBtnClass = "relative w-full py-3 bg-white border-2 border-slate-200 border-b-[5px] border-b-slate-300 rounded-xl text-slate-600 font-extrabold text-sm tracking-wide active:border-b-2 active:translate-y-[3px] transition-all duration-100 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700";
 
     return (
         <div className="relative flex min-h-screen w-full flex-col bg-background overflow-hidden max-w-md mx-auto shadow-2xl">
@@ -69,35 +55,23 @@ export const HomeScreen: React.FC = () => {
                         </button>
                     </div>
                     
-                    {/* Secondary List */}
+                    {/* Secondary List using MenuButton Component */}
                     <div className="flex flex-col gap-2.5 w-full max-w-[240px]">
-                        <button 
-                            className={secondaryBtnClass}
-                            onClick={() => navigate('/app-guide')}
-                        >
+                        <MenuButton onClick={() => navigate(ROUTES.APP_GUIDE)}>
                             ¿Cómo Usar Esta App?
-                        </button>
+                        </MenuButton>
 
-                        <button 
-                            className={secondaryBtnClass}
-                            onClick={() => navigate('/rules')}
-                        >
+                        <MenuButton onClick={() => navigate(ROUTES.RULES)}>
                             Reglas Del Juego
-                        </button>
+                        </MenuButton>
 
-                        <button 
-                            className={secondaryBtnClass}
-                            onClick={() => navigate('/settings')}
-                        >
+                        <MenuButton onClick={() => navigate(ROUTES.SETTINGS)}>
                             Configuración
-                        </button>
+                        </MenuButton>
 
-                        <button 
-                            className={secondaryBtnClass}
-                            onClick={() => navigate('/extras')}
-                        >
+                        <MenuButton onClick={() => navigate(ROUTES.EXTRAS)}>
                             Extras
-                        </button>
+                        </MenuButton>
                     </div>
                 </div>
             </div>
