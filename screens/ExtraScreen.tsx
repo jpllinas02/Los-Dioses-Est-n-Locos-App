@@ -15,7 +15,7 @@ export const ExtraScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f8fafc]">
-            <Header title="Extras" showBack={true} onBack={() => navigate(-1)} actionIcon="help" />
+            <Header title="Extras" showBack={true} onBack={() => navigate(-1)} />
             
             <div className="flex-1 overflow-y-auto pb-32">
                 {/* Hero Section */}

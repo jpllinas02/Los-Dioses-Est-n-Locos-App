@@ -483,7 +483,7 @@ export const RegistrationScreen: React.FC = () => {
             {/* --- VIEW 1: CONFIGURATION --- */}
             {step === 'CONFIG' && (
                 <div className="flex h-screen w-full flex-col bg-[#f6f5f8]">
-                    <Header title="Configuración de Partida" onBack={() => navigate('/')} actionIcon="help" />
+                    <Header title="Configuración de Partida" onBack={() => navigate('/')} actionIcon="settings" />
                     
                     <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-4">
                         
@@ -560,7 +560,7 @@ export const RegistrationScreen: React.FC = () => {
             {/* --- VIEW 2: NAME INPUT (Loop) --- */}
             {step === 'INPUT_NAMES' && (
                 <div className="flex h-screen w-full flex-col bg-[#f6f5f8]">
-                    <Header title="Registro de Jugadores" onBack={handleInputBack} actionIcon="help" />
+                    <Header title="Registro de Jugadores" onBack={handleInputBack} actionIcon="settings" />
                     
                     {/* Hide content if we are 'done' but waiting for modal to confirm/edit */}
                     {players.length < config.playerCount ? (
@@ -653,7 +653,7 @@ export const RegistrationScreen: React.FC = () => {
                         title="Asignación de Pactos" 
                         showBack={true} 
                         onBack={handleRevealBack} 
-                        actionIcon="help"
+                        actionIcon="settings"
                     />
                     
                     <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
