@@ -24,8 +24,11 @@ const App: React.FC = () => {
     return (
         <Router>
             <Routes>
-                {/* Main Menu */}
+                {/* Main Menu - Explicitly defined as index */}
+                <Route index element={<HomeScreen />} />
                 <Route path={ROUTES.HOME} element={<HomeScreen />} />
+                
+                {/* Secondary Menus */}
                 <Route path={ROUTES.SETTINGS} element={<SettingScreen />} />
                 <Route path={ROUTES.EXTRAS} element={<ExtraScreen />} />
                 <Route path={ROUTES.APP_GUIDE} element={<AppGuideScreen />} />
@@ -48,7 +51,7 @@ const App: React.FC = () => {
                 <Route path={ROUTES.CALCULATOR} element={<CalculatorScreen />} />
                 <Route path={ROUTES.LEADERBOARD} element={<LeaderboardScreen />} />
 
-                {/* Catch-all redirect */}
+                {/* Catch-all redirect to Home */}
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
             </Routes>
         </Router>

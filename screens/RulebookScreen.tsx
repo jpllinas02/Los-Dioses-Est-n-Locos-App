@@ -450,7 +450,7 @@ export const RulebookScreen: React.FC = () => {
     if (viewMode === 'SELECTION') {
         return (
             <div className="flex min-h-screen flex-col bg-background">
-                <Header title="Reglas del Juego" showBack={true} onBack={handleBack} actionIcon="menu_book" />
+                <Header title="Reglas del Juego" showBack={true} onBack={handleBack} />
                 
                 <div className="flex-1 flex flex-col justify-center gap-6 p-6 pb-24">
                     <div className="text-center mb-2">
@@ -490,7 +490,7 @@ export const RulebookScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Reglas del Juego" showBack={true} onBack={handleBack} actionIcon="menu_book" />
+            <Header title="Reglas del Juego" showBack={true} onBack={handleBack} />
 
             <div className="flex-1 overflow-y-auto pb-24 pt-4">
                 {/* ACCORDION SECTIONS */}

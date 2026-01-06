@@ -171,7 +171,7 @@ export const MinigameSelectorScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Selector de Minijuegos" actionIcon="settings" onBack={() => navigate(ROUTES.GAME)} />
+            <Header title="Selector de Minijuegos" onBack={() => navigate(ROUTES.GAME)} />
             
             {/* Filters */}
             <div className="w-full px-4 pt-4 pb-2 z-20">

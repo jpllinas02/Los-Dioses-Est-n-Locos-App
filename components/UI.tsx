@@ -1,35 +1,51 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../constants';
 
 interface HeaderProps {
     title?: string;
-    showBack?: boolean;
-    onBack?: () => void;
-    rightElement?: React.ReactNode;
-    actionIcon?: string;
-    onAction?: () => void;
+    showBack?: boolean; // Default: false
+    onBack?: () => void; // Optional override
+    showHelp?: boolean; // Default: true
+    rightAction?: React.ReactNode; // Optional override for Help button
     transparent?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
     title, 
-    showBack = true, 
+    showBack = false, 
     onBack, 
-    rightElement,
-    actionIcon,
-    onAction,
+    showHelp = true,
+    rightAction,
     transparent = false 
 }) => {
     const navigate = useNavigate();
-    const handleBack = onBack || (() => navigate(-1));
+
+    // Logic: Show back button if explicitly requested OR if a custom handler is provided
+    const shouldShowBack = showBack || !!onBack;
+
+    const handleBack = () => {
+        if (onBack) {
+            onBack();
+        } else {
+            navigate(-1);
+        }
+    };
+
+    const handleHelp = () => {
+        navigate(ROUTES.APP_GUIDE);
+    };
+
+    const buttonStyles = `flex h-10 w-10 items-center justify-center rounded-full transition-colors active:scale-95 ${transparent ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'}`;
 
     return (
         <header className={`sticky top-0 z-50 flex items-center justify-between px-4 py-3 transition-all duration-200 ${transparent ? 'bg-transparent' : 'bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm'}`}>
+            {/* LEFT: BACK BUTTON */}
             <div className="flex w-12 shrink-0 items-center justify-start">
-                {showBack ? (
+                {shouldShowBack ? (
                     <button 
                         onClick={handleBack} 
-                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors active:scale-95 ${transparent ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'}`}
+                        className={buttonStyles}
                         aria-label="Atrás"
                     >
                         <span className="material-symbols-outlined text-2xl">arrow_back</span>
@@ -39,6 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
             </div>
             
+            {/* CENTER: TITLE */}
             <div className="flex-1 flex justify-center px-2">
                 {title && (
                     <h2 className={`text-lg font-bold leading-tight tracking-tight text-center truncate ${transparent ? 'text-white drop-shadow-md' : 'text-slate-900'}`}>
@@ -47,17 +64,20 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
             </div>
 
+            {/* RIGHT: ACTION or HELP */}
             <div className="flex w-12 shrink-0 items-center justify-end">
-                {actionIcon ? (
+                {rightAction ? (
+                    rightAction
+                ) : showHelp ? (
                     <button 
-                        onClick={onAction}
-                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors active:scale-95 ${transparent ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'}`}
-                        aria-label="Acción"
+                        onClick={handleHelp}
+                        className={buttonStyles}
+                        aria-label="Ayuda"
                     >
-                        <span className="material-symbols-outlined text-2xl">{actionIcon}</span>
+                        <span className="material-symbols-outlined text-2xl">help</span>
                     </button>
                 ) : (
-                    rightElement || <div className="w-10" />
+                    <div className="w-10" />
                 )}
             </div>
         </header>

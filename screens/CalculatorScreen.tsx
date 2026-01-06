@@ -35,7 +35,6 @@ export const CalculatorScreen: React.FC = () => {
                 title={ui.showFinalSummary ? "Resumen Final" : "Calculadora"} 
                 showBack={true} 
                 onBack={actions.handleBackArrow}
-                actionIcon="settings"
              />
             
             {!ui.showFinalSummary ? (

@@ -26,7 +26,6 @@ export const GameSessionScreen: React.FC = () => {
                 title="Partida Activa" 
                 showBack={true} 
                 onBack={() => navigate(ROUTES.HOME)}
-                actionIcon="settings"
             />
 
             <div className="flex-1 px-4 py-6">

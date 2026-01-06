@@ -48,7 +48,7 @@ export const LogScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f5f7f8]">
-            <Header title="Bitácora de Partida" actionIcon="settings" onBack={handleBack} />
+            <Header title="Bitácora de Partida" onBack={handleBack} />
             
             <div className="flex-1 px-4 pt-6 pb-36 overflow-y-auto no-scrollbar">
                 {/* Intro Card */}

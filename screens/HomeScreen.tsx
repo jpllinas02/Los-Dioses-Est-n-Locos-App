@@ -10,6 +10,7 @@ export const HomeScreen: React.FC = () => {
     const { hasActiveSession, startNewGame, resumeGame } = useGameSession();
     const [showResumeModal, setShowResumeModal] = useState(false);
 
+    // Lógica 100% manual: Solo se ejecuta al hacer Click
     const handleStartGame = () => {
         if (hasActiveSession) {
             setShowResumeModal(true);

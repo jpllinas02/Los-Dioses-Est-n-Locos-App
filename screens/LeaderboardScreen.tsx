@@ -91,7 +91,7 @@ export const LeaderboardScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Resultados Finales" actionIcon="share" />
+            <Header title="Resultados Finales" showBack={true} />
             <div className="flex-1 overflow-y-auto pb-32 relative">
                 {/* ... Winner/Leaderboard UI ... */}
                  <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none z-0"></div>

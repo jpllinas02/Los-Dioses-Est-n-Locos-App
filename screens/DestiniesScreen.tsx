@@ -173,7 +173,7 @@ export const DestiniesScreen: React.FC = () => {
 
     return (
         <div className="flex h-screen w-full flex-col bg-[#f8fafc]">
-            <Header title="Selector de Destinos" actionIcon="settings" />
+            <Header title="Selector de Destinos" showBack={true} />
 
             {/* --- TOP: Player Filter --- */}
             <div className="bg-white border-b border-slate-100 pb-3 pt-4 px-4 shadow-sm z-20">

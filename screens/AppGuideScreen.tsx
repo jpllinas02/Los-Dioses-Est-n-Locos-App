@@ -58,7 +58,7 @@ export const AppGuideScreen: React.FC = () => {
             color: 'text-orange-600',
             bg: 'bg-orange-100',
             border: 'border-orange-200',
-            title: '4. Bitácora de Victoria',
+            title: '4. Bitácora de Partida',
             desc: '¡Crucial! Registra quién gana cada Minijuego. La app lleva el conteo para las estadísticas finales.',
             detailsTitle: 'Historial de la Partida',
             features: [
@@ -93,7 +93,8 @@ export const AppGuideScreen: React.FC = () => {
                 <Header 
                     title={step.title.split('. ')[1]} // Remove number for cleaner header
                     showBack={true} 
-                    onBack={() => setSelectedStepIndex(null)} 
+                    onBack={() => setSelectedStepIndex(null)}
+                    showHelp={false}
                 />
                 
                 <div className="flex-1 overflow-y-auto pb-24">
@@ -135,7 +136,7 @@ export const AppGuideScreen: React.FC = () => {
     // --- RENDER: MAIN LIST VIEW ---
     return (
         <div className="flex min-h-screen flex-col bg-white">
-            <Header title="Guía Rápida" showBack={true} onBack={() => navigate(ROUTES.HOME)} />
+            <Header title="Guía Rápida" showBack={true} showHelp={false} />
             
             <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
                 <div className="text-center mb-8">
