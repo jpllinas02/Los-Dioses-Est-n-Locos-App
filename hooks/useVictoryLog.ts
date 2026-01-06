@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Player, MinigameRecord, GameColor } from '../types';
-import { STORAGE_KEYS } from '../constants';
-import { shuffle, DEFAULT_NAME_POOL } from '../utils';
+import { useNavigate } from 'react-router-dom';
+import { Player, MinigameRecord } from '../types';
+import { STORAGE_KEYS, ROUTES } from '../constants';
 
 export const useVictoryLog = (shouldAutoOpenModal: boolean = false) => {
+    const navigate = useNavigate();
     const [players, setPlayers] = useState<Player[]>([]);
     
     // Data State
@@ -28,47 +29,37 @@ export const useVictoryLog = (shouldAutoOpenModal: boolean = false) => {
         const storedLog = localStorage.getItem(STORAGE_KEYS.LOG);
         const storedHistory = localStorage.getItem(STORAGE_KEYS.MINIGAME_HISTORY);
 
-        let currentPlayers: Player[] = [];
-
         if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
-            currentPlayers = JSON.parse(storedPlayers);
-        } else {
-            // Fallback generation
-            const shuffledPool = shuffle([...DEFAULT_NAME_POOL]);
-            const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
-            currentPlayers = defaultColors.map((color, index) => ({
-                id: `def-${index}`,
-                name: shuffledPool[index],
-                pact: 'Atenea',
-                color: color
-            }));
-        }
-        
-        setPlayers(currentPlayers);
+            const currentPlayers = JSON.parse(storedPlayers);
+            setPlayers(currentPlayers);
             
-        if (storedLog) {
-            const parsedLog = JSON.parse(storedLog);
-            if (parsedLog.decisions && !parsedLog.mentions) {
-                parsedLog.mentions = { 'strategy': parsedLog.decisions };
+            if (storedLog) {
+                const parsedLog = JSON.parse(storedLog);
+                if (parsedLog.decisions && !parsedLog.mentions) {
+                    parsedLog.mentions = { 'strategy': parsedLog.decisions };
+                }
+                setLog(parsedLog.mentions ? parsedLog : { minigames: {}, mentions: {} });
+            } else {
+                const initialLog = { minigames: {}, mentions: {} };
+                currentPlayers.forEach((p: Player) => {
+                    // @ts-ignore
+                    initialLog.minigames[p.id] = 0;
+                });
+                setLog(initialLog);
             }
-            setLog(parsedLog.mentions ? parsedLog : { minigames: {}, mentions: {} });
+
+            if (storedHistory) {
+                setMinigameHistory(JSON.parse(storedHistory));
+            }
+
+            if (shouldAutoOpenModal) {
+                setShowMinigameModal(true);
+            }
         } else {
-            const initialLog = { minigames: {}, mentions: {} };
-            currentPlayers.forEach((p: Player) => {
-                // @ts-ignore
-                initialLog.minigames[p.id] = 0;
-            });
-            setLog(initialLog);
+            // No players found, redirect to home
+            navigate(ROUTES.HOME, { replace: true });
         }
-
-        if (storedHistory) {
-            setMinigameHistory(JSON.parse(storedHistory));
-        }
-
-        if (shouldAutoOpenModal) {
-            setShowMinigameModal(true);
-        }
-    }, [shouldAutoOpenModal]);
+    }, [shouldAutoOpenModal, navigate]);
 
     // Persistence
     useEffect(() => {

@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Button, ActionCard } from '../components/UI';
-import { ROUTES } from '../constants';
+import { ROUTES, STORAGE_KEYS } from '../constants';
 
 // --- Game Session (Main Hub) ---
 export const GameSessionScreen: React.FC = () => {
     const navigate = useNavigate();
+    
+    // Auth Guard: If no players, go home
+    useEffect(() => {
+        const storedPlayers = localStorage.getItem(STORAGE_KEYS.PLAYERS);
+        if (!storedPlayers || JSON.parse(storedPlayers).length === 0) {
+            navigate(ROUTES.HOME, { replace: true });
+        }
+    }, [navigate]);
     
     const handleEndGameClick = () => {
         // Direct navigation to calculator (which leads to leaderboard)

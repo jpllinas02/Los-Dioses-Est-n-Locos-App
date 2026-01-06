@@ -10,11 +10,15 @@ import { RegistrationScreen } from './screens/NewGameScreen';
 import { GameSessionScreen } from './screens/GameScreens';
 import { MinigameSelectorScreen } from './screens/MinigameSelectorScreen';
 import { OracleScreen } from './screens/OracleScreen';
-import { VictoryLogScreen, CalculatorScreen, LeaderboardScreen } from './screens/LogsAndWinnerScreen';
 import { TimerScreen } from './screens/TimerScreen';
 import { DestiniesScreen } from './screens/DestiniesScreen';
 import { AppGuideScreen } from './screens/AppGuideScreen';
 import { RulebookScreen } from './screens/RulebookScreen';
+
+// 2. New Refactored Screens
+import { LogScreen } from './screens/LogScreen';
+import { CalculatorScreen } from './screens/CalculatorScreen';
+import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
 const App: React.FC = () => {
     return (
@@ -40,7 +44,7 @@ const App: React.FC = () => {
                 <Route path={ROUTES.DESTINIES} element={<DestiniesScreen />} />
                 
                 {/* Game Stats, Logs & Results */}
-                <Route path={ROUTES.VICTORY_LOG} element={<VictoryLogScreen />} />
+                <Route path={ROUTES.VICTORY_LOG} element={<LogScreen />} />
                 <Route path={ROUTES.CALCULATOR} element={<CalculatorScreen />} />
                 <Route path={ROUTES.LEADERBOARD} element={<LeaderboardScreen />} />
 

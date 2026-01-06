@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header, Button, PlayerName } from '../components/UI';
 import { Player, GameColor } from '../types';
-import { shuffle, DEFAULT_NAME_POOL } from '../utils';
-import { STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS, ROUTES } from '../constants';
 
 export const DestiniesScreen: React.FC = () => {
+    const navigate = useNavigate();
     // Core Data
     const [players, setPlayers] = useState<Player[]>([]);
     const [excludedIds, setExcludedIds] = useState<string[]>([]);
@@ -47,19 +48,10 @@ export const DestiniesScreen: React.FC = () => {
         if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
             setPlayers(JSON.parse(storedPlayers));
         } else {
-            // Default players if none registered - use random names
-            const shuffledPool = shuffle([...DEFAULT_NAME_POOL]);
-
-            const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
-            const defaults: Player[] = defaultColors.map((color, index) => ({
-                id: `def-${index}`,
-                name: shuffledPool[index], // Use random name
-                pact: 'Atenea', // Dummy value
-                color: color
-            }));
-            setPlayers(defaults);
+            // No players, redirect to home
+            navigate(ROUTES.HOME, { replace: true });
         }
-    }, []);
+    }, [navigate]);
 
     // Check scroll availability whenever players change or component mounts
     useEffect(() => {

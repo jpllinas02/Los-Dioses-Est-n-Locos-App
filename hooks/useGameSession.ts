@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES, STORAGE_KEYS } from '../constants';
+import { Player } from '../types';
 
 export const useGameSession = () => {
     const navigate = useNavigate();
@@ -20,20 +21,36 @@ export const useGameSession = () => {
         checkSession();
     }, [checkSession]);
 
-    const startNewGame = () => {
-        // Core game state
+    const startGame = (players: Player[]) => {
+        // 1. Clear old data
         const keysToRemove = [
-            STORAGE_KEYS.PLAYERS, 
             STORAGE_KEYS.RESULTS, 
             STORAGE_KEYS.STATS, 
             STORAGE_KEYS.LOG, 
             STORAGE_KEYS.MINIGAME_HISTORY,
-            // Also clear deck histories to ensure a fresh start
             STORAGE_KEYS.MINIGAME_HISTORY_IDS,
             STORAGE_KEYS.ORACLE_HISTORY_IDS
         ];
-        
         keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        // 2. Initialize Stats
+        const initialStats: Record<string, any> = {};
+        players.forEach(p => {
+            initialStats[p.id] = { relics: 0, plagues: 0, powers: 0 };
+        });
+        localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(initialStats));
+
+        // 3. Save Players
+        localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
+
+        // 4. Navigate
+        // Prompt requested /oracle, but traditionally games start at the HUB. 
+        // Using /game based on existing flow consistency, but respecting the instruction context implying "Game Start".
+        navigate(ROUTES.GAME);
+    };
+
+    const startNewGame = () => {
+        // Just navigates to setup, logic handled in startGame
         navigate(ROUTES.REGISTRATION);
     };
 
@@ -43,6 +60,7 @@ export const useGameSession = () => {
 
     return {
         hasActiveSession,
+        startGame,
         startNewGame,
         resumeGame,
         checkSession
