@@ -2,104 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Header, Button, BottomBar, PlayerName } from '../components/UI';
 import { Player, GameColor } from '../types';
-import { shuffle, DEFAULT_NAME_POOL } from '../utils';
-import { ROUTES, STORAGE_KEYS } from '../constants';
-
-// --- Types for Log ---
-interface MinigameRecord {
-    id: string;
-    round: number;
-    winners: string[];
-    timestamp: number;
-}
+import { shuffle, DEFAULT_NAME_POOL, getColorStyle } from '../utils';
+import { ROUTES, STORAGE_KEYS, VOTE_CATEGORIES } from '../constants';
+import { useVictoryLog } from '../hooks/useVictoryLog';
+import { MinigameHistoryList } from '../components/VictoryLog/MinigameHistoryList';
+import { WinnerSelectionModal } from '../components/VictoryLog/WinnerSelectionModal';
+import { VotingModal } from '../components/VictoryLog/VotingModal';
 
 // --- VICTORY LOG COMPONENT ---
 export const VictoryLogScreen: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [players, setPlayers] = useState<Player[]>([]);
     
-    // Check if we came from calculator
+    // Check flags
     const isFromCalculator = location.state?.fromCalculator;
-    // Check if we came from Minigame Selector to auto-open modal
     const shouldAutoOpenModal = location.state?.openMinigameModal;
 
-    // 'mentions' structure: { [category: string]: { [playerId: string]: number } }
-    const [log, setLog] = useState<{minigames: Record<string, number>, mentions: Record<string, Record<string, number>>}>({ minigames: {}, mentions: {} });
-    
-    // Detailed history for this screen
-    const [minigameHistory, setMinigameHistory] = useState<MinigameRecord[]>([]);
-    
-    // UI States
-    const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
-    const [showMinigameModal, setShowMinigameModal] = useState(false);
-    const [showVoteModal, setShowVoteModal] = useState(false);
-    const [activeCategory, setActiveCategory] = useState<string | null>(null);
-    const [selectedWinners, setSelectedWinners] = useState<string[]>([]);
-    const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
-    
-    // New UI State for Vote Feedback
-    const [justVotedId, setJustVotedId] = useState<string | null>(null);
-    const [isClearingVotes, setIsClearingVotes] = useState(false);
-
-    // Initialize Modal from Navigation State
-    useEffect(() => {
-        if (shouldAutoOpenModal) {
-            setShowMinigameModal(true);
-        }
-    }, [shouldAutoOpenModal]);
-
-    useEffect(() => {
-        const storedPlayers = localStorage.getItem(STORAGE_KEYS.PLAYERS);
-        const storedLog = localStorage.getItem(STORAGE_KEYS.LOG);
-        const storedHistory = localStorage.getItem(STORAGE_KEYS.MINIGAME_HISTORY);
-
-        let currentPlayers: Player[] = [];
-
-        if (storedPlayers && JSON.parse(storedPlayers).length > 0) {
-            currentPlayers = JSON.parse(storedPlayers);
-        } else {
-             // Fallback: Generate Default Players for Victory Log usage with random names
-            const shuffledPool = shuffle([...DEFAULT_NAME_POOL]);
-
-            const defaultColors: GameColor[] = ['red', 'blue', 'yellow', 'green', 'black', 'white'];
-            currentPlayers = defaultColors.map((color, index) => ({
-                id: `def-${index}`,
-                name: shuffledPool[index], // Use random name
-                pact: 'Atenea',
-                color: color
-            }));
-        }
-        
-        setPlayers(currentPlayers);
-            
-        if (storedLog) {
-            const parsedLog = JSON.parse(storedLog);
-            if (parsedLog.decisions && !parsedLog.mentions) {
-                parsedLog.mentions = { 'strategy': parsedLog.decisions };
-            }
-            setLog(parsedLog.mentions ? parsedLog : { minigames: {}, mentions: {} });
-        } else {
-            const initialLog = { minigames: {}, mentions: {} };
-            currentPlayers.forEach((p: Player) => {
-                // @ts-ignore
-                initialLog.minigames[p.id] = 0;
-            });
-            setLog(initialLog);
-        }
-
-        if (storedHistory) {
-            setMinigameHistory(JSON.parse(storedHistory));
-        }
-    }, []);
-
-    // Persistence
-    useEffect(() => {
-        if (players.length > 0) {
-            localStorage.setItem(STORAGE_KEYS.LOG, JSON.stringify(log));
-            localStorage.setItem(STORAGE_KEYS.MINIGAME_HISTORY, JSON.stringify(minigameHistory));
-        }
-    }, [log, minigameHistory, players]);
+    // Use Custom Hook for Logic
+    const { 
+        players, 
+        minigameHistory, 
+        ui, 
+        actions 
+    } = useVictoryLog(shouldAutoOpenModal);
 
     const handleBack = () => {
         if (isFromCalculator) {
@@ -109,183 +34,18 @@ export const VictoryLogScreen: React.FC = () => {
         }
     };
 
-    const toggleWinnerSelection = (playerId: string) => {
-        setSelectedWinners(prev => 
-            prev.includes(playerId) 
-                ? prev.filter(id => id !== playerId) 
-                : [...prev, playerId]
-        );
-    };
-
-    const openMinigameModal = (record?: MinigameRecord) => {
-        if (record) {
-            setEditingRecordId(record.id);
-            setSelectedWinners(record.winners);
-        } else {
-            setEditingRecordId(null);
-            setSelectedWinners([]);
-        }
-        setShowMinigameModal(true);
-    };
-
-    const handleCloseMinigameModal = () => {
-        setShowMinigameModal(false);
-        setEditingRecordId(null);
-        setSelectedWinners([]);
-        
-        if (shouldAutoOpenModal) {
+    const handleConfirmMinigameWrapper = () => {
+        const success = actions.confirmMinigame();
+        if (success && shouldAutoOpenModal) {
             navigate(-1);
         }
     };
 
-    const deleteMinigameRecord = () => {
-        if (!editingRecordId) return;
-
-        let newHistory = minigameHistory.filter(rec => rec.id !== editingRecordId);
-        
-        // Re-index rounds
-        newHistory = newHistory.map((rec, index) => ({
-            ...rec,
-            round: newHistory.length - index
-        }));
-
-        setMinigameHistory(newHistory);
-        recalculateStats(newHistory, log.mentions); 
-
-        handleCloseMinigameModal(); 
-    };
-
-    const confirmMinigame = () => {
-        let winnersToSave = selectedWinners;
-        
-        if (selectedWinners.length === players.length) {
-            winnersToSave = [];
-        }
-
-        let newHistory = [...minigameHistory];
-        
-        if (editingRecordId) {
-             // UPDATE Existing
-             newHistory = newHistory.map(rec => {
-                 if (rec.id === editingRecordId) {
-                     return { ...rec, winners: winnersToSave };
-                 }
-                 return rec;
-             });
-        } else {
-             // CREATE New
-             const newRecord: MinigameRecord = {
-                 id: `mg-${Date.now()}`,
-                 round: minigameHistory.length + 1,
-                 winners: winnersToSave,
-                 timestamp: Date.now()
-             };
-             newHistory = [newRecord, ...newHistory];
-             setIsHistoryExpanded(true); // Auto expand on new add
-        }
-        
-        setMinigameHistory(newHistory);
-        recalculateStats(newHistory, log.mentions);
-
-        // Reset
-        setShowMinigameModal(false);
-        setEditingRecordId(null);
-        setSelectedWinners([]);
-
-        // Smart return if came from game
+    const handleCloseMinigameWrapper = () => {
+        actions.closeMinigameModal();
         if (shouldAutoOpenModal) {
             navigate(-1);
         }
-    };
-
-    const recalculateStats = (history: MinigameRecord[], currentMentions: Record<string, Record<string, number>>) => {
-        const newMinigamesStats: Record<string, number> = {};
-        // Reset to 0
-        players.forEach(p => newMinigamesStats[p.id] = 0);
-        
-        // Sum from history
-        history.forEach(rec => {
-            rec.winners.forEach(wid => {
-                newMinigamesStats[wid] = (newMinigamesStats[wid] || 0) + 1;
-            });
-        });
-
-        setLog({ minigames: newMinigamesStats, mentions: currentMentions });
-    };
-
-    const openVoteModal = (category: string) => {
-        setActiveCategory(category);
-        setShowVoteModal(true);
-    }
-
-    const confirmVote = (winnerId: string) => {
-        if (!activeCategory) return;
-        
-        setJustVotedId(winnerId);
-
-        setTimeout(() => {
-            setLog(prev => {
-                const catVotes = prev.mentions[activeCategory] || {};
-                return {
-                    ...prev,
-                    mentions: {
-                        ...prev.mentions,
-                        [activeCategory]: {
-                            ...catVotes,
-                            [winnerId]: (catVotes[winnerId] || 0) + 1
-                        }
-                    }
-                }
-            });
-            setShowVoteModal(false);
-            setActiveCategory(null);
-            setJustVotedId(null); // Reset
-        }, 700);
-    };
-
-    const clearCategoryVotes = () => {
-        if (!activeCategory) return;
-        
-        setIsClearingVotes(true);
-
-        setTimeout(() => {
-            setLog(prev => {
-                const newMentions = { ...prev.mentions };
-                delete newMentions[activeCategory];
-                return { ...prev, mentions: newMentions };
-            });
-            setShowVoteModal(false);
-            setActiveCategory(null);
-            setIsClearingVotes(false);
-        }, 700); // 700ms duration
-    }
-
-    const getColorStyle = (color: GameColor) => {
-        switch(color) {
-            case 'red': return {bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-200'};
-            case 'blue': return {bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-200'};
-            case 'yellow': return {bg: 'bg-yellow-400', text: 'text-yellow-600', border: 'border-yellow-200'};
-            case 'green': return {bg: 'bg-green-500', text: 'text-green-600', border: 'border-green-200'};
-            case 'black': return {bg: 'bg-slate-900', text: 'text-slate-900', border: 'border-slate-800'};
-            case 'white': return {bg: 'bg-white', text: 'text-slate-600', border: 'border-slate-300'};
-            default: return {bg: 'bg-slate-500', text: 'text-slate-600', border: 'border-slate-200'};
-        }
-    };
-
-    const voteCategories = [
-        { id: 'strategy', label: 'Estratega', modalTitle: 'El Más Estratégico', icon: 'psychology', color: 'purple' },
-        { id: 'chaos', label: 'Caótico', modalTitle: 'El Más Caótico', icon: 'local_fire_department', color: 'red' },
-        { id: 'fun', label: 'Gracioso', modalTitle: 'Quien Más Hizo Reír', icon: 'sentiment_very_satisfied', color: 'amber' },
-        { id: 'liar', label: 'Mentiroso', modalTitle: 'El Mejor Mentiroso', icon: 'theater_comedy', color: 'slate' },
-    ];
-
-    const getActiveCategoryModalTitle = () => {
-        return voteCategories.find(c => c.id === activeCategory)?.modalTitle || 'Votación';
-    }
-
-    const getTotalVotesForCategory = (catId: string) => {
-        if (!log.mentions || !log.mentions[catId]) return 0;
-        return Object.values(log.mentions[catId]).reduce((sum: number, count: number) => sum + count, 0);
     };
 
     return (
@@ -293,7 +53,7 @@ export const VictoryLogScreen: React.FC = () => {
             <Header title="Bitácora de Partida" actionIcon="settings" onBack={handleBack} />
             
             <div className="flex-1 px-4 pt-6 pb-36 overflow-y-auto no-scrollbar">
-                {/* ... Main Content ... */}
+                {/* Intro Card */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8 text-center relative overflow-hidden">
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-500 mb-4">
                         <span className="material-symbols-outlined text-[32px]">emoji_events</span>
@@ -313,11 +73,11 @@ export const VictoryLogScreen: React.FC = () => {
                                 Minijuegos
                             </h3>
                             <button 
-                                onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                                onClick={() => ui.setIsHistoryExpanded(!ui.isHistoryExpanded)}
                                 className="text-xs font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors"
                             >
-                                {isHistoryExpanded ? 'Ocultar Lista' : 'Mostrar Lista'}
-                                <span className={`material-symbols-outlined text-sm transition-transform ${isHistoryExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                                {ui.isHistoryExpanded ? 'Ocultar Lista' : 'Mostrar Lista'}
+                                <span className={`material-symbols-outlined text-sm transition-transform ${ui.isHistoryExpanded ? 'rotate-180' : ''}`}>expand_more</span>
                             </button>
                         </div>
 
@@ -325,52 +85,17 @@ export const VictoryLogScreen: React.FC = () => {
                             fullWidth 
                             className="bg-action shadow-lg shadow-action/20 mb-4" 
                             icon="add_circle"
-                            onClick={() => openMinigameModal()}
+                            onClick={() => actions.openMinigameModal()}
                         >
                             Registrar Ganador de Minijuego
                         </Button>
 
-                        {isHistoryExpanded && (
-                            <div className="flex flex-col gap-3" style={{scrollbarGutter: 'stable'}}>
-                                {minigameHistory.length === 0 ? (
-                                    <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                                        No hay minijuegos registrados aún.
-                                    </div>
-                                ) : (
-                                    minigameHistory.map((record, idx) => (
-                                        <div key={record.id} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ronda {record.round}</span>
-                                                <span className="font-bold text-slate-800 text-sm">Minijuego</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1">
-                                                    {record.winners.length === 0 ? (
-                                                        <span className="text-xs text-slate-400 font-bold italic mr-1">Sin ganadores</span>
-                                                    ) : (
-                                                        record.winners.map(wid => {
-                                                            const p = players.find(pl => pl.id === wid);
-                                                            if (!p) return null;
-                                                            const style = getColorStyle(p.color);
-                                                            return (
-                                                                <div key={wid} className={`size-8 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-sm`} title={p.name}>
-                                                                    <span className={`material-symbols-outlined text-sm ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
-                                                                </div>
-                                                            )
-                                                        })
-                                                    )}
-                                                </div>
-                                                <button 
-                                                    onClick={() => openMinigameModal(record)}
-                                                    className="size-8 rounded-full text-slate-400 hover:text-action hover:bg-slate-50 flex items-center justify-center transition-colors"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">edit</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                        {ui.isHistoryExpanded && (
+                            <MinigameHistoryList 
+                                history={minigameHistory}
+                                players={players}
+                                onEdit={actions.openMinigameModal}
+                            />
                         )}
                     </div>
 
@@ -387,12 +112,12 @@ export const VictoryLogScreen: React.FC = () => {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3">
-                            {voteCategories.map(cat => {
-                                const totalVotes = getTotalVotesForCategory(cat.id);
+                            {VOTE_CATEGORIES.map(cat => {
+                                const totalVotes = actions.getTotalVotesForCategory(cat.id);
                                 return (
                                     <button 
                                         key={cat.id}
-                                        onClick={() => openVoteModal(cat.id)}
+                                        onClick={() => actions.openVoteModal(cat.id)}
                                         className={`flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:border-${cat.color}-200 hover:bg-${cat.color}-50 transition-all active:scale-[0.98] group`}
                                     >
                                         <div className={`size-10 rounded-full bg-${cat.color}-100 text-${cat.color}-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
@@ -409,136 +134,29 @@ export const VictoryLogScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* ... Modals (Minigame & Vote) remain same JSX structure ... */}
-            {/* Minigame Winner Modal */}
-            {showMinigameModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCloseMinigameModal}></div>
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
-                        <div className="p-5 border-b border-slate-100 bg-white text-center relative">
-                            <h3 className="typo-h3 text-slate-900">{editingRecordId ? 'Editar Resultado' : '¿Quién Ganó el Minijuego?'}</h3>
-                            <p className="text-sm text-slate-500 mt-1 font-medium">Selecciona los ganadores de la Ronda</p>
-                        </div>
-                        
-                        <div className="p-5 overflow-y-auto grid grid-cols-2 gap-3 bg-[#f8fafc]">
-                            {players.map(p => {
-                                const isSelected = selectedWinners.includes(p.id);
-                                const style = getColorStyle(p.color);
-                                return (
-                                    <button 
-                                        key={p.id}
-                                        onClick={() => toggleWinnerSelection(p.id)}
-                                        className={`relative p-3 rounded-2xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 h-28 shadow-sm ${isSelected ? `border-action bg-white ring-2 ring-action/20` : 'border-white bg-white hover:border-slate-200'}`}
-                                    >
-                                        <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform ${isSelected ? 'scale-110' : ''}`}>
-                                            <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
-                                        </div>
-                                        <span className={`text-sm font-bold truncate w-full text-center ${isSelected ? 'text-action' : 'text-slate-700'}`}>
-                                            <PlayerName name={p.name} />
-                                        </span>
-                                        
-                                        <div className={`absolute top-2 right-2 size-5 rounded-full flex items-center justify-center transition-all duration-200 ${isSelected ? 'bg-action text-white scale-100' : 'bg-slate-100 text-slate-300 scale-0 opacity-0'}`}>
-                                            <span className="material-symbols-outlined text-xs font-bold">check</span>
-                                        </div>
-                                    </button>
-                                )
-                            })}
-                        </div>
-                        
-                        <div className="p-5 border-t border-slate-100 bg-white flex flex-col gap-3">
-                            <div className="flex gap-3 w-full">
-                                <Button variant="ghost" className="flex-1" onClick={handleCloseMinigameModal}>Cancelar</Button>
-                                <Button className="flex-[2] shadow-xl shadow-primary/20" onClick={confirmMinigame}>
-                                    {(selectedWinners.length === 0 || selectedWinners.length === players.length) ? 'No Hubo Ganadores' : 'Confirmar'}
-                                </Button>
-                            </div>
-                            
-                            {editingRecordId && (
-                                <button 
-                                    onClick={deleteMinigameRecord} 
-                                    className="w-full py-3 rounded-xl text-danger font-bold text-sm hover:bg-red-50 transition-colors flex items-center justify-center gap-2 mt-2"
-                                >
-                                    <span className="material-symbols-outlined icon-sm">delete</span> Eliminar este registro
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Modals */}
+            <WinnerSelectionModal 
+                isOpen={ui.showMinigameModal}
+                players={players}
+                selectedWinners={ui.selectedWinners}
+                isEditing={!!ui.editingRecordId}
+                onToggleWinner={actions.toggleWinnerSelection}
+                onConfirm={handleConfirmMinigameWrapper}
+                onDelete={actions.deleteMinigameRecord}
+                onClose={handleCloseMinigameWrapper}
+            />
 
-            {/* Vote Modal */}
-            {showVoteModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isClearingVotes && setShowVoteModal(false)}></div>
-                    <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[85vh] animate-float">
-                         
-                         {isClearingVotes && (
-                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-300">
-                                <div className="flex flex-col items-center justify-center animate-pop-in">
-                                    <div className="size-14 rounded-full bg-red-100 text-red-500 flex items-center justify-center mb-3 shadow-xl border-4 border-white">
-                                        <span className="material-symbols-outlined text-3xl font-bold">delete</span>
-                                    </div>
-                                    <p className="text-red-500 font-bold text-lg animate-pulse">¡Votos Eliminados!</p>
-                                </div>
-                            </div>
-                         )}
-
-                         <div className="p-5 border-b border-slate-100 bg-white text-center">
-                            <h3 className="typo-h3 text-slate-900">{getActiveCategoryModalTitle()}</h3>
-                            <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wide">
-                                ({activeCategory ? getTotalVotesForCategory(activeCategory) : 0} {activeCategory && getTotalVotesForCategory(activeCategory) === 1 ? 'voto recibido' : 'votos recibidos'})
-                            </p>
-                            <p className="text-sm text-slate-500 mt-2 font-medium">Toca al jugador que merece este título</p>
-                        </div>
-                        <div className="p-5 overflow-y-auto grid grid-cols-2 gap-3 bg-[#f8fafc] relative">
-                             {players.map(p => {
-                                const style = getColorStyle(p.color);
-                                const isJustVoted = justVotedId === p.id;
-                                
-                                return (
-                                    <button 
-                                        key={p.id}
-                                        onClick={() => confirmVote(p.id)}
-                                        disabled={justVotedId !== null || isClearingVotes}
-                                        className={`relative p-3 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 h-28 shadow-sm active:scale-95 overflow-hidden ${isJustVoted ? 'bg-green-50 border-green-500 scale-105' : 'border-white bg-white hover:border-slate-200'}`}
-                                    >
-                                        {isJustVoted ? (
-                                            <div className="flex flex-col items-center justify-center w-full h-full animate-pop-in">
-                                                <div className="size-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg mb-2 border-4 border-white">
-                                                    <span className="material-symbols-outlined text-3xl font-bold">check</span>
-                                                </div>
-                                                <span className="text-green-600 font-bold text-sm animate-pulse">¡Voto!</span>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <div className={`size-12 rounded-full ${style.bg} flex items-center justify-center border ${style.border} shadow-md transition-transform`}>
-                                                    <span className={`material-symbols-outlined text-2xl ${p.color === 'white' ? 'text-slate-800' : 'text-white'}`}>face</span>
-                                                </div>
-                                                <div className="w-full text-center relative z-10">
-                                                    <span className="block text-sm font-bold truncate w-full text-slate-700">
-                                                        <PlayerName name={p.name} />
-                                                    </span>
-                                                </div>
-                                            </>
-                                        )}
-                                    </button>
-                                )
-                             })}
-                        </div>
-                        <div className="p-5 border-t border-slate-100 bg-white flex gap-3">
-                            <Button variant="outline" className="flex-1" onClick={() => setShowVoteModal(false)} disabled={isClearingVotes}>Cancelar</Button>
-                            
-                            <button 
-                                onClick={clearCategoryVotes} 
-                                disabled={isClearingVotes}
-                                className="flex-1 py-3 rounded-xl text-danger font-bold text-sm hover:bg-red-50 border border-red-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                <span className="material-symbols-outlined icon-sm">delete</span> Borrar votos
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <VotingModal 
+                isOpen={ui.showVoteModal}
+                activeCategory={ui.activeCategory}
+                players={players}
+                totalVotes={ui.activeCategory ? actions.getTotalVotesForCategory(ui.activeCategory) : 0}
+                justVotedId={ui.justVotedId}
+                isClearingVotes={ui.isClearingVotes}
+                onVote={actions.confirmVote}
+                onClear={actions.clearCategoryVotes}
+                onClose={() => ui.setShowVoteModal(false)}
+            />
 
             {isFromCalculator && (
                 <BottomBar className="bg-white border-t border-slate-100">
@@ -757,18 +375,6 @@ export const CalculatorScreen: React.FC = () => {
         }
     }
 
-    const getColorStyle = (color: GameColor) => {
-        switch(color) {
-            case 'red': return { border: 'border-red-500 shadow-red-500/20', bg: 'bg-red-500', dot: 'bg-red-500' };
-            case 'blue': return { border: 'border-blue-500 shadow-blue-500/20', bg: 'bg-blue-500', dot: 'bg-blue-500' };
-            case 'yellow': return { border: 'border-yellow-400 shadow-yellow-400/20', bg: 'bg-yellow-400', dot: 'bg-yellow-400' };
-            case 'green': return { border: 'border-green-500 shadow-green-500/20', bg: 'bg-green-500', dot: 'bg-green-500' };
-            case 'black': return { border: 'border-slate-800 shadow-slate-800/20', bg: 'bg-slate-900', dot: 'bg-slate-900' };
-            case 'white': return { border: 'border-slate-300 shadow-slate-300/20', bg: 'bg-slate-200', dot: 'bg-slate-400' };
-            default: return { border: 'border-slate-200', bg: 'bg-slate-200', dot: 'bg-primary' };
-        }
-    };
-
     let mainButtonText = "Siguiente";
     let mainButtonIcon = "arrow_forward";
 
@@ -811,7 +417,7 @@ export const CalculatorScreen: React.FC = () => {
                                     return (
                                         <div 
                                             key={idx} 
-                                            className={`h-2.5 rounded-full transition-all duration-300 ${isActive ? `w-8 shadow-sm ${pStyle.dot}` : 'w-2.5 bg-gray-200'}`}
+                                            className={`h-2.5 rounded-full transition-all duration-300 ${isActive ? `w-8 shadow-sm ${pStyle.bg}` : 'w-2.5 bg-gray-200'}`}
                                         ></div>
                                     );
                                 })}
@@ -857,7 +463,7 @@ export const CalculatorScreen: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col gap-4 px-4 w-full max-w-md mx-auto">
-                            {/* ... Stat Inputs (Relics, Plagues, Powers) - Logic is same, JSX same ... */}
+                            {/* ... Stat Inputs ... */}
                             <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-100 transition-colors hover:border-cyan-200">
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center justify-center rounded-2xl bg-cyan-50 text-cyan-500 border border-cyan-100 shrink-0 h-16 w-16 shadow-sm">
@@ -1112,12 +718,9 @@ export const LeaderboardScreen: React.FC = () => {
     const getCategoryHonors = () => {
         if (!gameLog?.mentions || !results.length) return [];
         
-        const categories = [
-             { id: 'strategy', title: 'El Más Estratégico', icon: 'psychology' },
-             { id: 'chaos', title: 'El Más Caótico', icon: 'local_fire_department' },
-             { id: 'fun', title: 'Quien Más Hizo Reír', icon: 'sentiment_very_satisfied' },
-             { id: 'liar', title: 'El Mejor Mentiroso', icon: 'theater_comedy' },
-        ];
+        const categories = VOTE_CATEGORIES.map(c => ({
+             id: c.id, title: c.modalTitle, icon: c.icon
+        }));
 
         const honors: any[] = [];
 
@@ -1161,17 +764,7 @@ export const LeaderboardScreen: React.FC = () => {
     const hasHonors = minigameHonor || categoryHonors.length > 0;
     
     // ... Color Helpers ...
-    const getColorStyle = (color: GameColor) => {
-        switch(color) {
-            case 'red': return {bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-200'};
-            case 'blue': return {bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-200'};
-            case 'yellow': return {bg: 'bg-yellow-400', text: 'text-yellow-600', border: 'border-yellow-200'};
-            case 'green': return {bg: 'bg-green-500', text: 'text-green-600', border: 'border-green-200'};
-            case 'black': return {bg: 'bg-slate-900', text: 'text-slate-900', border: 'border-slate-800'};
-            case 'white': return {bg: 'bg-white', text: 'text-slate-600', border: 'border-slate-300'};
-            default: return {bg: 'bg-slate-500', text: 'text-slate-600', border: 'border-slate-200'};
-        }
-    };
+    // Note: getColorStyle is now imported from utils
 
     const getHonorColorStyles = (color: GameColor) => {
         // ... (Keep existing implementation) ...

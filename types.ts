@@ -47,3 +47,11 @@ export interface Minigame {
     type: MinigameType;
     description: string;
 }
+
+// --- Log Types ---
+export interface MinigameRecord {
+    id: string;
+    round: number;
+    winners: string[];
+    timestamp: number;
+}

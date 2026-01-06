@@ -24,3 +24,10 @@ export const STORAGE_KEYS = {
     MINIGAME_HISTORY_IDS: 'game_minigame_history_ids',
     ORACLE_HISTORY_IDS: 'game_oracle_history_ids',
 };
+
+export const VOTE_CATEGORIES = [
+    { id: 'strategy', label: 'Estratega', modalTitle: 'El Más Estratégico', icon: 'psychology', color: 'purple' },
+    { id: 'chaos', label: 'Caótico', modalTitle: 'El Más Caótico', icon: 'local_fire_department', color: 'red' },
+    { id: 'fun', label: 'Gracioso', modalTitle: 'Quien Más Hizo Reír', icon: 'sentiment_very_satisfied', color: 'amber' },
+    { id: 'liar', label: 'Mentiroso', modalTitle: 'El Mejor Mentiroso', icon: 'theater_comedy', color: 'slate' },
+];
