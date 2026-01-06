@@ -27,9 +27,23 @@ export enum DestinyMode {
     SECRET = 'Secret'
 }
 
-export interface OracleResult {
+// --- Oracle Types ---
+export type OracleType = 'Favorable' | 'Desfavorable' | 'Neutral';
+
+export interface Oracle {
+    id: string;
     title: string;
-    type: 'Favorable' | 'Desfavorable' | 'Neutral';
+    type: OracleType;
     description: string;
-    image: string;
+    image?: string;
+}
+
+// --- Minigame Types ---
+export type MinigameType = 'Individual' | 'Team' | 'Special';
+
+export interface Minigame {
+    id: string;
+    title: string;
+    type: MinigameType;
+    description: string;
 }

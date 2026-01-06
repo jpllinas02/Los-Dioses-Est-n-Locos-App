@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
-// New Organization
+// 1. Screens
 import { HomeScreen } from './screens/HomeScreen';
 import { SettingScreen } from './screens/SettingScreen';
 import { ExtraScreen } from './screens/ExtraScreen';
 import { RegistrationScreen } from './screens/NewGameScreen';
-import { GameSessionScreen, MinigameSelectorScreen, OracleScreen } from './screens/GameScreens';
+import { GameSessionScreen } from './screens/GameScreens';
+import { MinigameSelectorScreen } from './screens/MinigameSelectorScreen';
+import { OracleScreen } from './screens/OracleScreen';
 import { VictoryLogScreen, CalculatorScreen, LeaderboardScreen } from './screens/LogsAndWinnerScreen';
 import { TimerScreen } from './screens/TimerScreen';
 import { DestiniesScreen } from './screens/DestiniesScreen';
