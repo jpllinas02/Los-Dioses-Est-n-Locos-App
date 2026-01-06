@@ -144,7 +144,7 @@ export const OracleScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-[#fcfaff]"> {/* Subtle Purple Tint Background */}
-            <Header title="Oráculo Divino" onBack={() => navigate(ROUTES.GAME)} />
+            <Header title="Oráculo Divino" onBack={() => navigate(ROUTES.GAME)} helpTarget="decks" />
             
             <div className={`flex-1 flex flex-col items-center p-4 relative min-h-[360px] pb-28 overflow-y-auto overflow-x-hidden no-scrollbar transition-all duration-300 ${hasActiveCard ? 'justify-start pt-6' : 'justify-center'}`}>
                 

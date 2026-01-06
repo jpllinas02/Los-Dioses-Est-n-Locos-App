@@ -47,7 +47,7 @@ export const RegistrationScreen: React.FC = () => {
             {/* VIEW 1: CONFIGURATION */}
             {state.step === 'CONFIG' && (
                 <>
-                    <Header title="Configuración de Partida" onBack={() => navigate(ROUTES.HOME)} />
+                    <Header title="Configuración de Partida" onBack={() => navigate(ROUTES.HOME)} helpTarget="setup" />
                     <ConfigWizard 
                         config={state.config} 
                         onUpdate={actions.updateConfig} 
@@ -59,7 +59,7 @@ export const RegistrationScreen: React.FC = () => {
             {/* VIEW 2: INPUT NAMES */}
             {state.step === 'INPUT_NAMES' && (
                 <div className="flex h-screen w-full flex-col bg-[#f6f5f8]">
-                    <Header title="Registro de Jugadores" onBack={actions.handleInputBack} />
+                    <Header title="Registro de Jugadores" onBack={actions.handleInputBack} helpTarget="setup" />
                     
                     <div className="flex-1 px-6 pt-8 flex flex-col items-center animate-fade-in pb-32 overflow-y-auto">
                         <PlayerInputForm 
@@ -90,7 +90,7 @@ export const RegistrationScreen: React.FC = () => {
             {/* VIEW 3: REVEAL PACTS */}
             {state.step === 'REVEAL_PACTS' && (
                 <div className={`flex h-screen w-full flex-col bg-[#f6f5f8]`}>
-                    <Header title="Asignación de Pactos" showBack={true} onBack={handleRevealBack} />
+                    <Header title="Asignación de Pactos" showBack={true} onBack={handleRevealBack} helpTarget="setup" />
                     
                     <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
                         {/* Reveal Card UI */}

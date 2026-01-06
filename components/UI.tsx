@@ -7,6 +7,7 @@ interface HeaderProps {
     showBack?: boolean; // Default: false
     onBack?: () => void; // Optional override
     showHelp?: boolean; // Default: true
+    helpTarget?: string; // NEW: Contextual help target ID
     rightAction?: React.ReactNode; // Optional override for Help button
     transparent?: boolean;
 }
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
     showBack = false, 
     onBack, 
     showHelp = true,
+    helpTarget,
     rightAction,
     transparent = false 
 }) => {
@@ -33,7 +35,12 @@ export const Header: React.FC<HeaderProps> = ({
     };
 
     const handleHelp = () => {
-        navigate(ROUTES.APP_GUIDE);
+        // Pass targetId state if provided
+        if (helpTarget) {
+            navigate(ROUTES.APP_GUIDE, { state: { targetId: helpTarget } });
+        } else {
+            navigate(ROUTES.APP_GUIDE);
+        }
     };
 
     const buttonStyles = `flex h-10 w-10 items-center justify-center rounded-full transition-colors active:scale-95 ${transparent ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'}`;
