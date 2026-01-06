@@ -2,13 +2,16 @@ import React, { useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
 // New Organization
-import { HomeScreen, ExtrasScreen } from './screens/HomeScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { SettingScreen } from './screens/SettingScreen';
+import { ExtraScreen } from './screens/ExtraScreen';
 import { RegistrationScreen } from './screens/NewGameScreen';
 import { GameSessionScreen, MinigameSelectorScreen, OracleScreen } from './screens/GameScreens';
 import { VictoryLogScreen, CalculatorScreen, LeaderboardScreen } from './screens/LogsAndWinnerScreen';
 import { TimerScreen } from './screens/TimerScreen';
 import { DestiniesScreen } from './screens/DestiniesScreen';
 import { AppGuideScreen } from './screens/AppGuideScreen';
+import { RulebookScreen } from './screens/RulebookScreen';
 
 // Component to handle initial redirect
 const InitialRedirect: React.FC = () => {
@@ -27,8 +30,10 @@ const App: React.FC = () => {
             <Routes>
                 {/* Main Menu */}
                 <Route path="/" element={<HomeScreen />} />
-                <Route path="/extras" element={<ExtrasScreen />} />
+                <Route path="/settings" element={<SettingScreen />} />
+                <Route path="/extras" element={<ExtraScreen />} />
                 <Route path="/app-guide" element={<AppGuideScreen />} />
+                <Route path="/rules" element={<RulebookScreen />} />
                 
                 {/* Game Setup */}
                 <Route path="/registration" element={<RegistrationScreen />} />

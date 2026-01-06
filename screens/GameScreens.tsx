@@ -17,7 +17,7 @@ export const GameSessionScreen: React.FC = () => {
                 title="Partida Activa" 
                 showBack={true} 
                 onBack={() => navigate('/')}
-                actionIcon="settings"
+                actionIcon="help"
             />
 
             <div className="flex-1 px-4 py-6">
@@ -290,7 +290,7 @@ export const MinigameSelectorScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Header title="Selector de Minijuegos" actionIcon="settings" onBack={() => navigate('/game')} />
+            <Header title="Selector de Minijuegos" actionIcon="help" onBack={() => navigate('/game')} />
             
             {/* Filters */}
             <div className="w-full px-4 pt-4 pb-2 z-20">
@@ -569,7 +569,7 @@ export const OracleScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-[#fcfaff]"> {/* Subtle Purple Tint Background */}
-            <Header title="Oráculo Divino" actionIcon="settings" onBack={() => navigate('/game')} />
+            <Header title="Oráculo Divino" actionIcon="help" onBack={() => navigate('/game')} />
             
             <div className={`flex-1 flex flex-col items-center p-4 relative min-h-[360px] pb-28 overflow-y-auto overflow-x-hidden no-scrollbar transition-all duration-300 ${hasActiveCard ? 'justify-start pt-6' : 'justify-center'}`}>
                 

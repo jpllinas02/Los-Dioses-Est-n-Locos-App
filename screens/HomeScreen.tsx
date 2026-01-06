@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Header, Button } from '../components/UI';
+import { useNavigate } from 'react-router-dom';
 
 // --- Home Screen ---
 export const HomeScreen: React.FC = () => {
@@ -28,10 +27,6 @@ export const HomeScreen: React.FC = () => {
 
     const resumeGame = () => {
         navigate('/game');
-    };
-
-    const navigateToPlaceholder = (title: string, description: string) => {
-        navigate('/extras', { state: { title, description } });
     };
 
     // Helper for 3D Button Style
@@ -85,21 +80,21 @@ export const HomeScreen: React.FC = () => {
 
                         <button 
                             className={secondaryBtnClass}
-                            onClick={() => navigateToPlaceholder("Reglas Del Juego", "El reglamento completo de 'Los Dioses Están Locos' estará disponible aquí para consulta rápida durante tus partidas.")}
+                            onClick={() => navigate('/rules')}
                         >
                             Reglas Del Juego
                         </button>
 
                         <button 
                             className={secondaryBtnClass}
-                            onClick={() => navigateToPlaceholder("Configuración", "Próximamente podrás ajustar el volumen, idioma, notificaciones y otras preferencias de la aplicación desde este menú.")}
+                            onClick={() => navigate('/settings')}
                         >
                             Configuración
                         </button>
 
                         <button 
                             className={secondaryBtnClass}
-                            onClick={() => navigateToPlaceholder("Extras", "Esta sección contendrá Galería de imágenes, Prototipos y versiones iniciales, y Agradecimientos especiales.")}
+                            onClick={() => navigate('/extras')}
                         >
                             Extras
                         </button>
@@ -122,37 +117,6 @@ export const HomeScreen: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
-    );
-};
-
-export const ExtrasScreen: React.FC = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    
-    // Get state from navigation or fallback defaults
-    const { title, description } = location.state || {
-        title: "Extras",
-        description: "Esta sección contendrá Galería de imágenes, Prototipos y versiones iniciales, y Agradecimientos especiales."
-    };
-
-    return (
-        <div className="flex min-h-screen flex-col bg-background">
-            <Header title={title} actionIcon="settings" />
-            <div className="flex-1 flex flex-col items-center justify-center px-6 bg-[#f6f5f8]">
-                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center max-w-sm w-full">
-                    <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span className="material-symbols-outlined text-4xl">construction</span>
-                    </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">En Construcción</h2>
-                    <p className="text-slate-500 mb-8 leading-relaxed">
-                        {description}
-                    </p>
-                    <Button fullWidth variant="outline" onClick={() => navigate(-1)}>
-                        Volver
-                    </Button>
-                 </div>
-            </div>
         </div>
     );
 };

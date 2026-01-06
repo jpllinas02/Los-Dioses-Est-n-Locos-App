@@ -146,7 +146,7 @@ export const TimerScreen: React.FC = () => {
 
     return (
         <div className={`flex h-screen w-full flex-col font-display overflow-hidden text-slate-900 transition-colors duration-500 ${showAlertVisuals ? 'bg-red-50' : 'bg-[#f8fafc]'}`}>
-            <Header title={mode === 'TIMER' ? "Temporizador" : "Cronómetro"} actionIcon="settings" />
+            <Header title={mode === 'TIMER' ? "Temporizador" : "Cronómetro"} actionIcon="help" />
             
             <div className="relative z-10 flex flex-col h-full items-center">
                 
