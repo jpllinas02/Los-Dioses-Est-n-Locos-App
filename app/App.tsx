@@ -1,5 +1,6 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// CAMBIO CRÍTICO: Usamos BrowserRouter en lugar de HashRouter para soportar el basename correctamente
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants';
 
 // 1. Screens
@@ -22,7 +23,8 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
 const App: React.FC = () => {
     return (
-        <Router>
+        /* CAMBIO CLAVE: Añadimos basename="/app" para que las rutas funcionen en la subcarpeta */
+        <Router basename="/app">
             <Routes>
                 {/* Main Menu - Explicitly defined as index */}
                 <Route index element={<HomeScreen />} />
