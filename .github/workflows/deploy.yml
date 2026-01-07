@@ -31,11 +31,12 @@ jobs:
 
       - name: Assemble Site Structure
         run: |
-          # Crear una carpeta temporal para el sitio final
           mkdir final_site
-          # Copiar el Home (index.html de la raíz) a la carpeta final
+          # Copiar el Home (index.html de la raíz)
           cp index.html final_site/
-          # Copiar la App construida a una subcarpeta /app
+          # COPIAR EL CNAME (Añade esta línea para mantener tu dominio)
+          cp CNAME final_site/ || true 
+          # Copiar la App
           mkdir -p final_site/app
           cp -r app/dist/* final_site/app/
 
