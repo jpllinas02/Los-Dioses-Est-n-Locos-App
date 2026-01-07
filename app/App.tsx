@@ -1,6 +1,6 @@
 import React from 'react';
-// CAMBIO CRÍTICO: Usamos BrowserRouter en lugar de HashRouter para soportar el basename correctamente
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// CAMBIO DIVINO: Cambiamos BrowserRouter por HashRouter para evitar los 404 al recargar
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants';
 
 // 1. Screens
@@ -23,14 +23,18 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
 const App: React.FC = () => {
     return (
-        /* CAMBIO CLAVE: Añadimos basename="/app" para que las rutas funcionen en la subcarpeta */
-        <Router basename="/app">
+        /* Usamos HashRouter. 
+           Nota: En HashRouter, el basename suele ser innecesario si el servidor 
+           sirve el index.html desde la subcarpeta, pero lo mantenemos para 
+           consistencia con la estructura de archivos /app.
+        */
+        <Router>
             <Routes>
-                {/* Main Menu - Explicitly defined as index */}
-                <Route index element={<HomeScreen />} />
+                {/* Main Menu - Ruta raíz del hash */}
+                <Route path="/" element={<HomeScreen />} />
                 <Route path={ROUTES.HOME} element={<HomeScreen />} />
                 
-                {/* Secondary Menus */}
+                {/* Menus */}
                 <Route path={ROUTES.SETTINGS} element={<SettingScreen />} />
                 <Route path={ROUTES.EXTRAS} element={<ExtraScreen />} />
                 <Route path={ROUTES.APP_GUIDE} element={<AppGuideScreen />} />
@@ -54,7 +58,7 @@ const App: React.FC = () => {
                 <Route path={ROUTES.LEADERBOARD} element={<LeaderboardScreen />} />
 
                 {/* Catch-all redirect to Home */}
-                <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
     );
