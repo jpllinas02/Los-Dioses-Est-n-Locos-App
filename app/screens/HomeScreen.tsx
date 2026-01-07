@@ -33,7 +33,7 @@ export const HomeScreen: React.FC = () => {
                 {/* Logo Section - modificado: sin texto, más grande y más cerca del botón */}
                 <div className="flex flex-col items-center justify-center mb-2 w-full">
                     <div className="relative w-56 h-56 mb-2">
-                        <div className="relative w-full h-full bg-transparent rounded-full shadow-xl flex items-center justify-center p-2 animate-float">
+                        <div className="relative w-full h-full bg-transparent rounded-full flex items-center justify-center p-2 animate-float">
                             {/* Imagen con fondo transparente (app/assets/logo_transparente.png). */}
                             <img
                                 src={Logo}
