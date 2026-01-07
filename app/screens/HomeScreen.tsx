@@ -4,6 +4,9 @@ import { useGameSession } from '../hooks/useGameSession';
 import { MenuButton } from '../components/UI';
 import { ROUTES } from '../constants';
 
+// Importa el logo transparente que subiste
+import Logo from '../assets/logo_transparente.png';
+
 // --- Home Screen ---
 export const HomeScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -32,7 +35,13 @@ export const HomeScreen: React.FC = () => {
                     <div className="relative w-40 h-40 mb-4">
                         <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
                         <div className="relative w-full h-full bg-gradient-to-br from-white to-purple-50 rounded-3xl border border-white/80 shadow-xl flex items-center justify-center p-4 animate-float">
-                            <div className="w-full h-full bg-center bg-contain bg-no-repeat" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAWjwyX0TYR79Q1qqIZ8qT_iykfcOl-WeITNgC9FktM6HGOs5Lvz9VIFGVI_b7Gp6XwGzKVViIMBFBZuIPBdyNl25Csv0Lhe6nldJKQhSN7HjNVTC4TQUpXKMWXlDvv-2q7imiNsatYy8JYetX63eZh9QM4omeVU2zOch52VBWuD6eO2T6qkZmRLISa7CwLGB221LuJNWEaA76hPQHQfKk56qV5oFlp6dCzyqEg8HkClqzGPKDErSnZEG2gq29i1TxKky-ugQ5ZIFo")'}}></div>
+                            {/* Aquí mostramos tu logo (usa la animación animate-float ya aplicada al contenedor) */}
+                            <img
+                                src={Logo}
+                                alt="Los Dioses - Logo"
+                                className="w-full h-full object-contain"
+                                style={{ pointerEvents: 'none' }}
+                            />
                         </div>
                     </div>
                     <h1 className="typo-h1 text-center drop-shadow-sm leading-none">
@@ -49,7 +58,7 @@ export const HomeScreen: React.FC = () => {
                     <div className="w-full max-w-xs mb-6">
                         <button 
                             onClick={handleStartGame} 
-                            className="group relative w-full py-8 px-4 bg-[#330df2] text-white rounded-2xl shadow-[0_6px_0_0_#280bc4,0_0_40px_rgba(51,13,242,0.5)] active:shadow-none active:translate-y-[6px] transition-all duration-150 flex flex-col items-center justify-center hover:bg-[#3b16f2]"
+                            className="group relative w-full py-8 px-4 bg-[#330df2] text-white rounded-2xl shadow-[0_6px_0_0_#280bc4,0_0_40px_rgba(51,13,242,0.5)] active:shadow-none active:translate-y-[2px] transition-transform"
                         >
                             <span className="text-xl font-extrabold tracking-tight leading-none mb-1">Empieza Partida Nueva</span>
                             <span className="text-sm font-medium text-white/80 leading-none">O Retoma una iniciada</span>
