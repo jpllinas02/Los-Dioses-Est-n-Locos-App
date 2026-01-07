@@ -10,6 +10,7 @@ interface HeaderProps {
     helpTarget?: string; // NEW: Contextual help target ID
     rightAction?: React.ReactNode; // Optional override for Help button
     transparent?: boolean;
+    onHelp?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -19,7 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
     showHelp = true,
     helpTarget,
     rightAction,
-    transparent = false 
+    transparent = false,
+    onHelp
 }) => {
     const navigate = useNavigate();
 
@@ -35,6 +37,10 @@ export const Header: React.FC<HeaderProps> = ({
     };
 
     const handleHelp = () => {
+        if (onHelp) {
+            onHelp();
+            return;
+        }
         // Pass targetId state if provided
         if (helpTarget) {
             navigate(ROUTES.APP_GUIDE, { state: { targetId: helpTarget } });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Button, BottomBar } from '../components/UI';
+import { ROUTES } from '../constants'; // Added Import
 
 export const SettingScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -9,13 +10,17 @@ export const SettingScreen: React.FC = () => {
     const settingsItems = [
         { icon: 'volume_up', label: 'Control de Volumen', type: 'slider' },
         { icon: 'translate', label: 'Idioma (Español/Inglés)', type: 'row' },
-        { icon: 'notifications', label: 'Notificaciones', type: 'toggle' },
+        { icon: 'extension', label: 'Minijuegos Adicionales', type: 'toggle' },
         { icon: 'palette', label: 'Modo Oscuro', type: 'toggle' },
     ];
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f8fafc]">
-            <Header title="Configuración" showBack={true} />
+            <Header 
+                title="Configuración" 
+                showBack={true} 
+                onBack={() => navigate(ROUTES.HOME)} // Explicit back
+            />
             
             <div className="flex-1 overflow-y-auto pb-32">
                 {/* Hero Section */}
@@ -80,7 +85,7 @@ export const SettingScreen: React.FC = () => {
             </div>
 
             <BottomBar className="bg-white border-t border-slate-100">
-                <Button fullWidth onClick={() => navigate(-1)} icon="arrow_back">
+                <Button fullWidth onClick={() => navigate(ROUTES.HOME)} icon="arrow_back">
                     Volver
                 </Button>
             </BottomBar>

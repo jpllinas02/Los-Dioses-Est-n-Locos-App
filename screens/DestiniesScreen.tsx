@@ -173,7 +173,12 @@ export const DestiniesScreen: React.FC = () => {
 
     return (
         <div className="flex h-screen w-full flex-col bg-[#f8fafc]">
-            <Header title="Selector de Destinos" showBack={true} helpTarget="tools" />
+            <Header 
+                title="Selector de Destinos" 
+                showBack={true} 
+                onBack={() => navigate(ROUTES.GAME)} // Explicit back
+                helpTarget="tools" 
+            />
 
             {/* --- TOP: Player Filter --- */}
             <div className="bg-white border-b border-slate-100 pb-3 pt-4 px-4 shadow-sm z-20">

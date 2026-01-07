@@ -28,7 +28,8 @@ export const LogScreen: React.FC = () => {
         if (isFromCalculator) {
             navigate(ROUTES.CALCULATOR, { state: { initialShowSummary: true } });
         } else {
-            navigate(-1);
+            // Explicitly go to GAME session, not generic -1, to prevent help screen loop
+            navigate(ROUTES.GAME);
         }
     };
 

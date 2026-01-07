@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Button } from '../components/UI';
+import { ROUTES } from '../constants'; // Added Import
 
 export const RulebookScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -18,11 +19,15 @@ export const RulebookScreen: React.FC = () => {
         if (viewMode === 'DETAILS') {
             setViewMode('SELECTION');
         } else {
-            navigate(-1);
+            navigate(ROUTES.HOME); // Explicit back
         }
     };
 
-    const openSummaryPdf = () => {
+    const openPdf = () => {
+        window.open('https://drive.google.com/file/d/1dYUQGyPVRNEFTqIfDJ5VEiKGuzMTpA-e/view?usp=sharing', '_blank');
+    };
+
+    const openImage = () => {
         window.open('https://drive.google.com/file/d/1sx2DAzhly_wv_xND52ImQy2kAwqRQbMl/view?usp=drive_link', '_blank');
     };
 
@@ -452,35 +457,48 @@ export const RulebookScreen: React.FC = () => {
             <div className="flex min-h-screen flex-col bg-background">
                 <Header title="Reglas del Juego" showBack={true} onBack={handleBack} />
                 
-                <div className="flex-1 flex flex-col justify-center gap-6 p-6 pb-24">
-                    <div className="text-center mb-2">
+                <div className="flex-1 flex flex-col justify-start gap-4 p-6 pt-8 pb-24 overflow-y-auto no-scrollbar">
+                    <div className="text-center mb-4">
                          <h2 className="typo-h2">¿Cómo prefieres leerlas?</h2>
                          <p className="typo-body text-slate-500 mt-2">Elige el formato que mejor se adapte a tu tiempo.</p>
                     </div>
 
                     <button 
                         onClick={() => setViewMode('DETAILS')}
-                        className="w-full bg-white rounded-3xl p-6 shadow-xl shadow-primary/5 border-2 border-primary/10 flex flex-col items-center gap-4 transition-all active:scale-[0.98] group hover:border-primary/30"
+                        className="w-full bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-row items-center gap-4 transition-all active:scale-[0.98] group hover:border-primary hover:shadow-md"
                     >
-                        <div className="size-20 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                            <span className="material-symbols-outlined text-5xl">auto_stories</span>
+                        <div className="size-16 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                            <span className="material-symbols-outlined text-3xl">touch_app</span>
                         </div>
-                        <div className="text-center">
-                             <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">Reglas Detalladas</h3>
-                             <p className="text-sm text-slate-500 font-medium">Reglas completas paso a paso.</p>
+                        <div className="text-left">
+                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Reglas en la App</h3>
+                             <p className="text-xs text-slate-500 font-medium">Explora las reglas paso a paso aquí mismo.</p>
                         </div>
                     </button>
 
                     <button 
-                         onClick={openSummaryPdf}
-                         className="w-full bg-white rounded-3xl p-6 shadow-xl shadow-orange-500/5 border-2 border-orange-500/10 flex flex-col items-center gap-4 transition-all active:scale-[0.98] group hover:border-orange-500/30"
+                         onClick={openPdf}
+                         className="w-full bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-row items-center gap-4 transition-all active:scale-[0.98] group hover:border-red-500 hover:shadow-md"
                     >
-                        <div className="size-20 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300">
-                            <span className="material-symbols-outlined text-5xl">timer</span>
+                        <div className="size-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center shrink-0 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300">
+                            <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
                         </div>
-                        <div className="text-center">
-                             <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-orange-600 transition-colors">Resumen en 1 Minuto</h3>
-                             <p className="text-sm text-slate-500 font-medium">Enlace a una guía visual resumida (Imagen).</p>
+                        <div className="text-left">
+                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-500 transition-colors">Reglamento Oficial</h3>
+                             <p className="text-xs text-slate-500 font-medium">Documento completo en PDF.</p>
+                        </div>
+                    </button>
+
+                    <button 
+                         onClick={openImage}
+                         className="w-full bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-row items-center gap-4 transition-all active:scale-[0.98] group hover:border-amber-500 hover:shadow-md"
+                    >
+                        <div className="size-16 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
+                            <span className="material-symbols-outlined text-3xl">image</span>
+                        </div>
+                        <div className="text-left">
+                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-amber-500 transition-colors">Resumen Visual</h3>
+                             <p className="text-xs text-slate-500 font-medium">Guía rápida en una imagen.</p>
                         </div>
                     </button>
                 </div>

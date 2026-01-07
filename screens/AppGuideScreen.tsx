@@ -156,6 +156,17 @@ export const AppGuideScreen: React.FC = () => {
         ? GUIDE_GROUPS.filter(g => g.id === targetId)
         : GUIDE_GROUPS;
 
+    // --- LOGIC: Back Button Handler ---
+    const handleDetailBack = () => {
+        // If the user arrived here via a specific link (Contextual Help),
+        // pressing Back should return them to the origin screen, not the Guide Menu.
+        if (targetId) {
+            navigate(-1);
+        } else {
+            setSelectedItem(null);
+        }
+    };
+
     // --- RENDER: DETAIL VIEW (Level 3) ---
     if (selectedItem) {
         return (
@@ -163,7 +174,7 @@ export const AppGuideScreen: React.FC = () => {
                 <Header 
                     title={selectedItem.title} 
                     showBack={true} 
-                    onBack={() => setSelectedItem(null)}
+                    onBack={handleDetailBack} // Use smart back handler
                     showHelp={false}
                 />
                 
@@ -198,8 +209,8 @@ export const AppGuideScreen: React.FC = () => {
                 </div>
 
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 z-20">
-                    <Button fullWidth onClick={() => setSelectedItem(null)}>
-                        Volver al Menú de Ayuda
+                    <Button fullWidth onClick={handleDetailBack}>
+                        {targetId ? 'Volver a la Pantalla Anterior' : 'Volver al Menú de Ayuda'}
                     </Button>
                 </div>
             </div>

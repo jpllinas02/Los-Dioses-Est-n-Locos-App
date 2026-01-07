@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Button, BottomBar } from '../components/UI';
+import { ROUTES } from '../constants'; // Added Import
 
 export const ExtraScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -15,7 +16,11 @@ export const ExtraScreen: React.FC = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f8fafc]">
-            <Header title="Extras" showBack={true} />
+            <Header 
+                title="Extras" 
+                showBack={true} 
+                onBack={() => navigate(ROUTES.HOME)} // Explicit back
+            />
             
             <div className="flex-1 overflow-y-auto pb-32">
                 {/* Hero Section */}
@@ -66,7 +71,7 @@ export const ExtraScreen: React.FC = () => {
             </div>
 
             <BottomBar className="bg-white border-t border-slate-100">
-                <Button fullWidth onClick={() => navigate(-1)} icon="arrow_back">
+                <Button fullWidth onClick={() => navigate(ROUTES.HOME)} icon="arrow_back">
                     Volver
                 </Button>
             </BottomBar>

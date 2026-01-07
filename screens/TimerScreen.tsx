@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // Added import
 import { Header, Button } from '../components/UI';
+import { ROUTES } from '../constants'; // Added import
 
 export const TimerScreen: React.FC = () => {
+    const navigate = useNavigate(); // Hook initialized
+    
     // Modes: 'TIMER' (Countdown) | 'STOPWATCH' (Count Up with Target)
     const [mode, setMode] = useState<'TIMER' | 'STOPWATCH'>('TIMER');
 
@@ -146,7 +150,12 @@ export const TimerScreen: React.FC = () => {
 
     return (
         <div className={`flex h-screen w-full flex-col font-display overflow-hidden text-slate-900 transition-colors duration-500 ${showAlertVisuals ? 'bg-red-50' : 'bg-[#f8fafc]'}`}>
-            <Header title={mode === 'TIMER' ? "Temporizador" : "Cronómetro"} showBack={true} helpTarget="tools" />
+            <Header 
+                title={mode === 'TIMER' ? "Temporizador" : "Cronómetro"} 
+                showBack={true} 
+                onBack={() => navigate(ROUTES.GAME)} // Explicit navigation
+                helpTarget="tools" 
+            />
             
             <div className="relative z-10 flex flex-col h-full items-center">
                 
