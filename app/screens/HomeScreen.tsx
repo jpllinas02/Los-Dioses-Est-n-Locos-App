@@ -30,25 +30,20 @@ export const HomeScreen: React.FC = () => {
             <div className="w-full pt-8"></div>
 
             <div className="relative z-10 flex-1 flex flex-col items-center px-6 w-full pt-4">
-                {/* Logo Section */}
-                <div className="flex flex-col items-center justify-center mb-8 w-full">
-                    <div className="relative w-40 h-40 mb-4">
+                {/* Logo Section - modificado: sin texto, más grande y más cerca del botón */}
+                <div className="flex flex-col items-center justify-center mb-2 w-full">
+                    <div className="relative w-56 h-56 mb-2">
                         <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
-                        <div className="relative w-full h-full bg-gradient-to-br from-white to-purple-50 rounded-3xl border border-white/80 shadow-xl flex items-center justify-center p-4 animate-float">
-                            {/* Aquí mostramos tu logo (usa la animación animate-float ya aplicada al contenedor) */}
+                        <div className="relative w-full h-full bg-transparent rounded-full border border-white/80 shadow-xl flex items-center justify-center p-2 animate-float">
+                            {/* Imagen con fondo transparente (app/assets/logo_transparente.png). */}
                             <img
                                 src={Logo}
-                                alt="Los Dioses - Logo"
+                                alt="Logo - Los Dioses"
                                 className="w-full h-full object-contain"
                                 style={{ pointerEvents: 'none' }}
                             />
                         </div>
                     </div>
-                    <h1 className="typo-h1 text-center drop-shadow-sm leading-none">
-                        Los Dioses <br/>
-                        <span className="text-4xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-primary">Están Locos</span>
-                    </h1>
-                    <p className="mt-2 text-primary/60 font-bold uppercase tracking-[0.2em] text-[10px]">Aplicación Acompañante</p>
                 </div>
                 
                 {/* Menu System */}
