@@ -52,10 +52,10 @@ export const HomeScreen: React.FC = () => {
                     <div className="w-full max-w-xs mb-6">
                         <button 
                             onClick={handleStartGame} 
-                            className="group relative w-full py-8 px-4 bg-[#330df2] text-white rounded-2xl shadow-[0_6px_0_0_#280bc4,0_0_40px_rgba(51,13,242,0.5)] active:shadow-none active:translate-y-[2px] transition-transform"
+                            className="group relative w-full py-8 px-4 bg-[#330df2] text-white rounded-2xl shadow-[0_6px_0_0_#280bc4,0_0_40px_rgba(51,13,242,0.5)] active:shadow-none active:translate-y-[2px] transition-transform flex flex-col items-center justify-center"
                         >
-                            <span className="text-xl font-extrabold tracking-tight leading-none mb-1">Empieza Partida Nueva</span>
-                            <span className="text-sm font-medium text-white/80 leading-none">\nO Retoma una iniciada</span>
+                            <span className="text-xl font-extrabold tracking-tight leading-none mb-2 block">Empieza Partida Nueva</span>
+                            <span className="text-sm font-medium text-white/80 leading-none block">O Retoma una iniciada</span>
                         </button>
                     </div>
                     
