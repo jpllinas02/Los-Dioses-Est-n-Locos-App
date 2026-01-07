@@ -30,7 +30,7 @@ export const HomeScreen: React.FC = () => {
             <div className="w-full pt-8"></div>
 
             <div className="relative z-10 flex-1 flex flex-col items-center px-6 w-full pt-4">
-                {/* Logo Section - modificado: sin texto, más grande y más cerca del botón */}
+                {/* Logo Section - sin texto, más grande y más cerca del botón */}
                 <div className="flex flex-col items-center justify-center mb-2 w-full">
                     <div className="relative w-56 h-56 mb-2">
                         <div className="relative w-full h-full bg-transparent rounded-full flex items-center justify-center p-2 animate-float">
@@ -46,7 +46,7 @@ export const HomeScreen: React.FC = () => {
                 </div>
                 
                 {/* Menu System */}
-                <div className="w-full flex flex-col items-center justify-start flex-1 mb-8">
+                <div className="w-full flex flex-col items-center justify-start flex-1 mb-4">
                     
                     {/* Main Button */}
                     <div className="w-full max-w-xs mb-6">
@@ -76,6 +76,16 @@ export const HomeScreen: React.FC = () => {
                         <MenuButton onClick={() => navigate(ROUTES.EXTRAS)}>
                             Extras
                         </MenuButton>
+
+                    </div>
+                </div>
+
+                {/* Footer: texto pequeño, gris semi-opaco, centrado; distancia prudente desde el último botón */}
+                <div className="w-full flex items-center justify-center mt-4 mb-6">
+                    <div className="text-center text-[12px] text-slate-400/80 leading-snug">
+                        <p>Esta App funciona mejor desde un dispositivo móvil.</p>
+                        <p className="mt-1">Última Actualización: 07/01/2026</p>                        
+                        
                     </div>
                 </div>
             </div>
