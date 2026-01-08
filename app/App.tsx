@@ -1,5 +1,5 @@
 import React from 'react';
-// CAMBIO DIVINO: Cambiamos BrowserRouter por HashRouter para evitar los 404 al recargar
+//Gemini: Cambiamos BrowserRouter por HashRouter para evitar los 404 al recargar
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants';
 
@@ -28,6 +28,22 @@ const App: React.FC = () => {
            sirve el index.html desde la subcarpeta, pero lo mantenemos para 
            consistencia con la estructura de archivos /app.
         */
+        /* CAPA 1: FONDO DE ESCRITORIO 
+           Centra el móvil en pantallas grandes y pone un fondo gris suave.
+        */
+        <div className="min-h-screen bg-slate-200 flex justify-center items-center p-0 sm:p-4 font-rounded text-text overflow-hidden">
+            
+            {/* CAPA 2: EL CHASIS DEL MÓVIL (MASTER CONTAINER)
+               Define el ancho máximo, la sombra 2xl y el borde oscuro.
+            */}
+            <div className="relative w-full max-w-[450px] h-[100dvh] sm:h-[850px] sm:max-h-[90vh] bg-background shadow-2xl overflow-hidden sm:rounded-[2.5rem] border-x-0 sm:border-[8px] border-slate-900 flex flex-col transition-all duration-300">
+                
+                {/* CAPA 3: VIEWPORT CON SCROLL
+                   Aquí ocurre la magia. Todo lo que renderice el Router vivirá aquí dentro.
+                   El scroll es interno, simulando la pantalla táctil.
+                */}
+                <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-background w-full">
+
         <Router>
             <Routes>
                 {/* Main Menu - Ruta raíz del hash */}
@@ -61,7 +77,9 @@ const App: React.FC = () => {
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
+                </div>
+            </div>
+        </div>
     );
 };
-
 export default App;
