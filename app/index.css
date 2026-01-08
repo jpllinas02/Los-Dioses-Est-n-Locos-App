@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Gemini: */
+  /* Forzamos a que .h-screen se comporte como 100% del contenedor padre (el móvil), no del viewport del navegador */
+  .h-screen {
+    height: 100% !important; 
+    min-height: 100% !important;
+  }
+  
+  /* Lo mismo para el ancho */
+  .w-screen {
+    width: 100% !important;
+  }
+
+  /* Aseguramos que el html/body no tengan scroll doble */
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* El scroll ahora pertenece al div interno de App.tsx */
+  }
+}
