@@ -3,35 +3,21 @@
 @tailwind utilities;
 
 @layer base {
-  /* Gemini: */
-  /* Forzamos a que .h-screen se comporte como 100% del contenedor padre (el móvil), no del viewport del navegador */
-  .h-screen {
-    height: 100% !important; 
-    min-height: 100% !important;
-  }
-  
-  /* Lo mismo para el ancho */
-  .w-screen {
-    width: 100% !important;
-  }
-
-  /* Aseguramos que el html/body no tengan scroll doble */
+  /* Mantenemos el bloqueo del scroll exterior para evitar el doble scroll */
   html, body, #root {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* El scroll ahora pertenece al div interno de App.tsx */
+    overflow: hidden; 
   }
 }
 
 @layer utilities {
-  /* Utilidad para ocultar la barra de scroll en Chrome, Safari y Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
- /* Utilidad para ocultar la barra de scroll en IE, Edge y Firefox */
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE y Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
