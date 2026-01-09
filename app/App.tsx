@@ -41,7 +41,7 @@ const App: React.FC = () => {
                      Suficiente para que el texto suba por encima de tu BottomBar, 
                      pero sin dejar un espacio vacío gigante.
                 */}
-                <div className="h-full w-full flex flex-col overflow-y-auto overflow-x-hidden relative bg-background no-scrollbar overscroll-none pb-24">
+                <div className="flex-1 w-full flex flex-col overflow-y-auto overflow-x-hidden relative bg-background no-scrollbar overscroll-none pb-24">
                     
                     <Router>
                         <Routes>
