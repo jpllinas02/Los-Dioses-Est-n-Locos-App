@@ -3,18 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Los Dioses Están Locos - Inicio</title>
+    <title>Los Dioses Están Locos - Próximamente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&family=Titan+One&display=swap" rel="stylesheet">
     <style>
-        body { font-family: system-ui, sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { text-align: center; padding: 2rem; border: 1px solid #333; border-radius: 15px; background: #1e1e1e; }
-        .btn { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #e63946; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        :root {
+            --primary: #330df2;
+            --secondary: #f59e0b;
+            --danger: #f2460d;
+            --surface: #ffffff;
+            --text: #0f172a;
+        }
+
+        body { 
+            font-family: 'Fredoka', sans-serif; 
+            background: radial-gradient(circle, #1a0b7e 0%, #0f172a 100%); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .card { 
+            text-align: center; 
+            padding: 3rem; 
+            border-radius: 24px; 
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            max-width: 400px;
+            animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        h1 { 
+            font-family: 'Titan One', cursive; 
+            font-size: 2.5rem; 
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            text-shadow: 2px 4px 0px rgba(0,0,0,0.3);
+        }
+
+        p {
+            line-height: 1.6;
+            font-size: 1.1rem;
+            color: #cbd5e1;
+        }
+
+        .logo { 
+            width: 180px;
+            height: auto;
+            display: block; 
+            margin: 0 auto 30px;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Animaciones Oficiales */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes pop-in {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--danger);
+            padding: 5px 15px;
+            border-radius: 999px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <img src="/app/assets/logo_transparente.png" alt="Logo" style="background: transparent; display: block; margin: 0 auto 20px;">
+        <img src="app/assets/logo_transparente.png" alt="Los Dioses Están Locos" class="logo">
+        <span class="badge">Compañero Digital</span>
         <h1>¡Bienvenido, Mortal!</h1>
-        <p>Los Dioses aún están terminando este juego de mesa y muy pronto sabrás más.<br>Pídeles paciencia y que no se tarden mucho.</p>
+        <p>Los Dioses están forjando los últimos detalles  de este <strong>juego de mesa</strong>. <br> 
+        Muy pronto, esta página estará lista para ti.</p>
     </div>
 </body>
 </html>
