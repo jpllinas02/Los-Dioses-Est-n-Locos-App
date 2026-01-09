@@ -1,5 +1,4 @@
 import React from 'react';
-//Gemini: Se usa BrowserRouter en lugar de HashRouter para evitar los 404 al recargar
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './constants';
 
@@ -23,18 +22,28 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
 const App: React.FC = () => {
     return (
-        /* CAPA 1: FONDO DE ESCRITORIO */
-        <div className="min-h-screen bg-gray-50 flex justify-center items-end sm:items-center p-0 sm:p-8 font-sans text-text overflow-hidden transition-all duration-500">
+        /* CAPA 1: FONDO DE ESCRITORIO
+           - h-[100dvh]: Altura dinámica total del viewport.
+           - items-center: Centrado vertical (aunque como llenaremos la altura, esto es preventivo).
+           - bg-gray-50: Color de fondo para los laterales en PC.
+        */
+        <div className="h-[100dvh] w-full bg-gray-50 flex justify-center items-stretch overflow-hidden font-sans text-text">
             
-            {/* CAPA 2: EL CONTENEDOR (Estilo Tarjeta)
-               - max-w-[430px]: Ancho de móvil estándar.
-               - sm:rounded-2xl: Esquinas LIGERAMENTE redondeadas (sutil, no bola).
-               - shadow-2xl: Profundidad.
+            {/* CAPA 2: EL CONTENEDOR (Estilo App Nativa)
+               - w-full: En móvil ocupa todo el ancho.
+               - max-w-[430px]: En PC se limita al ancho de un móvil.
+               - h-full: Ocupa el 100% de la altura (Toca arriba y abajo).
+               - shadow-2xl: Mantiene la profundidad en PC.
+               - relative z-10: Se asegura de estar encima de cualquier rareza del fondo.
             */}
-            <div className="relative w-full max-w-[430px] h-[100dvh] sm:h-[850px] sm:max-h-[92vh] bg-background shadow-2xl overflow-hidden sm:rounded-2xl flex flex-col transition-all duration-300 ring-1 ring-black/5">
+            <div className="relative w-full sm:max-w-[430px] h-full bg-background shadow-2xl overflow-hidden flex flex-col z-10">
                 
-                {/* CAPA 3: VIEWPORT (Scroll Invisible) */}
-                <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-background w-full no-scrollbar">
+                {/* CAPA 3: VIEWPORT CON SCROLL INVISIBLE
+                   - pb-32: ¡CLAVE! Añadimos padding extra al final. 
+                     Esto permite que el último texto haga scroll hasta arriba, 
+                     librándose de la barra de navegación o del corte de pantalla.
+                */}
+                <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-background w-full no-scrollbar pb-32">
                     
                     <Router>
                         <Routes>
