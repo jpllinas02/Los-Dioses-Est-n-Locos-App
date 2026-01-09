@@ -33,7 +33,7 @@ const App: React.FC = () => {
                  Ya no se "saldrá" por abajo.
                - ESCRITORIO: Vuelve a ser relativo y flotante.
             */}
-            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[430px] h-screen bg-background sm:shadow-2xl flex flex-col z-50 overflow-hidden ring-1 ring-black/5">
+            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[430px] h-[100dvh] sm:h-[90vh] bg-background sm:shadow-2xl flex flex-col z-50 overflow-hidden ring-1 ring-black/5 sm:rounded-[30px]">
                 
                 {/* CAPA 3: SCROLL INTERNO
                    - h-full: Ocupa exactamente el espacio disponible dentro del Chasis.
