@@ -22,28 +22,26 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
 const App: React.FC = () => {
     return (
-        /* CAPA 1: FONDO (Solo visible en Escritorio)
-           - bg-gray-50: Color de fondo elegante.
-           - items-center: Centra el móvil verticalmente en PC.
-           - En móvil, este div queda detrás debido al 'fixed' del hijo.
+        /* CAPA 1: FONDO DE ESCRITORIO
+           Mantiene el fondo elegante en PC, pero en móvil quedará oculto.
         */
-        <div className="min-h-[100dvh] w-full bg-gray-50 flex justify-center items-center font-sans text-text">
+        <div className="min-h-screen w-full bg-gray-50 flex justify-center items-center font-sans text-text">
             
-            {/* CAPA 2: EL CHASIS (La App en sí)
-               - MÓVIL (Por defecto): 'fixed inset-0'. Ocupa toda la pantalla física. 
-                 Esto elimina el cuadro blanco superior y el espacio inferior.
-               - ESCRITORIO (sm:): 'sm:relative'. Vuelve a ser una caja flotante.
-                 sm:h-[850px], sm:rounded-2xl, etc.
+            {/* CAPA 2: EL CHASIS (Anclaje Absoluto)
+               - MÓVIL: 'fixed inset-0'. ESTA ES LA SOLUCIÓN.
+                 Obliga al div a respetar los límites físicos de la pantalla.
+                 Ya no se "saldrá" por abajo.
+               - ESCRITORIO: Vuelve a ser relativo y flotante.
             */}
-            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[430px] sm:h-[850px] sm:max-h-[92vh] bg-background sm:shadow-2xl sm:rounded-2xl flex flex-col z-10 overflow-hidden ring-1 ring-black/5">
+            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[430px] sm:h-[850px] sm:max-h-[92vh] bg-background sm:shadow-2xl sm:rounded-2xl flex flex-col z-50 overflow-hidden ring-1 ring-black/5">
                 
-                {/* CAPA 3: VIEWPORT (Scroll)
-                   - overscroll-none: Evita el rebote blanco en iOS/Android.
-                   - pb-28: Padding inferior ajustado (aprox 112px). 
-                     Suficiente para librar la BottomBar y mostrar las 2 líneas, 
-                     pero sin bajar "más de lo necesario".
+                {/* CAPA 3: SCROLL INTERNO
+                   - h-full: Ocupa exactamente el espacio disponible dentro del Chasis.
+                   - pb-24: El colchón justo (aprox 96px). 
+                     Suficiente para que el texto suba por encima de tu BottomBar, 
+                     pero sin dejar un espacio vacío gigante.
                 */}
-                <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-background w-full no-scrollbar pb-28 overscroll-none">
+                <div className="h-full w-full flex flex-col overflow-y-auto overflow-x-hidden relative bg-background no-scrollbar overscroll-none pb-24">
                     
                     <Router>
                         <Routes>
