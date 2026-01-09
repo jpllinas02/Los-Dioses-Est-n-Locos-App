@@ -37,11 +37,10 @@ const App: React.FC = () => {
                 
                 {/* CAPA 3: SCROLL INTERNO
                    - h-full: Ocupa exactamente el espacio disponible dentro del Chasis.
-                   - pb-24: El colchón justo (aprox 96px). 
                      Suficiente para que el texto suba por encima de tu BottomBar, 
                      pero sin dejar un espacio vacío gigante.
                 */}
-                <div className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-background overscroll-contain pb-24">
+                <div className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-background overscroll-contain pb-0">
                     
                     <Router>
                         <Routes>
