@@ -23,3 +23,15 @@
     overflow: hidden; /* El scroll ahora pertenece al div interno de App.tsx */
   }
 }
+
+@layer utilities {
+  /* Utilidad para ocultar la barra de scroll en Chrome, Safari y Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+ /* Utilidad para ocultar la barra de scroll en IE, Edge y Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE y Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
