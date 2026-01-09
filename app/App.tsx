@@ -22,28 +22,28 @@ import { LeaderboardScreen } from './screens/LeaderboardScreen';
 
 const App: React.FC = () => {
     return (
-        /* CAPA 1: FONDO DE ESCRITORIO
-           - h-[100dvh]: Altura dinámica total del viewport.
-           - items-center: Centrado vertical (aunque como llenaremos la altura, esto es preventivo).
-           - bg-gray-50: Color de fondo para los laterales en PC.
+        /* CAPA 1: FONDO (Solo visible en Escritorio)
+           - bg-gray-50: Color de fondo elegante.
+           - items-center: Centra el móvil verticalmente en PC.
+           - En móvil, este div queda detrás debido al 'fixed' del hijo.
         */
-        <div className="h-[100dvh] w-full bg-gray-50 flex justify-center items-stretch overflow-hidden font-sans text-text">
+        <div className="min-h-[100dvh] w-full bg-gray-50 flex justify-center items-center font-sans text-text">
             
-            {/* CAPA 2: EL CONTENEDOR (Estilo App Nativa)
-               - w-full: En móvil ocupa todo el ancho.
-               - max-w-[430px]: En PC se limita al ancho de un móvil.
-               - h-full: Ocupa el 100% de la altura (Toca arriba y abajo).
-               - shadow-2xl: Mantiene la profundidad en PC.
-               - relative z-10: Se asegura de estar encima de cualquier rareza del fondo.
+            {/* CAPA 2: EL CHASIS (La App en sí)
+               - MÓVIL (Por defecto): 'fixed inset-0'. Ocupa toda la pantalla física. 
+                 Esto elimina el cuadro blanco superior y el espacio inferior.
+               - ESCRITORIO (sm:): 'sm:relative'. Vuelve a ser una caja flotante.
+                 sm:h-[850px], sm:rounded-2xl, etc.
             */}
-            <div className="relative w-full sm:max-w-[430px] h-full bg-background shadow-2xl overflow-hidden flex flex-col z-10">
+            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[430px] sm:h-[850px] sm:max-h-[92vh] bg-background sm:shadow-2xl sm:rounded-2xl flex flex-col z-10 overflow-hidden ring-1 ring-black/5">
                 
-                {/* CAPA 3: VIEWPORT CON SCROLL INVISIBLE
-                   - pb-32: ¡CLAVE! Añadimos padding extra al final. 
-                     Esto permite que el último texto haga scroll hasta arriba, 
-                     librándose de la barra de navegación o del corte de pantalla.
+                {/* CAPA 3: VIEWPORT (Scroll)
+                   - overscroll-none: Evita el rebote blanco en iOS/Android.
+                   - pb-28: Padding inferior ajustado (aprox 112px). 
+                     Suficiente para librar la BottomBar y mostrar las 2 líneas, 
+                     pero sin bajar "más de lo necesario".
                 */}
-                <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-background w-full no-scrollbar pb-32">
+                <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-background w-full no-scrollbar pb-28 overscroll-none">
                     
                     <Router>
                         <Routes>
