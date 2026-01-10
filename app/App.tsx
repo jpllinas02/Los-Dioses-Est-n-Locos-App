@@ -27,20 +27,21 @@ const App: React.FC = () => {
         */
         <div className="min-h-screen w-full bg-gray-50 flex justify-center items-center font-sans text-text">
             
+            
             {/* CAPA 2: EL CHASIS (Anclaje Absoluto)
                - MÓVIL: 'fixed inset-0'. ESTA ES LA SOLUCIÓN.
                  Obliga al div a respetar los límites físicos de la pantalla.
                  Ya no se "saldrá" por abajo.
                - ESCRITORIO: Vuelve a ser relativo y flotante.
             */}
-            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[430px] h-[100dvh] sm:h-[100vh] bg-background sm:shadow-2xl flex flex-col z-50 overflow-hidden ring-1 ring-black/5">
+            <div className="fixed inset-0 sm:relative sm:inset-auto w-full sm:max-w-[450px] h-[100dvh] sm:h-[100vh] bg-background sm:shadow-2xl flex flex-col z-50 overflow-hidden ring-1 ring-black/5">
                 
                 {/* CAPA 3: SCROLL INTERNO
                    - h-full: Ocupa exactamente el espacio disponible dentro del Chasis.
                      Suficiente para que el texto suba por encima de tu BottomBar, 
                      pero sin dejar un espacio vacío gigante.
                 */}
-                <div className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-background overscroll-contain pb-0">
+                <div className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-background overscroll-contain pb-0 [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:display-none">
                     
                     <Router>
                         <Routes>
