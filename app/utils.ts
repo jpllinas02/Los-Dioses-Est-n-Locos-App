@@ -13,7 +13,7 @@ export const shuffle = <T>(array: T[]): T[] => {
 
 export const DEFAULT_NAME_POOL = [
     "Pro", "Caos", "NPC", "Error 404",
-    "Tyr", "Nix", "Seth", "Xolotl", "Ganesh", "Epona", "Raijin", "Maui"
+    "Tyr", "Nix", "Seth", "Xolotl", "Ganesh", "Epona", "Raijin", "Maui",
     "Nadie", "¿Quién?", "¿Yo?", "¿Cuándo?", "¿Dónde?",
     "G.O.A.T", "Bombón", "Burbuja", "Bellota"
 ];
