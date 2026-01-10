@@ -12,6 +12,13 @@
   }
 }
 
+@font-face {
+  font-family: 'Cakerolli';
+  src: url('./assets/fonts/cakerolli.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
