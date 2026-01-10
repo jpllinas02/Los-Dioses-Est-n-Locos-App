@@ -141,7 +141,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({ title, bgImage, onClick,
     return (
         <Card onClick={onClick} className={`h-64 border-4 border-white group ${className}`} bgImage={bgImage}>
             {/* Darker overlay for better text contrast */}
-            <div className="absolute inset-0 bg-black/15 transition-colors group-hover:bg-black/50"></div>
+            <div className="absolute inset-0 bg-black/15 transition-colors group-hover:bg-black/20"></div>
             <div className="relative z-10 flex flex-col justify-center items-center h-full p-4 text-center">
                 <h4 className="text-white text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md">{title}</h4>
             </div>
