@@ -3,6 +3,11 @@ import { Header, Button, BottomBar, PlayerName } from '../components/UI';
 import { getColorStyle } from '../utils';
 import { useCalculator } from '../hooks/useCalculator';
 
+// --- ASSETS IMPORTS ---
+import reliquiaIconT from '../assets/reliquia_transparente.png';
+import plagaIconT from '../assets/plaga_transparente.png';
+import poderIconT from '../assets/poder_transparente.png';
+
 export const CalculatorScreen: React.FC = () => {
     const { 
         players, 
@@ -104,8 +109,8 @@ export const CalculatorScreen: React.FC = () => {
                             {/* --- RELICS --- */}
                             <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-100 transition-colors hover:border-cyan-200">
                                 <div className="flex items-center gap-4">
-                                    <div className="flex items-center justify-center rounded-2xl bg-cyan-50 text-cyan-500 border border-cyan-100 shrink-0 h-16 w-16 shadow-sm">
-                                        <span className="material-symbols-outlined text-[36px] filled" style={{fontVariationSettings: "'FILL' 1"}}>diamond</span>
+                                    <div className="flex items-center justify-center rounded-2xl bg-cyan-50 border border-cyan-100 shrink-0 h-16 w-16 shadow-sm p-3">
+                                        <img src={reliquiaIconT} alt="Reliquia" className="w-full h-full object-contain drop-shadow-sm" />
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         <p className="typo-h3 text-slate-800">Reliquias</p>
@@ -126,8 +131,8 @@ export const CalculatorScreen: React.FC = () => {
                             {/* --- PLAGUES --- */}
                             <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-100 transition-colors hover:border-purple-200">
                                 <div className="flex items-center gap-4">
-                                    <div className="flex items-center justify-center rounded-2xl bg-purple-50 text-purple-500 border border-purple-100 shrink-0 h-16 w-16 shadow-sm">
-                                        <span className="material-symbols-outlined text-[36px] filled" style={{fontVariationSettings: "'FILL' 1"}}>skull</span>
+                                    <div className="flex items-center justify-center rounded-2xl bg-purple-50 border border-purple-100 shrink-0 h-16 w-16 shadow-sm p-3">
+                                        <img src={plagaIconT} alt="Plaga" className="w-full h-full object-contain drop-shadow-sm" />
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         <p className="typo-h3 text-slate-800">Plagas</p>
@@ -148,8 +153,8 @@ export const CalculatorScreen: React.FC = () => {
                             {/* --- POWERS --- */}
                             <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-slate-100 transition-colors hover:border-yellow-200">
                                 <div className="flex items-center gap-4">
-                                    <div className="flex items-center justify-center rounded-2xl bg-yellow-50 text-yellow-500 border border-yellow-100 shrink-0 h-16 w-16 shadow-sm">
-                                        <span className="material-symbols-outlined text-[36px] filled" style={{fontVariationSettings: "'FILL' 1"}}>bolt</span>
+                                    <div className="flex items-center justify-center rounded-2xl bg-yellow-50 border border-yellow-100 shrink-0 h-16 w-16 shadow-sm p-2">
+                                        <img src={poderIconT} alt="Poder" className="w-full h-full object-contain drop-shadow-sm" />
                                     </div>
                                     <div className="flex flex-col gap-0.5">
                                         <p className="typo-h3 text-slate-800">Poderes</p>
@@ -180,11 +185,11 @@ export const CalculatorScreen: React.FC = () => {
                 <>
                     <div className="flex-1 overflow-y-auto p-4 pb-32">
                          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                            <div className="grid grid-cols-5 gap-2 p-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
+                            <div className="grid grid-cols-5 gap-2 p-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider text-center items-center">
                                 <div className="col-span-2 text-left pl-2">Jugador</div>
-                                <div><span className="material-symbols-outlined text-lg align-middle text-cyan-500">diamond</span></div>
-                                <div><span className="material-symbols-outlined text-lg align-middle text-purple-500">skull</span></div>
-                                <div><span className="material-symbols-outlined text-lg align-middle text-yellow-500">bolt</span></div>
+                                <div className="flex justify-center"><img src={reliquiaIconT} className="w-6 h-6 object-contain opacity-80" alt="R" /></div>
+                                <div className="flex justify-center"><img src={plagaIconT} className="w-6 h-6 object-contain opacity-80" alt="P" /></div>
+                                <div className="flex justify-center"><img src={poderIconT} className="w-6 h-6 object-contain opacity-80" alt="Po" /></div>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 {players.map((p, index) => {
