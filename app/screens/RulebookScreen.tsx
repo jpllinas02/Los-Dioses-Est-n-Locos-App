@@ -459,8 +459,8 @@ export const RulebookScreen: React.FC = () => {
                 
                 <div className="flex-1 flex flex-col justify-start gap-4 p-6 pt-8 pb-24 overflow-y-auto no-scrollbar">
                     <div className="text-center mb-4">
-                         <h2 className="typo-h2">¿Cómo prefieres leerlas?</h2>
-                         <p className="typo-body text-slate-500 mt-2">Elige la forma que mejor se adapte a lo que necesites.</p>
+                         <h2 className="text-xl">¿Cómo prefieres leerlas?</h2>
+                         <p className="text-base text-slate-500 mt-2">Elige la forma que mejor se adapte a lo que necesites.</p>
                     </div>
 
                     <button 
@@ -472,7 +472,7 @@ export const RulebookScreen: React.FC = () => {
                         </div>
                         <div className="text-left">
                              <h3 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors">Reglamento completo desde la APP</h3>
-                             <p className="text-sm text-slate-500 font-medium">Mira las reglas paso a paso aquí directamente.</p>
+                             <p className="text-xs text-slate-500 font-medium">Mira las reglas paso a paso aquí directamente.</p>
                         </div>
                     </button>
 
@@ -484,7 +484,7 @@ export const RulebookScreen: React.FC = () => {
                             <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
                         </div>
                         <div className="text-left">
-                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-500 transition-colors">Reglamento completo desde un PDF</h3>
+                             <h3 className="text-base font-bold text-slate-900 group-hover:text-red-500 transition-colors">Reglamento completo desde un PDF</h3>
                              <p className="text-xs text-slate-500 font-medium">Usa el PDF del folleto impreso.</p>
                         </div>
                     </button>
@@ -497,7 +497,7 @@ export const RulebookScreen: React.FC = () => {
                             <span className="material-symbols-outlined text-3xl">image</span>
                         </div>
                         <div className="text-left">
-                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-amber-500 transition-colors">Resumen Visual</h3>
+                             <h3 className="text-base font-bold text-slate-900 group-hover:text-amber-500 transition-colors">Resumen Visual</h3>
                              <p className="text-xs text-slate-500 font-medium">Mira una imagen un resumen para mayor rapidez.</p>
                         </div>
                     </button>
