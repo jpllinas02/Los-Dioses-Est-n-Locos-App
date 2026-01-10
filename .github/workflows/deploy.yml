@@ -29,14 +29,20 @@ jobs:
           npm install
           npm run build
 
+
       - name: Assemble Site Structure
         run: |
           mkdir final_site
-          # Copiar el Home (index.html de la raíz)
+          # 1. Copiar el Home
           cp index.html final_site/
-          # COPIAR EL CNAME (Añade esta línea para mantener tu dominio)
+          
+          # 2. COPIAR LA CARPETA ASSETS (¡Esta es la línea que falta!)
+          cp -r assets final_site/
+          
+          # 3. Copiar el CNAME (si existe)
           cp CNAME final_site/ || true 
-          # Copiar la App
+          
+          # 4. Copiar la App compilada
           mkdir -p final_site/app
           cp -r app/dist/* final_site/app/
 
