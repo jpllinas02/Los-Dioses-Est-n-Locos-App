@@ -138,7 +138,7 @@ export const RegistrationScreen: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center animate-pop-in relative z-10 pt-4">
-                                    <div className="mb-4"><span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Tu Pacto Es Con</span></div>
+                                    <div className="mb-2"><span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Tu Pacto Es Con</span></div>
                                     
                                     {/* 2. IMAGEN */}
                                     <div className="flex-1 w-full flex items-center justify-center relative min-h-0">
@@ -154,7 +154,7 @@ export const RegistrationScreen: React.FC = () => {
                                         {pactDetails[state.players[state.revealState.index].pact].label}
                                     </h1>
                                     
-                                    <div className="mt-4 pb-2">
+                                    <div className="mt-4 pb-1">
                                         <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1"><span className="material-symbols-outlined text-sm">lock</span> Información Secreta</p>
                                     </div>
                                 </div>
