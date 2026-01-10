@@ -12,10 +12,10 @@ export const shuffle = <T>(array: T[]): T[] => {
 };
 
 export const DEFAULT_NAME_POOL = [
-    "AFK", "¡VIP!", "Pro", "Noob", "Caos", "NPC",
-    "Osi", "Tete", "Nono", "Mole", "Oh La la",
-    "Nadie", "Casi Casi", "¿Quién?", "¿Yo?", "Cinco", "Error 404", "¡Ouch!",
-    "Bicho", "Pulga", "G.O.A.T", "Bombón", "Burbuja", "Bellota"
+    "Pro", "Caos", "NPC", "Error 404",
+    "Tyr", "Nix", "Seth", "Xolotl", "Ganesh", "Epona", "Raijin", "Maui"
+    "Nadie", "¿Quién?", "¿Yo?", "¿Cuándo?", "¿Dónde?",
+    "G.O.A.T", "Bombón", "Burbuja", "Bellota"
 ];
 
 export const GAME_COLORS: { id: GameColor, bg: string, shadow: string, ring: string, text: string, checkColor?: string, border?: string, line: string }[] = [
