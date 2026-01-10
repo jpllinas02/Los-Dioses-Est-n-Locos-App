@@ -471,8 +471,8 @@ export const RulebookScreen: React.FC = () => {
                             <span className="material-symbols-outlined text-3xl">touch_app</span>
                         </div>
                         <div className="text-left">
-                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Reglamento completo desde la APP</h3>
-                             <p className="text-xs text-slate-500 font-medium">Mira las reglas paso a paso aquí directamente.</p>
+                             <h3 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors">Reglamento completo desde la APP</h3>
+                             <p className="text-sm text-slate-500 font-medium">Mira las reglas paso a paso aquí directamente.</p>
                         </div>
                     </button>
 
