@@ -1,110 +1,306 @@
-import React from 'react';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Los Dioses Están Locos | Próximamente</title>
+    
+    <!-- Tipografías de los Dioses -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Titan+One&display=swap" rel="stylesheet">
 
-/**
- * Los Dioses Están Locos - Minimalist Landing Page
- * Estética: 2D Vector / Kingdom Rush Style
- * Arquitectura: React 19 + Tailwind CSS
- */
+    <style>
+        /* --- DESIGN SYSTEM (Replica de Tailwind Config) --- */
+        :root {
+            /* Colores */
+            --primary: #330df2;
+            --primary-dark: #1a0b7e;
+            --secondary: #f59e0b; /* Amarillo vibrante */
+            --bg-color: #FAF9F6;  /* Crema off-white */
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --danger: #f2460d;
+            
+            /* Fuentes */
+            --font-display: 'Titan One', cursive;
+            --font-body: 'Fredoka', sans-serif;
+        }
 
-const App = () => {
-  return (
-    <div className="min-h-screen bg-[#FAF9F6] flex flex-col font-rounded selection:bg-secondary/30">
-      {/* Importación de tipografías específicas de los Dioses */}
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Titan+One&family=Fredoka:wght@400;600&display=swap');
-          
-          .font-cartoon { font-family: 'Titan One', cursive; }
-          .font-rounded { font-family: 'Fredoka', sans-serif; }
+        /* --- RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-          @keyframes float {
+        body {
+            background-color: var(--bg-color);
+            font-family: var(--font-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+                padding: 4rem;
+                gap: 6rem;
+                text-align: left;
+            }
+        }
+
+        /* --- LEFT COLUMN: CONTENT --- */
+        .content-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centrado en móvil */
+            z-index: 10;
+        }
+
+        @media (min-width: 768px) {
+            .content-col {
+                align-items: flex-start; /* Alineado izq en desktop */
+            }
+        }
+
+        /* Logo */
+        .logo-placeholder {
+            width: 160px;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+        .logo-placeholder:hover {
+            transform: scale(1.05);
+        }
+
+        /* Títulos */
+        h1 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            line-height: 1.1;
+            text-transform: uppercase;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        h1 .highlight {
+            color: var(--primary);
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 4.5rem;
+                text-align: left;
+            }
+        }
+
+        /* Badge "Coming Soon" */
+        .badge {
+            display: inline-block;
+            background-color: var(--secondary);
+            color: var(--text-main);
+            font-family: var(--font-display);
+            font-size: 1rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 12px;
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px 0px #000;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2rem;
+            transform: rotate(-2deg);
+        }
+
+        /* Párrafo */
+        .copy {
+            font-size: 1.125rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .copy strong {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        @media (min-width: 768px) {
+            .copy {
+                text-align: left;
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Botón CTA */
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.125rem;
+            padding: 1rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(51, 13, 242, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .cta-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(51, 13, 242, 0.5);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        /* --- RIGHT COLUMN: VISUAL --- */
+        .visual-col {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Glow Effect */
+        .glow-bg {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            background-color: rgba(51, 13, 242, 0.05);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: 0;
+            top: 10%;
+            left: 10%;
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        .character-img {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            filter: drop-shadow(0 20px 20px rgba(0,0,0,0.15));
+            animation: float 5s ease-in-out infinite;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-          }
+            50% { transform: translateY(-15px); }
+        }
 
-          @keyframes pop-in {
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        @keyframes popIn {
             0% { opacity: 0; transform: scale(0.9); }
             100% { opacity: 1; transform: scale(1); }
-          }
+        }
 
-          .animate-float { animation: float 4s ease-in-out infinite; }
-          .animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        `}
-      </style>
+        .content-col {
+            animation: popIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
 
-      {/* Main Container */}
-      <main className="flex-1 flex flex-col md:flex-row items-center justify-center p-6 md:p-12 lg:p-24 gap-12 max-w-7xl mx-auto w-full">
+        /* --- FOOTER --- */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="container">
         
-        {/* Left Column: Content */}
-        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left space-y-8 animate-pop-in">
-          {/* Logo Placeholder */}
-          <div className="w-32 md:w-40 transition-transform hover:scale-105 duration-300">
+        <!-- Columna Izquierda: Texto -->
+        <div class="content-col">
+            <!-- Logo -->
             <img 
-              src="assets/logo_transparente.png" 
-              alt="Logo Los Dioses Están Locos" 
-              className="w-full h-auto drop-shadow-sm"
-              onError={(e) => { e.target.src = "https://via.placeholder.com/160x160?text=LOGO"; }}
-            />
-          </div>
+                src="assets/logo_transparente.png" 
+                alt="Logo Los Dioses Están Locos" 
+                class="logo-placeholder"
+                onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block';"
+            >
+            <!-- Fallback por si no hay imagen de logo -->
+            <div id="logo-text" style="display:none; font-family:var(--font-display); font-size:1.5rem; margin-bottom:1rem; color:var(--primary);">
+                LDEL
+            </div>
 
-          <div className="space-y-4">
-            {/* Title */}
-            <h1 className="font-cartoon text-4xl md:text-6xl lg:text-7xl text-[#0f172a] leading-tight tracking-tight uppercase">
-              Los Dioses <br />
-              <span className="text-[#330df2]">Están Locos</span>
+            <div class="badge">Próximamente</div>
+
+            <h1>
+                Los Dioses <br>
+                <span class="highlight">Están Locos</span>
             </h1>
 
-            {/* Coming Soon Badge */}
-            <div className="inline-block">
-              <span className="bg-[#f59e0b] text-[#0f172a] px-4 py-1.5 rounded-lg border-[3px] border-black font-cartoon text-sm md:text-lg uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                Muy Pronto
-              </span>
-            </div>
-          </div>
+            <p class="copy">
+                Estamos puliendo los últimos detalles de la creación. 
+                Muy pronto, la <strong>locura divina</strong> llegará a tu mesa. 
+                Prepárate para el caos.
+            </p>
 
-          {/* Copy */}
-          <p className="text-[#64748b] text-lg md:text-xl max-w-md leading-relaxed">
-            Estamos puliendo los últimos detalles de la creación. 
-            Muy pronto, la <span className="text-[#f2460d] font-semibold">locura divina</span> llegará a tu mesa. 
-            Prepárate para el caos.
-          </p>
-
-          {/* Call to Action (Soft) */}
-          <div className="pt-4 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-             <a 
-              href="/app"
-              className="bg-[#330df2] hover:bg-[#1a0b7e] text-white font-rounded font-semibold px-8 py-4 rounded-2xl shadow-lg transition-all active:scale-95 text-center flex items-center justify-center gap-2 group"
-            >
-              Explorar la App
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+            <!-- Este enlace lleva a tu app de React -->
+            <a href="/app" class="cta-button">
+                Explorar el Panteón
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
             </a>
-          </div>
         </div>
 
-        {/* Right Column: Visual Impact */}
-        <div className="flex-1 w-full max-w-md lg:max-w-xl animate-float">
-          <div className="relative group">
-            {/* Subtle glow effect behind character */}
-            <div className="absolute inset-0 bg-[#330df2]/5 blur-3xl rounded-full scale-110 group-hover:bg-[#330df2]/10 transition-colors duration-1000"></div>
-            
+        <!-- Columna Derecha: Imagen -->
+        <div class="visual-col">
+            <div class="glow-bg"></div>
             <img 
-              src="assets/longwang_poder.png" 
-              alt="Hércules Divino" 
-              className="relative w-full h-auto drop-shadow-2xl select-none"
-              onError={(e) => { e.target.src = "https://via.placeholder.com/600x800?text=PERSONAJE+EPICO"; }}
-            />
-          </div>
+                src="assets/longwang_poder.png" 
+                alt="Personaje Épico" 
+                class="character-img"
+                onerror="this.src='https://placehold.co/500x700/330df2/FFFFFF?text=Dios+Epico&font=montserrat';"
+            >
         </div>
-      </main>
 
-      {/* Footer / Social (Optional & Minimal) */}
-      <footer className="p-8 text-center text-[#64748b] text-sm font-rounded opacity-60">
-        &copy; {new Date().getFullYear()} Los Dioses Están Locos. Todos los derechos reservados.
-      </footer>
-    </div>
-  );
-};
+    </main>
 
-export default App;
+    <footer>
+        &copy; 2026 Los Dioses Están Locos. Todos los derechos reservados.
+    </footer>
+
+</body>
+</html>
