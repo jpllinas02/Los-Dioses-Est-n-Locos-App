@@ -459,7 +459,7 @@ export const RulebookScreen: React.FC = () => {
                 
                 <div className="flex-1 flex flex-col justify-start gap-4 p-6 pt-8 pb-24 overflow-y-auto no-scrollbar">
                     <div className="text-center mb-4">
-                         <h2 className="text-xl">¿Cómo prefieres leerlas?</h2>
+                         <h2 className="text-xl font-bold">¿Cómo prefieres leerlas?</h2>
                          <p className="text-base text-slate-500 mt-2">Elige la forma que mejor se adapte a lo que necesites.</p>
                     </div>
 
