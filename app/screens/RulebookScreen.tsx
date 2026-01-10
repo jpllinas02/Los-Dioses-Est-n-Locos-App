@@ -133,7 +133,7 @@ export const RulebookScreen: React.FC = () => {
                         <strong className="text-slate-800">Selección del Poder Inicial:</strong> Revuelve el mazo de Poderes. Cada jugador toma 3, elige el que más le convenga y devuelve el resto.
                     </li>
                     <li>
-                        <strong className="text-slate-800">Organización del Tablero:</strong> Revuelve por separado los mazos (Poderes, Minijuegos, Oráculos) y ubícalos en el tablero. Separa las fichas (Reliquias y Plagas). Entrega 1 Reliquia a cada jugador.
+                        <strong className="text-slate-800">Organización del Tablero:</strong> Revuelve por separado los mazos (Poderes, Minijuegos, Oráculos) y ubícalos en el tablero. Separa las Reliquias y Plagas. Entrega 1 Reliquia a cada jugador.
                     </li>
                     <li>
                         <strong className="text-slate-800">Elección del Elegido:</strong> Definan quién será el primero en jugar. Quien empieza se convierte en el primer Elegido y recibe el Símbolo.
@@ -354,7 +354,7 @@ export const RulebookScreen: React.FC = () => {
 
                     <details className="group">
                         <summary className="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-                            4. ¿Cómo se reciben o entregan fichas?
+                            4. ¿Cómo se reciben o entregan las Reliquias y Plagas?
                             <span className="material-symbols-outlined text-slate-400 transition group-open:rotate-180">expand_more</span>
                         </summary>
                         <ul className="mt-2 text-xs bg-white p-2 rounded border border-slate-100 list-disc pl-4">
@@ -460,7 +460,7 @@ export const RulebookScreen: React.FC = () => {
                 <div className="flex-1 flex flex-col justify-start gap-4 p-6 pt-8 pb-24 overflow-y-auto no-scrollbar">
                     <div className="text-center mb-4">
                          <h2 className="typo-h2">¿Cómo prefieres leerlas?</h2>
-                         <p className="typo-body text-slate-500 mt-2">Elige el formato que mejor se adapte a tu tiempo.</p>
+                         <p className="typo-body text-slate-500 mt-2">Elige la forma que mejor se adapte a lo que necesites.</p>
                     </div>
 
                     <button 
@@ -471,8 +471,8 @@ export const RulebookScreen: React.FC = () => {
                             <span className="material-symbols-outlined text-3xl">touch_app</span>
                         </div>
                         <div className="text-left">
-                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Reglas en la App</h3>
-                             <p className="text-xs text-slate-500 font-medium">Explora las reglas paso a paso aquí mismo.</p>
+                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Reglamento completo desde la APP</h3>
+                             <p className="text-xs text-slate-500 font-medium">Mira las reglas paso a paso aquí directamente.</p>
                         </div>
                     </button>
 
@@ -484,8 +484,8 @@ export const RulebookScreen: React.FC = () => {
                             <span className="material-symbols-outlined text-3xl">picture_as_pdf</span>
                         </div>
                         <div className="text-left">
-                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-500 transition-colors">Reglamento Oficial</h3>
-                             <p className="text-xs text-slate-500 font-medium">Documento completo en PDF.</p>
+                             <h3 className="text-lg font-bold text-slate-900 group-hover:text-red-500 transition-colors">Reglamento completo desde un PDF</h3>
+                             <p className="text-xs text-slate-500 font-medium">Usa el PDF del folleto impreso.</p>
                         </div>
                     </button>
 
@@ -498,7 +498,7 @@ export const RulebookScreen: React.FC = () => {
                         </div>
                         <div className="text-left">
                              <h3 className="text-lg font-bold text-slate-900 group-hover:text-amber-500 transition-colors">Resumen Visual</h3>
-                             <p className="text-xs text-slate-500 font-medium">Guía rápida en una imagen.</p>
+                             <p className="text-xs text-slate-500 font-medium">Mira una imagen un resumen para mayor rapidez.</p>
                         </div>
                     </button>
                 </div>
