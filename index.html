@@ -34,11 +34,12 @@
             box-sizing: border-box;
         }
 
+        /* --- ACTUALIZACIÓN DE RESET & BASE --- */
         body {
             background-color: var(--bg-color);
             font-family: var(--font-body);
             color: var(--text-main);
-            min-height: 100vh;
+            height: 100vh; /* Ocupa exactamente el alto de pantalla */
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
@@ -72,22 +73,25 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centrado en móvil */
+            align-items: center; /* Centrado total siempre (Móvil y Desktop) */
+            justify-content: center;
             z-index: 10;
+            text-align: center; /* Texto centrado */
         }
 
         @media (min-width: 768px) {
             .content-col {
-                align-items: flex-start; /* Alineado izq en desktop */
+                align-items: center; /* Forzamos centrado en desktop también */
             }
+            .copy {
+                text-align: center !important; /* Forzamos texto centrado en desktop */
         }
 
-        /* Logo */
+        /* Logo con animación infinita */
         .logo-placeholder {
-            width: 160px;
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease;
-        }
+            width: 280px; /* Más grande */
+            margin-bottom: 1rem;
+            animation: logo-loop 3s ease-in-out infinite; /* Animación constante */        }
         .logo-placeholder:hover {
             transform: scale(1.05);
         }
@@ -116,17 +120,17 @@
             }
         }
 
-        /* Badge "Coming Soon" */
+        /* Badge más pequeño (Punto 4) */
         .badge {
             display: inline-block;
             background-color: var(--secondary);
             color: var(--text-main);
             font-family: var(--font-display);
-            font-size: 1rem;
-            padding: 0.5rem 1.5rem;
-            border-radius: 12px;
+            font-size: 0.85rem; /* Tamaño reducido */
+            padding: 0.4rem 1.2rem;
+            border-radius: 10px;
             border: 3px solid #000;
-            box-shadow: 4px 4px 0px 0px #000;
+            box-shadow: 3px 3px 0px 0px #000;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 2rem;
@@ -208,11 +212,12 @@
         .character-img {
             position: relative;
             z-index: 1;
-            width: 100%;
-            max-width: 500px;
-            height: auto;
+            width: auto;
+            max-height: 65vh; /* Se ajusta al alto de la columna de texto (Punto 2) */
+            border-radius: 2rem; /* Esquinas redondeadas (Punto 8) */
             filter: drop-shadow(0 20px 20px rgba(0,0,0,0.15));
             animation: float 5s ease-in-out infinite;
+            object-fit: contain;
         }
 
         /* --- ANIMATIONS --- */
@@ -231,6 +236,13 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
+        /* Nueva Animación para el Logo */
+        @keyframes logo-loop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); } /* Efecto de latido/crecimiento */
+        }
+
+            
         .content-col {
             animation: popIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -238,10 +250,11 @@
         /* --- FOOTER --- */
         footer {
             text-align: center;
-            padding: 2rem;
-            font-size: 0.875rem;
+            padding: 1rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             opacity: 0.6;
+            background-color: var(--bg-color);
         }
     </style>
 </head>
@@ -265,13 +278,8 @@
 
             <div class="badge">Próximamente</div>
 
-            <h1>
-                Los Dioses <br>
-                <span class="highlight">Están Locos</span>
-            </h1>
-
-            <p class="copy">
-                Estamos puliendo los últimos detalles de la creación. 
+           <p class="copy">
+                Los Dioses están puliendo los últimos detalles de la creación. 
                 Muy pronto, la <strong>locura divina</strong> llegará a tu mesa. 
                 Prepárate para el caos.
             </p>
@@ -299,7 +307,7 @@
     </main>
 
     <footer>
-        &copy; 2026 Los Dioses Están Locos. Todos los derechos reservados.
+        &copy; 2026 Los Dioses Están Locos. Todos los derechos reservados (no por mortales).
     </footer>
 
 </body>
