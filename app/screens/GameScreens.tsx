@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Header, Button, ActionCard } from '../components/UI';
 import { ROUTES, STORAGE_KEYS } from '../constants';
 
+// --- ASSETS IMPORTS ---
+// Importamos las imágenes locales para que Vite las procese
+import minijuegoCarta from '../assets/minijuego_carta.png';
+import oraculoCarta from '../assets/oraculo_carta.png';
+
 // --- Game Session (Main Hub) ---
 export const GameSessionScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -35,18 +40,18 @@ export const GameSessionScreen: React.FC = () => {
                     <span className="material-symbols-outlined text-base">style</span> PILAS DE CARTAS
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                    {/* Minigame Card - Refactored to ActionCard */}
+                    {/* Minigame Card */}
                     <ActionCard 
                         title="Jugar Minijuego"
                         onClick={() => navigate(ROUTES.MINIGAME_SELECTOR)}
-                        bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuAlkW3Xim0uV0HK2wLarIuDmnPNIxq6jxurfDoWcgSZFCnSnp0hxr3dUMh7AALzEB-Jt-KtfY7CdDHk7lAel5YbztNTT9y39EWZ4ZP_xLE7-aHS2eWLwDTc9j-Kp8WmsK17sl2a-ObIvNoekXKRK7ncyL3JdigLfAjcUG054BZ2EA2G5jG4MkLOPam8H1uNyb45kjrApoEC72QAapwFAR7ECEgl975PQ4rqaIYwqnv79kxuSnrLgfddpi1yS6iPbBuZmm4kjG0StSo"
+                        bgImage={minijuegoCarta} // <--- IMAGEN ACTUALIZADA
                     />
                     
-                    {/* Oracle Card - Refactored to ActionCard */}
+                    {/* Oracle Card */}
                     <ActionCard 
                         title="Activar Oráculo"
                         onClick={() => navigate(ROUTES.ORACLE)}
-                        bgImage="https://lh3.googleusercontent.com/aida-public/AB6AXuD9QZx7CtrJnAHf9WfZTyPOlTMAK7huKeUFgLtc33PrED9FikKC8usbyisSCOi2BuhW9d-S0tLyBUDMBiK6TOoPDH6JRgJCZgVj9G7sDmv4-KrLTdPS93yBc0VxGPm-pEYNK_gjxy266cH0TZBTo1tFrOg9RHQlJFGjxwImcPf5mCwVmTOOd6LB5o0f85239Cd1aL1iyspDGfYPpGdptQX4tqVOczJJbjZ6RFrzl8zBoRfDwyFQWNihIv34b0I9Yrw7t6SOra7hIC8"
+                        bgImage={oraculoCarta}   // <--- IMAGEN ACTUALIZADA
                     />
                 </div>
 
