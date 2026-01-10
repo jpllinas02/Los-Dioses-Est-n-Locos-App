@@ -138,7 +138,7 @@ export const RegistrationScreen: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center animate-pop-in relative z-10 pt-4">
-                                    <div className="mb-1"><span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Tu Pacto Es Con</span></div>
+                                    <div className="mb-4"><span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Tu Pacto Es Con</span></div>
                                     
                                     {/* 2. IMAGEN */}
                                     <div className="flex-1 w-full flex items-center justify-center relative min-h-0">
@@ -150,7 +150,7 @@ export const RegistrationScreen: React.FC = () => {
                                     </div>
                                     
                                     {/* PACTO */}
-                                    <h1 className={"text-3xl mb-4 ${pactDetails[state.players[state.revealState.index].pact].color} drop-shadow-sm"}>
+                                    <h1 className={`text-4xl font-bold mb-4 ${pactDetails[state.players[state.revealState.index].pact].color} drop-shadow-sm`}>
                                         {pactDetails[state.players[state.revealState.index].pact].label}
                                     </h1>
                                     
