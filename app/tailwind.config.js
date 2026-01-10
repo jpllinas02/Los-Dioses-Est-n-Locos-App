@@ -6,6 +6,7 @@ export default {
   ],
   theme: {
     extend: {
+      // ... tus colores ...
       colors: {
         primary: "#330df2",
         "primary-dark": "#1a0b7e",
@@ -17,11 +18,13 @@ export default {
         danger: "#f2460d",
         action: "#258cf4"
       },
+      // AQUÍ ES DONDE AGREGAS LA FUENTE:
       fontFamily: {
         sans: ["Plus Jakarta Sans", "sans-serif"],
         display: ["Space Grotesk", "sans-serif"],
         'cartoon': ['Titan One', 'cursive'],
         'rounded': ['Fredoka', 'sans-serif'],
+        'cake': ['Cakerolli', 'sans-serif'], // <--- ¡ESTA ES LA NUEVA LÍNEA!
       },
       animation: {
         'spin-slow': 'spin 12s linear infinite',
