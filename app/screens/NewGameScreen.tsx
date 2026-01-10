@@ -122,7 +122,7 @@ export const RegistrationScreen: React.FC = () => {
                     <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
                         {/* Reveal Card UI */}
                         <div className={`w-full aspect-[4/5] max-h-[60vh] bg-white rounded-[2.5rem] shadow-xl border-4 ${getColorStyle(state.players[state.revealState.index].color).border} relative overflow-hidden flex flex-col items-center justify-center p-6 text-center transition-all duration-300`} key={state.revealState.index}>
-                             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent opacity-60 pointer-events-none"></div>
+                             <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent opacity-90 pointer-events-none"></div>
 
                             {!state.revealState.isRevealed ? (
                                 <div className="w-full flex flex-col items-center animate-fade-in relative z-10">
@@ -140,12 +140,7 @@ export const RegistrationScreen: React.FC = () => {
                                 <div className="w-full h-full flex flex-col items-center justify-center animate-pop-in relative z-10 pt-4">
                                     <div className="mb-1"><span className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Tu Pacto Es Con</span></div>
                                     
-                                    {/* 1. NOMBRE PRIMERO (Con soporte para font-cake si se configura) */}
-                                    <h1 className={`font-cake font-cartoon text-5xl mb-4 ${pactDetails[state.players[state.revealState.index].pact].color} drop-shadow-sm`}>
-                                        {pactDetails[state.players[state.revealState.index].pact].label}
-                                    </h1>
-
-                                    {/* 2. IMAGEN DESPUÉS (Reemplaza al ícono) */}
+                                    {/* 2. IMAGEN */}
                                     <div className="flex-1 w-full flex items-center justify-center relative min-h-0">
                                         <img 
                                             src={pactDetails[state.players[state.revealState.index].pact].image} 
@@ -153,7 +148,12 @@ export const RegistrationScreen: React.FC = () => {
                                             className="max-h-full max-w-full object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-500"
                                         />
                                     </div>
-
+                                    
+                                    {/* PACTO */}
+                                    <h1 className={"text-3xl mb-4 ${pactDetails[state.players[state.revealState.index].pact].color} drop-shadow-sm"}>
+                                        {pactDetails[state.players[state.revealState.index].pact].label}
+                                    </h1>
+                                    
                                     <div className="mt-4 pb-2">
                                         <p className="text-[12px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1"><span className="material-symbols-outlined text-sm">lock</span> Información Secreta</p>
                                     </div>
