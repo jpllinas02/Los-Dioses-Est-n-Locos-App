@@ -252,11 +252,11 @@ export const MinigameSelectorScreen: React.FC = () => {
                 )}
             </div>
             
-            <BottomBar className="bg-white border-t border-slate-100">
+            <BottomBar className="bg-gray-100 border-t border-slate-100">
                  <div className="flex w-full gap-3 items-center">
                     {drawnCard && !isShuffling && (
                         <Button 
-                            className="flex-1 bg-white text-slate-600 border-2 border-slate-200 border-b-[4px] border-b-slate-300 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-slate-50 px-0 rounded-xl"
+                            className="flex-1 bg-gray-100 text-gray-800 border-2 border-slate-200 border-b-[4px] border-b-slate-300 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-slate-50 px-0 rounded-xl"
                             onClick={navigateToWinnerLog} 
                             icon="emoji_events"
                             disabled={cooldown > 0}
