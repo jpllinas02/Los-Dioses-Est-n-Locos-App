@@ -256,7 +256,9 @@ export const MinigameSelectorScreen: React.FC = () => {
                  <div className="flex w-full gap-3 items-center">
                     {drawnCard && !isShuffling && (
                         <Button 
-                            className="flex-1 bg-gray-100 text-gray-800 border-2 border-slate-200 border-b-[4px] border-b-slate-300 active:border-b-0 active:translate-y-[4px] transition-all hover:bg-slate-50 px-0 rounded-xl"
+                            // ARQUITECTO: He añadido h-14 para igualar la altura y ajustado los colores
+                            // bg-slate-200, text-slate-900 y eliminé el hover de cambio de color.
+                            className="flex-1 h-14 bg-slate-200 text-slate-900 border-2 border-slate-300 border-b-[5px] border-b-slate-400 active:border-b-0 active:translate-y-[5px] transition-all hover:bg-slate-200 px-0 rounded-xl flex items-center justify-center"
                             onClick={navigateToWinnerLog} 
                             icon="emoji_events"
                             disabled={cooldown > 0}
@@ -265,7 +267,8 @@ export const MinigameSelectorScreen: React.FC = () => {
                         </Button>
                     )}
                     <Button 
-                        className={`flex-[2] shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action ${isShuffling || cooldown > 0 ? 'opacity-80' : ''}`}
+                        // ARQUITECTO: He añadido h-14 aquí también para garantizar simetría.
+                        className={`flex-[2] h-14 shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action flex items-center justify-center ${isShuffling || cooldown > 0 ? 'opacity-80' : ''}`}
                         onClick={handleDraw} 
                         disabled={!canDraw && !poolExhausted}
                         icon={isShuffling ? 'cached' : poolExhausted ? 'replay' : 'style'}
