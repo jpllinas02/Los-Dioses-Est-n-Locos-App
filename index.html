@@ -1,124 +1,110 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Los Dioses Están Locos - Juego de Mesa</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Titan+One&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #330df2;
-            --secondary: #f59e0b;
-            --text: #1e293b;
-            --sky-light: #f0f9ff;
-            --cloud-white: #ffffff;
-        }
+import React from 'react';
 
-        body { 
-            font-family: 'Fredoka', sans-serif; 
-            /* Fondo de Cielo/Nubes */
-            background: linear-gradient(180deg, #e0f2fe 0%, #f8fafc 100%);
-            color: var(--text); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            margin: 0;
-            overflow: hidden;
-        }
+/**
+ * Los Dioses Están Locos - Minimalist Landing Page
+ * Estética: 2D Vector / Kingdom Rush Style
+ * Arquitectura: React 19 + Tailwind CSS
+ */
 
-        /* Efecto de nubes decorativas */
-        body::before {
-            content: "";
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background-image: url('https://www.transparenttextures.com/patterns/clouds.png');
-            opacity: 0.3;
-            animation: moveClouds 100s linear infinite;
-            z-index: -1;
-        }
+const App = () => {
+  return (
+    <div className="min-h-screen bg-[#FAF9F6] flex flex-col font-rounded selection:bg-secondary/30">
+      {/* Importación de tipografías específicas de los Dioses */}
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Titan+One&family=Fredoka:wght@400;600&display=swap');
+          
+          .font-cartoon { font-family: 'Titan One', cursive; }
+          .font-rounded { font-family: 'Fredoka', sans-serif; }
 
-        @keyframes moveClouds {
-            from { transform: translate(0, 0); }
-            to { transform: translate(-50%, -50%); }
-        }
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+          }
 
-        .card { 
-            text-align: center; 
-            padding: 3.5rem 2rem; 
-            border-radius: 40px; 
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-            max-width: 480px;
-            animation: pop-in 0.8s ease-out;
-        }
+          @keyframes pop-in {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+          }
 
-        .logo { 
-            width: 220px;
-            height: auto;
-            margin: 0 auto 1.5rem;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.05));
-        }
+          .animate-float { animation: float 4s ease-in-out infinite; }
+          .animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        `}
+      </style>
 
-        /* Estilo de Letra Refinado */
-        h1 { 
-            font-family: 'Fredoka', sans-serif;
-            font-weight: 700;
-            font-size: 2.8rem; 
-            color: var(--primary);
-            margin: 0;
-            line-height: 1.1;
-            letter-spacing: -1px;
-        }
-
-        .sub-title {
-            font-family: 'Titan One', cursive;
-            color: var(--secondary);
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        p {
-            font-size: 1.1rem;
-            color: #64748b;
-            margin-top: 1.5rem;
-            line-height: 1.5;
-        }
-
-        .board-game-tag {
-            background: #e2e8f0;
-            padding: 6px 16px;
-            border-radius: 99px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #475569;
-            display: inline-block;
-            margin-top: 1rem;
-        }
-
-        @keyframes pop-in {
-            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <img src="assets/logo_transparente.png" alt="Los Dioses Están Locos" class="logo">
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col md:flex-row items-center justify-center p-6 md:p-12 lg:p-24 gap-12 max-w-7xl mx-auto w-full">
         
-        <span class="sub-title">Juego de Mesa</span>
-        <h1>¡Bienvenido, Mortal!</h1>
-        
-        <p>Los Dioses están preparando los cielos para la gran partida. Mantén la calma, el tablero pronto estará listo.</p>
-        
-        <div class="board-game-tag">Propiedad de los Dioses</div>
+        {/* Left Column: Content */}
+        <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left space-y-8 animate-pop-in">
+          {/* Logo Placeholder */}
+          <div className="w-32 md:w-40 transition-transform hover:scale-105 duration-300">
+            <img 
+              src="assets/logo_transparente.png" 
+              alt="Logo Los Dioses Están Locos" 
+              className="w-full h-auto drop-shadow-sm"
+              onError={(e) => { e.target.src = "https://via.placeholder.com/160x160?text=LOGO"; }}
+            />
+          </div>
+
+          <div className="space-y-4">
+            {/* Title */}
+            <h1 className="font-cartoon text-4xl md:text-6xl lg:text-7xl text-[#0f172a] leading-tight tracking-tight uppercase">
+              Los Dioses <br />
+              <span className="text-[#330df2]">Están Locos</span>
+            </h1>
+
+            {/* Coming Soon Badge */}
+            <div className="inline-block">
+              <span className="bg-[#f59e0b] text-[#0f172a] px-4 py-1.5 rounded-lg border-[3px] border-black font-cartoon text-sm md:text-lg uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                Muy Pronto
+              </span>
+            </div>
+          </div>
+
+          {/* Copy */}
+          <p className="text-[#64748b] text-lg md:text-xl max-w-md leading-relaxed">
+            Estamos puliendo los últimos detalles de la creación. 
+            Muy pronto, la <span className="text-[#f2460d] font-semibold">locura divina</span> llegará a tu mesa. 
+            Prepárate para el caos.
+          </p>
+
+          {/* Call to Action (Soft) */}
+          <div className="pt-4 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+             <a 
+              href="/app"
+              className="bg-[#330df2] hover:bg-[#1a0b7e] text-white font-rounded font-semibold px-8 py-4 rounded-2xl shadow-lg transition-all active:scale-95 text-center flex items-center justify-center gap-2 group"
+            >
+              Explorar la App
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        {/* Right Column: Visual Impact */}
+        <div className="flex-1 w-full max-w-md lg:max-w-xl animate-float">
+          <div className="relative group">
+            {/* Subtle glow effect behind character */}
+            <div className="absolute inset-0 bg-[#330df2]/5 blur-3xl rounded-full scale-110 group-hover:bg-[#330df2]/10 transition-colors duration-1000"></div>
+            
+            <img 
+              src="assets/longwang_poder.png" 
+              alt="Hércules Divino" 
+              className="relative w-full h-auto drop-shadow-2xl select-none"
+              onError={(e) => { e.target.src = "https://via.placeholder.com/600x800?text=PERSONAJE+EPICO"; }}
+            />
+          </div>
+        </div>
+      </main>
+
+      {/* Footer / Social (Optional & Minimal) */}
+      <footer className="p-8 text-center text-[#64748b] text-sm font-rounded opacity-60">
+        &copy; {new Date().getFullYear()} Los Dioses Están Locos. Todos los derechos reservados.
+      </footer>
     </div>
-</body>
-</html>
+  );
+};
+
+export default App;
