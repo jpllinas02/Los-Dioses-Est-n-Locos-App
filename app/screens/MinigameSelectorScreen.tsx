@@ -256,9 +256,12 @@ export const MinigameSelectorScreen: React.FC = () => {
                  <div className="flex w-full gap-3 items-center">
                     {drawnCard && !isShuffling && (
                         <Button 
-                            // ARQUITECTO: He añadido h-14 para igualar la altura y ajustado los colores
-                            // bg-slate-200, text-slate-900 y eliminé el hover de cambio de color.
-                            className="flex-1 h-14 bg-slate-200 text-slate-900 border-2 border-slate-300 border-b-[5px] border-b-slate-400 active:border-b-0 active:translate-y-[5px] transition-all hover:bg-slate-200 px-0 rounded-xl flex items-center justify-center"
+                            // ARQUITECTO: ALINEACIÓN CON SISTEMA DE DISEÑO
+                            // Usamos estrictamente variant="outline". 
+                            // En UI.tsx esto define: bg-white, text-slate-700, border-slate-200.
+                            // Esto respeta la jerarquía "Fondo Claro / Letra Oscura" nativa de la App.
+                            variant="outline"
+                            className="flex-1 px-0 rounded-xl"
                             onClick={navigateToWinnerLog} 
                             icon="emoji_events"
                             disabled={cooldown > 0}
@@ -267,8 +270,8 @@ export const MinigameSelectorScreen: React.FC = () => {
                         </Button>
                     )}
                     <Button 
-                        // ARQUITECTO: He añadido h-14 aquí también para garantizar simetría.
-                        className={`flex-[2] h-14 shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action flex items-center justify-center ${isShuffling || cooldown > 0 ? 'opacity-80' : ''}`}
+                        // Botón primario (Acción Principal) se mantiene igual.
+                        className={`flex-[2] shadow-[0_4px_20px_rgba(37,140,244,0.4)] bg-action ${isShuffling || cooldown > 0 ? 'opacity-80' : ''}`}
                         onClick={handleDraw} 
                         disabled={!canDraw && !poolExhausted}
                         icon={isShuffling ? 'cached' : poolExhausted ? 'replay' : 'style'}
